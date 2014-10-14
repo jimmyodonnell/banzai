@@ -1,0 +1,1 @@
+This project analyzes the sequencing results from an Illumina MiSeq, run on a sample of PCR amplicons.
