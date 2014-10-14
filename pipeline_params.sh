@@ -21,7 +21,7 @@ BLAST_DB='/Users/threeprime/Documents/Data/genbank/16Smetazoa/16Smetazoa'
 
 # PRIMER REMOVAL
 # Specify a path to the fasta file containing the two primers used to generate the amplicons you sequenced:
-PRIMER
+PRIMER_FILE='/Users/threeprime/Documents/Data/IlluminaData/16S/primers_16S.fasta'
 PRIMER_MISMATCH_PROPORTION="0.10"
 
 # What is the maximum number of consecutive identical bases you're willing to accept?

@@ -14,10 +14,10 @@ source "$SCRIPT_DIR/pear_params.sh"
 CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
 
 # Read in primers and their reverse complements.
-PRIMER1=$( awk 'NR==2' "$SCRIPT_DIR/primers.fasta" )
-PRIMER2=$( awk 'NR==4' "$SCRIPT_DIR/primers.fasta" )
-PRIMER1RC=$( seqtk seq -r "$SCRIPT_DIR/primers.fasta" | awk 'NR==2' )
-PRIMER2RC=$( seqtk seq -r "$SCRIPT_DIR/primers.fasta" | awk 'NR==4' )
+PRIMER1=$( awk 'NR==2' "${PRIMER_FILE}" )
+PRIMER2=$( awk 'NR==4' "${PRIMER_FILE}" )
+PRIMER1RC=$( seqtk seq -r "${PRIMER_FILE}" | awk 'NR==2' )
+PRIMER2RC=$( seqtk seq -r "${PRIMER_FILE}" | awk 'NR==4' )
 
 # Take ambiguities out of primers. The sed command says "turn any character that's not A, T, C, or G, and replace it with N.
 PRIMER1_NON=$( echo $PRIMER1 | sed "s/[^ATCG]/N/g" )
@@ -78,7 +78,7 @@ usearch -sortbysize "${CURRENT_DIR}"/5_derep.fasta -minsize 2 -sizein -sizeout -
 usearch -cluster_otus "${CURRENT_DIR}"/6_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${CURRENT_DIR}"/7_OTUs.fasta -notmatched "${CURRENT_DIR}"/7_notmatched.fasta
 
 # BLAST CLUSTERS
-blastn -query "${CURRENT_DIR}"/7_OTUs.fasta -db "$BLAST_DB"/*.fasta -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${CURRENT_DIR}"/8_BLASTed.xml
+blastn -query "${CURRENT_DIR}"/7_OTUs.fasta -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${CURRENT_DIR}"/8_BLASTed.xml
 #/16Smetazoa.fasta
 # usearch -usearch_global "${CURRENT_DIR}"/5_OTUs.fasta -db "$BLAST_DB" -strand plus -id 0.97 -uc "${CURRENT_DIR}"/readmap.uc
 
