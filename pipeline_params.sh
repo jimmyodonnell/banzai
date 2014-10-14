@@ -12,7 +12,7 @@ LENGTH_FRAG="162"
 # What is the length of the reads of the Illumina run? (i.e. how long are the sequences in each of the run fastq files (R1 and R2)?)
 LENGTH_READ="150"
 
-# Specify the path to the DIRECTORIES (not files) where MEGAN, macqiime, etc. are stored
+# Specify the path to the MEGAN executable file you want to use.
 megan_dir='/Applications/megan'
 BLAST_DB='/Users/threeprime/Documents/Data/genbank/16Smetazoa'
 
