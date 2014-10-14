@@ -39,4 +39,4 @@ EVALUE="10"
 MAXIMUM_MATCHES="20"
 
 # Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
-PERFORM_CLEANUP="YES"
+PERFORM_CLEANUP="NO"

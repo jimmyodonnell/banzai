@@ -117,8 +117,8 @@ setwd('"${CURRENT_DIR}"')
 
 Rscript "${CURRENT_DIR}"/megan_plotter.R
 
-if [ PERFORM_CLEANUP=="YES" ]; then
-# 	rm test1 test2 test3 test4
+if [ "$PERFORM_CLEANUP" = "YES" ]; then
+	rm test1 test2 test3 test4
 	echo "Cleanup performed."
 else
 	echo "Cleanup not performed."
