@@ -98,8 +98,8 @@ EOF
 
 cat > "${CURRENT_DIR}"/megan_script.sh <<EOF
 #!/bin/bash
-cd ${megan_dir}
-./MEGAN -g -E -c ${CURRENT_DIR}/megan_commands.txt
+cd "${megan_exec%/*}"
+./"${megan_exec##*/}" -g -E -c ${CURRENT_DIR}/megan_commands.txt
 EOF
 
 sh "${CURRENT_DIR}"/megan_script.sh

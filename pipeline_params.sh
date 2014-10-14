@@ -13,8 +13,11 @@ LENGTH_FRAG="162"
 LENGTH_READ="150"
 
 # Specify the path to the MEGAN executable file you want to use.
-megan_dir='/Applications/megan'
-BLAST_DB='/Users/threeprime/Documents/Data/genbank/16Smetazoa'
+megan_dir='/Applications/megan/MEGAN'
+
+# Specify the path to the BLAST database.
+# Note this should be a path to any one of three files WITHOUT their extension *.nhr, *.nin, or *.nsq
+BLAST_DB='/Users/threeprime/Documents/Data/genbank/16Smetazoa/16Smetazoa'
 
 # PRIMER REMOVAL
 PRIMER_MISMATCH_PROPORTION="0.10"
