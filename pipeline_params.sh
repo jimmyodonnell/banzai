@@ -34,6 +34,7 @@ CLUSTERING_PERCENT="97"
 #BLAST:
 PERCENT_IDENTITY="95"
 WORD_SIZE="100"
+EVALUE="10"
 # number of matches recorded in the alignment:
 MAXIMUM_MATCHES="20"
 

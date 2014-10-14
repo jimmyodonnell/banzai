@@ -78,7 +78,7 @@ usearch -sortbysize "${CURRENT_DIR}"/5_derep.fasta -minsize 2 -sizein -sizeout -
 usearch -cluster_otus "${CURRENT_DIR}"/6_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${CURRENT_DIR}"/7_OTUs.fasta -notmatched "${CURRENT_DIR}"/7_notmatched.fasta
 
 # BLAST CLUSTERS
-blastn -query "${CURRENT_DIR}"/7_OTUs.fasta -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${CURRENT_DIR}"/8_BLASTed.xml
+blastn -query "${CURRENT_DIR}"/7_OTUs.fasta -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${CURRENT_DIR}"/8_BLASTed.xml
 #/16Smetazoa.fasta
 # usearch -usearch_global "${CURRENT_DIR}"/5_OTUs.fasta -db "$BLAST_DB" -strand plus -id 0.97 -uc "${CURRENT_DIR}"/readmap.uc
 
@@ -118,8 +118,10 @@ setwd('"${CURRENT_DIR}"')
 Rscript "${CURRENT_DIR}"/megan_plotter.R
 
 if [ PERFORM_CLEANUP=="YES" ]; then
-	rm test1 test2 test3 test4
+# 	rm test1 test2 test3 test4
 	echo "Cleanup performed."
+else
+	echo "Cleanup not performed."
 fi
 
 done
