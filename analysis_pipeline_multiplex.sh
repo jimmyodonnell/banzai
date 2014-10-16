@@ -60,23 +60,33 @@ else
 	cp "${ANALYSIS_DIR}"/2_filtered.fasta "${ANALYSIS_DIR}"/3_no_homopolymers.fasta
 fi
 
-# DEMULTIPLEX
+# DEMULTIPLEXING STARTS HERE
+# make a directory to put all the demultiplexed files in
 mkdir "${ANALYSIS_DIR}"/demultiplexed
 
-N_TAGS=$( wc -l < $PRIMER_TAGS )
+N_TAGS=$( wc -l < "${PRIMER_TAGS}" )
+
+# Write a file of sequence names to make a tag fasta file (necessary for reverse complementing)
+for i in `seq ${N_TAGS}`; do echo \>tag"$i"; done > "${ANALYSIS_DIR}"/tag_names.txt
+# Alternately paste those names and the sequences to make a tag fasta file.
+paste -d"\n" "${ANALYSIS_DIR}"/tag_names.txt "${PRIMER_TAGS}" > "${ANALYSIS_DIR}"/tags.fasta
+# Reverse complement the tags
+seqtk seq -r "${ANALYSIS_DIR}"/tags.fasta > "${ANALYSIS_DIR}"/tags_RC.fasta
 
 # Start the loop, do one loop for each of the number of lines in the tag file.
 for (( i=1; i<=${N_TAGS}; i++ ));
 
 do
 
+# Assign the current tag to to variable TAG, and its reverse complement to TAG_RC
+TAG=$( sed -n $((i * 2))p "${ANALYSIS_DIR}"/tags.fasta )
+TAG_RC=$( sed -n $((i * 2))p "${ANALYSIS_DIR}"/tags_RC.fasta )
+
 # Create a directory for the tag
 mkdir "${ANALYSIS_DIR}"/demultiplexed/tag_"${i}"
 
+# Make a variable (CURRENT_DIR) with the current tag's directory for ease of reading and writing.
 CURRENT_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${i}"
-
-# Remove the tags. Assign the current working to to variable TAG
-TAG=$( sed -n ${i}p "${PRIMER_TAGS}" )
 
 # remove the tag from the beginning of the sequence (5' end) in it's current orientation
 cutadapt -g ^NNN"${TAG}" -e 0 --discard-untrimmed "${ANALYSIS_DIR}"/3_no_homopolymers.fasta > "${CURRENT_DIR}"/5prime_tag_rm.fasta

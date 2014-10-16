@@ -10,6 +10,8 @@ MULTIPLEXED="YES"
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
 PRIMER_TAGS='/Users/threeprime/Documents/Data/IlluminaData/12S/12s_Tags.txt'
+# What is the maximum number of Ns to allow at the end of a sequence before a tag is reached?
+TAG_N_MAX="6"
 
 # IF DATA NEEDS TO BE DEMULTIPLEXED FIRST:
 # What is the path to the reads?
