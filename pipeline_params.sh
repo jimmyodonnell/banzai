@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# YOUR analysis folder must contain:
-# analysis_pipeline.sh
-# pear_params.sh
-# primers.fasta # A fasta file containing only the forward and reverse primers, in that order, in their 5'-3' orientation.
+# An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
+set -e
 
 # Are the reads multiplexed with tagged primers? (YES/NO)
 MULTIPLEXED="YES"
