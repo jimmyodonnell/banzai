@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
-set -e
-
 # Are the reads multiplexed with tagged primers? (YES/NO)
 MULTIPLEXED="YES"
 
@@ -10,13 +7,13 @@ MULTIPLEXED="YES"
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
 PRIMER_TAGS='/Users/threeprime/Documents/Data/IlluminaData/12S/12s_Tags.txt'
-# What is the maximum number of Ns to allow at the end of a sequence before a tag is reached?
-TAG_N_MAX="6"
+# What is the maximum number of Ns to allow at the end of a sequence before a tag is reached? NOTE: currently, this will only matter for the tag on the 3' end.
+# TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
 
 # IF DATA NEEDS TO BE DEMULTIPLEXED FIRST:
 # What is the path to the reads?
-READ1='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/PCpoolC_S1_L001_R1_001.fastq'
-READ2='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/PCpoolC_S1_L001_R2_001.fastq'
+READ1='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/R1_4K.fastq'
+READ2='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/R2_4K.fastq'
 
 # What is the maximum expected length of the fragment of interest, including primers?
 LENGTH_FRAG="162"

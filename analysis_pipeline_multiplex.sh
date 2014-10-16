@@ -2,8 +2,15 @@
 
 # Pipeline for analysis of MULTIPLEXED Illumina data, a la Jimmy
 
+# An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
+# set -e
+
 # This command specifies the path to the directory containing the script
 SCRIPT_DIR="$(dirname "$0")"
+
+# Read in the parameter files
+source "$SCRIPT_DIR/pipeline_params.sh"
+source "$SCRIPT_DIR/pear_params.sh"
 
 # Get the directory containing the READ1 file and assign it to variable READ_DIR.
 READ_DIR="${READ1%/*}"
@@ -13,12 +20,12 @@ START_TIME=$(date +%Y%m%d_%H%M)
 
 # And make a directory with that timestamp
 mkdir "${READ_DIR}"/Analysis_"${START_TIME}"
-ANALYSIS_DIR=$"{"${READ_DIR}"/Analysis_"${START_TIME}"}"
+ANALYSIS_DIR="${READ_DIR}"/Analysis_"${START_TIME}"
 
-# Read in the parameter files
-source "$SCRIPT_DIR/pipeline_params.sh"
-source "$SCRIPT_DIR/pear_params.sh"
-CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
+# Copy these files into that directory as a verifiable log you can refer back to.
+cp "${SCRIPT_DIR}"/analysis_pipeline_multiplex.sh "${ANALYSIS_DIR}"/analysis_pipeline_used.txt
+cp "${SCRIPT_DIR}"/pipeline_params.sh "${ANALYSIS_DIR}"/pipeline_parameters.txt
+cp "${SCRIPT_DIR}"/pear_params.sh "${ANALYSIS_DIR}"/pear_parameters.txt
 
 # Read in primers and their reverse complements.
 PRIMER1=$( awk 'NR==2' "${PRIMER_FILE}" )
@@ -88,71 +95,64 @@ mkdir "${ANALYSIS_DIR}"/demultiplexed/tag_"${i}"
 # Make a variable (CURRENT_DIR) with the current tag's directory for ease of reading and writing.
 CURRENT_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${i}"
 
+# REMOVE TAG SEQUENCES
 # remove the tag from the beginning of the sequence (5' end) in it's current orientation
 cutadapt -g ^NNN"${TAG}" -e 0 --discard-untrimmed "${ANALYSIS_DIR}"/3_no_homopolymers.fasta > "${CURRENT_DIR}"/5prime_tag_rm.fasta
-
 # This sed command looks really f***ing ugly; but I'm pretty sure it works.
-sed -E 's/'"${TAG}"'.{0,10}$/bananafruits/' 2_filtered.fasta > temp1.fasta
-
-cutadapt -g ^"${PRIMER1_NON}" -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${CURRENT_DIR}"/5prime_tag_rm.fasta > "${CURRENT_DIR}"/5prime_primer_rm.fasta
-
-cutadapt -a "${PRIMER1RC_NON}" -a "${PRIMER2RC_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${CURRENT_DIR}"/5prime_primer_rm.fasta > "${CURRENT_DIR}"/both_primer_rem.fasta
-
-
-
+sed -E 's/'"${TAG_RC}"'.{0,9}$//' "${CURRENT_DIR}"/5prime_tag_rm.fasta > "${CURRENT_DIR}"/3prime_tag_rm.fasta
 
 # REMOVE PRIMER SEQUENCES
-cutadapt -g ^${PRIMER1_NON} -e ${PRIMER_MISMATCH_PROPORTION} --match-read-wildcards --discard-untrimmed "${ANALYSIS_DIR}"/3_no_homopolymers.fasta > "${ANALYSIS_DIR}"/PRIMER1_remtmp.fasta
-cutadapt -a ${PRIMER2RC_NON} -e ${PRIMER_MISMATCH_PROPORTION} --match-read-wildcards --discard-untrimmed "${ANALYSIS_DIR}"/PRIMER1_remtmp.fasta > "${ANALYSIS_DIR}"/PRIMER1_rem.fasta
-cutadapt -g ^${PRIMER2_NON} -e ${PRIMER_MISMATCH_PROPORTION} --match-read-wildcards --discard-untrimmed "${ANALYSIS_DIR}"/3_no_homopolymers.fasta > "${ANALYSIS_DIR}"/PRIMER2_remtmp.fasta
-cutadapt -a ${PRIMER1RC_NON} -e ${PRIMER_MISMATCH_PROPORTION} --match-read-wildcards --discard-untrimmed "${ANALYSIS_DIR}"/PRIMER2_remtmp.fasta > "${ANALYSIS_DIR}"/PRIMER2_rem.fasta
-seqtk seq -r "${ANALYSIS_DIR}"/PRIMER2_rem.fasta > "${ANALYSIS_DIR}"/PRIMER2_rc.fasta
-cat "${ANALYSIS_DIR}"/PRIMER1_rem.fasta "${ANALYSIS_DIR}"/PRIMER2_rc.fasta > "${ANALYSIS_DIR}"/4_noprimers_sameorientation.fasta
+# Remove PRIMER1 and PRIMER2 from the beginning of the reads.
+cutadapt -g ^"${PRIMER1_NON}" -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${CURRENT_DIR}"/3prime_tag_rm.fasta > "${CURRENT_DIR}"/5prime_primer_rm.fasta
+# Remove the reverse complement of PRIMER1 and PRIMER2 from the end of the reads. NOTE cutadapt1.7
+cutadapt -a "${PRIMER1RC_NON}" -a "${PRIMER2RC_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${CURRENT_DIR}"/5prime_primer_rm.fasta > "${CURRENT_DIR}"/both_primer_rem.fasta
 
-# CONSOLIDATE IDENTICAL SEQUENCES. With macqiime, use: "${ANALYSIS_DIR}"/split_lib/seqs.fna
-usearch -derep_fulllength "${ANALYSIS_DIR}"/4_noprimers_sameorientation.fasta -sizeout -strand both -output "${ANALYSIS_DIR}"/5_derep.fasta #-minseqlength 75
+# CONSOLIDATE IDENTICAL SEQUENCES.
+usearch -derep_fulllength "${CURRENT_DIR}"/both_primer_rem.fasta -sizeout -strand both -output "${CURRENT_DIR}"/5_derep.fasta
 
 # REMOVE SINGLETONS
-usearch -sortbysize "${ANALYSIS_DIR}"/5_derep.fasta -minsize 2 -sizein -sizeout -output "${ANALYSIS_DIR}"/6_nosingle.fasta
+usearch -sortbysize "${CURRENT_DIR}"/5_derep.fasta -minsize 2 -sizein -sizeout -output "${CURRENT_DIR}"/6_nosingle.fasta
 
 # CLUSTER SEQUENCES
-usearch -cluster_otus "${ANALYSIS_DIR}"/6_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${ANALYSIS_DIR}"/7_OTUs.fasta -notmatched "${ANALYSIS_DIR}"/7_notmatched.fasta
+CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
+usearch -cluster_otus "${CURRENT_DIR}"/6_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${CURRENT_DIR}"/7_OTUs.fasta -notmatched "${CURRENT_DIR}"/7_notmatched.fasta
 
 # BLAST CLUSTERS
-blastn -query "${ANALYSIS_DIR}"/7_OTUs.fasta -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${ANALYSIS_DIR}"/8_BLASTed.xml
+blastn -query "${CURRENT_DIR}"/7_OTUs.fasta -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${CURRENT_DIR}"/8_BLASTed.xml
 
 # PERFORM COMMON ANCESTOR GROUPING IN MEGAN
-cat > "${ANALYSIS_DIR}"/megan_commands.txt <<EOF
-import blastfile='${ANALYSIS_DIR}/8_BLASTed.xml' meganfile='${ANALYSIS_DIR}/meganfile.rma';
+cat > "${CURRENT_DIR}"/megan_commands.txt <<EOF
+import blastfile='${CURRENT_DIR}/8_BLASTed.xml' meganfile='${CURRENT_DIR}/meganfile.rma';
 recompute minsupport=1 mincomplexity=0;
 uncollapse nodes=all;
 update;
-collapse rank=Family;
+collapse rank='$COLLAPSE_RANK';
 select nodes=all;
-export what=DSV format=readname_taxonname separator=comma file=${ANALYSIS_DIR}/meganout.csv;
+export what=DSV format=readname_taxonname separator=comma file=${CURRENT_DIR}/meganout.csv;
 quit;
 EOF
 
-cat > "${ANALYSIS_DIR}"/megan_script.sh <<EOF
+cat > "${CURRENT_DIR}"/megan_script.sh <<EOF
 #!/bin/bash
 cd "${megan_exec%/*}"
-./"${megan_exec##*/}" -g -E -c ${ANALYSIS_DIR}/megan_commands.txt
+./"${megan_exec##*/}" -g -E -c ${CURRENT_DIR}/megan_commands.txt
 EOF
 
-sh "${ANALYSIS_DIR}"/megan_script.sh
+sh "${CURRENT_DIR}"/megan_script.sh
 
 # Modify the MEGAN output so that it is a standard CSV file with cluterID, N_reads, and Taxon
-sed 's|;size=|,|' <"${ANALYSIS_DIR}"/meganout.csv >"${ANALYSIS_DIR}"/meganout_mod.csv
+sed 's|;size=|,|' <"${CURRENT_DIR}"/meganout.csv >"${CURRENT_DIR}"/meganout_mod.csv
 
 # Copy the plotting script to the current directory
-cp "${SCRIPT_DIR}"/megan_plotter.R "${ANALYSIS_DIR}"/megan_plotter.R
+cp "${SCRIPT_DIR}"/megan_plotter.R "${CURRENT_DIR}"/megan_plotter.R
 
-# Add a line (before line 4) to change R's directory to the one the loop is working in (the variable ${ANALYSIS_DIR})
+# PLOTTING ANNOTATIONS
+# Add a line (before line 4) to change R's directory to the one the loop is working in (the variable ${CURRENT_DIR}), and copy to the current directory
 sed "4i\\
-setwd('"${ANALYSIS_DIR}"')
-" ${ANALYSIS_DIR}/megan_plotter.R > tmpfile ; mv tmpfile ${ANALYSIS_DIR}/megan_plotter.R
+setwd('"${CURRENT_DIR}"')
+" ${SCRIPT_DIR}/megan_plotter.R > ${CURRENT_DIR}/megan_plotter.R
 
-Rscript "${ANALYSIS_DIR}"/megan_plotter.R
+Rscript "${CURRENT_DIR}"/megan_plotter.R
 
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
 	rm test1 test2 test3 test4
