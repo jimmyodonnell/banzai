@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 #my_dir="$(dirname "$0")"
 
 #Standard (mandatory) options:

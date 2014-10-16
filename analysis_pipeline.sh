@@ -45,7 +45,7 @@ READ1=$(find "${CURRENT_DIR}" -name '*R1*fastq')
 READ2=$(find "${CURRENT_DIR}" -name '*R2*fastq')
 
 #MERGE PAIRED-END READS (PEAR) (consider piping pear output by adding > pear_log.txt to end of line)
-pear -f "${READ1}" -r "${READ2}" -o "${CURRENT_DIR}"/1_merged -v $MINOVERLAP -m $ASSMAX -n $ASSMIN -t $TRIMMIN -q $QT -u $UNCALLEDMAX -g $TEST -p $PVALUE -s $SCORING -j $THREADS 
+pear -f "${READ1}" -r "${READ2}" -o "${CURRENT_DIR}"/1_merged -v $MINOVERLAP -m $ASSMAX -n $ASSMIN -t $TRIMMIN -q $QT -u $UNCALLEDMAX -g $TEST -p $PVALUE -s $SCORING -j $THREADS
 
 # FILTER READS (This is the last step that uses quality scores, so convert to fasta)
 usearch -fastq_filter "${CURRENT_DIR}"/1_merged.assembled.fastq -fastq_maxee 0.5 -fastq_minlen 75 -fastaout "${CURRENT_DIR}"/2_filtered.fasta
@@ -69,7 +69,7 @@ seqtk seq -r "${CURRENT_DIR}"/PRIMER2_rem.fasta > "${CURRENT_DIR}"/PRIMER2_rc.fa
 cat "${CURRENT_DIR}"/PRIMER1_rem.fasta "${CURRENT_DIR}"/PRIMER2_rc.fasta > "${CURRENT_DIR}"/4_noprimers_sameorientation.fasta
 
 # CONSOLIDATE IDENTICAL SEQUENCES. With macqiime, use: "${CURRENT_DIR}"/split_lib/seqs.fna
-usearch -derep_fulllength "${CURRENT_DIR}"/4_noprimers_sameorientation.fasta -sizeout -strand both -output "${CURRENT_DIR}"/5_derep.fasta #-minseqlength 75 
+usearch -derep_fulllength "${CURRENT_DIR}"/4_noprimers_sameorientation.fasta -sizeout -strand both -output "${CURRENT_DIR}"/5_derep.fasta #-minseqlength 75
 
 # REMOVE SINGLETONS
 usearch -sortbysize "${CURRENT_DIR}"/5_derep.fasta -minsize 2 -sizein -sizeout -output "${CURRENT_DIR}"/6_nosingle.fasta
