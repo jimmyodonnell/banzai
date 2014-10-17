@@ -40,7 +40,7 @@ CLUSTERING_PERCENT="97"
 # BLAST:
 # Specify the path to the BLAST database.
 # Note this should be a path to any one of three files WITHOUT their extension *.nhr, *.nin, or *.nsq
-BLAST_DB='/Users/threeprime/Documents/Data/genbank/16Smetazoa/16Smetazoa'
+BLAST_DB='/Users/threeprime/Documents/Data/genbank/12S/Vert12sdb/Vert12S_BLAST_DB/Vert_full_mtDNA_genomes_RefSeq+Bony_Cart_Cetacean_12S_partial'
 # BLAST PARAMETERS
 PERCENT_IDENTITY="95"
 WORD_SIZE="100"
