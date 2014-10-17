@@ -51,11 +51,11 @@ if [ ${INFILE_SIZE} -gt 4000000000 ]; then
 	HALF_LINES=$((LINES / 2))
 	head -n ${HALF_LINES} "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq
 	tail -n ${HALF_LINES} "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq
-	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq -fastq_maxee 0.5 -fastq_minlen 75 -fastaout "${ANALYSIS_DIR}"/2_filtered_A.fasta
-	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq -fastq_maxee 0.5 -fastq_minlen 75 -fastaout "${ANALYSIS_DIR}"/2_filtered_B.fasta
+	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq -fastq_maxee 0.5 -fastq_minlen $ASSMIN -fastaout "${ANALYSIS_DIR}"/2_filtered_A.fasta
+	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq -fastq_maxee 0.5 -fastq_minlen $ASSMIN -fastaout "${ANALYSIS_DIR}"/2_filtered_B.fasta
 	cat "${ANALYSIS_DIR}"/2_filtered_A.fasta "${ANALYSIS_DIR}"/2_filtered_B.fasta > "${ANALYSIS_DIR}"/2_filtered.fasta
 else
-	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled.fastq -fastq_maxee 0.5 -fastq_minlen 75 -fastaout "${ANALYSIS_DIR}"/2_filtered.fasta
+	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled.fastq -fastq_maxee 0.5 -fastq_minlen $ASSMIN -fastaout "${ANALYSIS_DIR}"/2_filtered.fasta
 fi
 
 # REMOVE SEQUENCES CONTAINING HOMOPOLYMERS
