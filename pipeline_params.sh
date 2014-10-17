@@ -26,7 +26,7 @@ megan_exec='/Applications/megan/MEGAN'
 
 # PRIMER REMOVAL
 # Specify a path to the fasta file containing the two primers used to generate the amplicons you sequenced:
-PRIMER_FILE='/Users/threeprime/Documents/Data/IlluminaData/16S/primers_16S.fasta'
+PRIMER_FILE='/Users/threeprime/Documents/Data/IlluminaData/12S/primers_12S.fasta'
 PRIMER_MISMATCH_PROPORTION="0.10"
 
 # What is the maximum number of consecutive identical bases you're willing to accept?

@@ -98,8 +98,12 @@ CURRENT_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${i}"
 # REMOVE TAG SEQUENCES
 # remove the tag from the beginning of the sequence (5' end) in it's current orientation
 cutadapt -g ^NNN"${TAG}" -e 0 --discard-untrimmed "${ANALYSIS_DIR}"/3_no_homopolymers.fasta > "${CURRENT_DIR}"/5prime_tag_rm.fasta
+# Need to first grep lines containing pattern first, THEN following sed command with remove them
+grep -E "${TAG_RC}.{0,9}$" -B 1 "${CURRENT_DIR}"/5prime_tag_rm.fasta | grep -v -- "^--$"  > "${CURRENT_DIR}"/3_prime_tagged.fasta
+# Turn the following line on to write chimaeras to a file.
+# grep -E -v "${TAG_RC}.{0,9}$" "${CURRENT_DIR}"/5prime_tag_rm.fasta > "${CURRENT_DIR}"/chimaeras.fasta
 # This sed command looks really f***ing ugly; but I'm pretty sure it works.
-sed -E 's/'"${TAG_RC}"'.{0,9}$//' "${CURRENT_DIR}"/5prime_tag_rm.fasta > "${CURRENT_DIR}"/3prime_tag_rm.fasta
+sed -E 's/'"${TAG_RC}"'.{0,9}$//' "${CURRENT_DIR}"/3_prime_tagged.fasta > "${CURRENT_DIR}"/3prime_tag_rm.fasta
 
 # REMOVE PRIMER SEQUENCES
 # Remove PRIMER1 and PRIMER2 from the beginning of the reads.
