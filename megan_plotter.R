@@ -12,6 +12,6 @@ prop_no_hits <- N_READS[["No hits"]]/sum(DATA["N_Reads"])
 
 pdf(file="N_reads.pdf")
 par(mar=c(5,9,1,1))
-barplot(N_READS_HITS, hor=TRUE, las=1, xlab="Number of Reads")
+barplot(N_READS_HITS, hor=TRUE, las=1, xlab="Number of Reads", cex.names=0.8)
 text(0,0, paste("proportion no BLAST hits = ", round(prop_no_hits, digits=3), sep=""), adj = c(-0.2,0))
 dev.off()

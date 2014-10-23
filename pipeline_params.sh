@@ -49,7 +49,7 @@ EVALUE="10"
 MAXIMUM_MATCHES="20"
 
 # At what taxonomic rank should MEGAN group OTUs
-COLLAPSE_RANK="Family"
+COLLAPSE_RANK="Genus"
 
 # Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
 PERFORM_CLEANUP="NO"
