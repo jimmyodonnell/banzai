@@ -44,9 +44,11 @@ pear -f "${READ1}" -r "${READ2}" -o "${ANALYSIS_DIR}"/1_merged -v $MINOVERLAP -m
 
 # FILTER READS (This is the last step that uses quality scores, so convert to fasta)
 # The 32bit version of usearch will not accept an input file greater than 4GB. The 64bit usearch is $900. Thus, for now:
+echo "Calculating merged file size..."
 INFILE_SIZE=$(stat "${ANALYSIS_DIR}"/1_merged.assembled.fastq | awk '{ print $8 }')
 if [ ${INFILE_SIZE} -gt 4000000000 ]; then
 # Must first check the number of reads. If odd, file must be split so as not to split the middle read's sequence from its quality score.
+	echo "Splitting large input file for quality filtering..."
 	LINES_MERGED=$(wc -l < "${ANALYSIS_DIR}"/1_merged.assembled.fastq)
 	READS_MERGED=$(( LINES_MERGED / 4 ))
 	HALF_LINES=$((LINES_MERGED / 2))
@@ -57,14 +59,15 @@ if [ ${INFILE_SIZE} -gt 4000000000 ]; then
 		head -n $(( HALF_LINES + 2 )) "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq
 		tail -n $(( HALF_LINES - 2 )) "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq
 	fi
-	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq -fastq_maxee 0.5 -fastq_minlen $ASSMIN -fastaout "${ANALYSIS_DIR}"/2_filtered_A.fasta
-	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq -fastq_maxee 0.5 -fastq_minlen $ASSMIN -fastaout "${ANALYSIS_DIR}"/2_filtered_B.fasta
+	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${ANALYSIS_DIR}"/2_filtered_A.fasta
+	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${ANALYSIS_DIR}"/2_filtered_B.fasta
 	cat "${ANALYSIS_DIR}"/2_filtered_A.fasta "${ANALYSIS_DIR}"/2_filtered_B.fasta > "${ANALYSIS_DIR}"/2_filtered.fasta
 else
-	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled.fastq -fastq_maxee 0.5 -fastq_minlen $ASSMIN -fastaout "${ANALYSIS_DIR}"/2_filtered.fasta
+	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${ANALYSIS_DIR}"/2_filtered.fasta
 fi
 
 # REMOVE SEQUENCES CONTAINING HOMOPOLYMERS
+echo "Removing homopolymers..."
 grep -E -i "(A|T|C|G)\1{$HOMOPOLYMER_MAX,}" "${ANALYSIS_DIR}"/2_filtered.fasta -B 1 -n | cut -f1 -d: | cut -f1 -d- | sed '/^$/d' > "${ANALYSIS_DIR}"/homopolymer_line_numbers.txt
 if [ -s "${ANALYSIS_DIR}"/homopolymer_line_numbers.txt ]; then
 	awk 'NR==FNR{l[$0];next;} !(FNR in l)' "${ANALYSIS_DIR}"/homopolymer_line_numbers.txt "${ANALYSIS_DIR}"/2_filtered.fasta > "${ANALYSIS_DIR}"/3_no_homopolymers.fasta
@@ -164,11 +167,13 @@ setwd('"${CURRENT_DIR}"')
 
 Rscript "${CURRENT_DIR}"/megan_plotter.R
 
+done
+
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
-	rm test1 test2 test3 test4
+	echo "Compressing fasta and fastq files..."
+	find "${ANALYSIS_DIR}" -type f -name '*.fasta' -exec gzip "{}" \;
+	find "${ANALYSIS_DIR}" -type f -name '*.fastq' -exec gzip "{}" \;
 	echo "Cleanup performed."
 else
 	echo "Cleanup not performed."
 fi
-
-done
