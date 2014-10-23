@@ -45,12 +45,18 @@ pear -f "${READ1}" -r "${READ2}" -o "${ANALYSIS_DIR}"/1_merged -v $MINOVERLAP -m
 # FILTER READS (This is the last step that uses quality scores, so convert to fasta)
 # The 32bit version of usearch will not accept an input file greater than 4GB. The 64bit usearch is $900. Thus, for now:
 INFILE_SIZE=$(stat "${ANALYSIS_DIR}"/1_merged.assembled.fastq | awk '{ print $8 }')
-
 if [ ${INFILE_SIZE} -gt 4000000000 ]; then
-	LINES=$(wc -l < "${ANALYSIS_DIR}"/1_merged.assembled.fastq)
-	HALF_LINES=$((LINES / 2))
-	head -n ${HALF_LINES} "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq
-	tail -n ${HALF_LINES} "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq
+# Must first check the number of reads. If odd, file must be split so as not to split the middle read's sequence from its quality score.
+	LINES_MERGED=$(wc -l < "${ANALYSIS_DIR}"/1_merged.assembled.fastq)
+	READS_MERGED=$(( LINES_MERGED / 4 ))
+	HALF_LINES=$((LINES_MERGED / 2))
+	if [ $((READS_MERGED%2)) -eq 0 ]; then
+		head -n ${HALF_LINES} "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq
+		tail -n ${HALF_LINES} "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq
+	else
+		head -n $(( HALF_LINES + 2 )) "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq
+		tail -n $(( HALF_LINES - 2 )) "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq
+	fi
 	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq -fastq_maxee 0.5 -fastq_minlen $ASSMIN -fastaout "${ANALYSIS_DIR}"/2_filtered_A.fasta
 	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq -fastq_maxee 0.5 -fastq_minlen $ASSMIN -fastaout "${ANALYSIS_DIR}"/2_filtered_B.fasta
 	cat "${ANALYSIS_DIR}"/2_filtered_A.fasta "${ANALYSIS_DIR}"/2_filtered_B.fasta > "${ANALYSIS_DIR}"/2_filtered.fasta

@@ -12,8 +12,8 @@ PRIMER_TAGS='/Users/threeprime/Documents/Data/IlluminaData/12S/12s_Tags.txt'
 
 # IF DATA NEEDS TO BE DEMULTIPLEXED FIRST:
 # What is the path to the reads?
-READ1='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/R1_4K.fastq'
-READ2='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/R2_4K.fastq'
+READ1='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/PCpoolC_S1_L001_R1_001.fastq'
+READ2='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/PCpoolC_S1_L001_R2_001.fastq'
 
 # What is the maximum expected length of the fragment of interest, including primers?
 LENGTH_FRAG="162"
