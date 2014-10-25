@@ -11,19 +11,15 @@ SCRIPT_DIR="$(dirname "$0")"
 # Assign everything before the last forward slash as the path to the analysis directory, which contains
 # ANALYSIS_DIR="${EXISTING_DEMULTIPLEXED_DIR}%/*"
 
+source "$SCRIPT_DIR/pipeline_params.sh"
+cp "$SCRIPT_DIR/pipeline_params.sh" "${REANALYSIS_DIR}"/pipeline_params.txt
+
 START_TIME=$(date +%Y%m%d_%H%M)
 REANALYSIS_DIR="${EXISTING_DEMULTIPLEXED_DIR%/*}"/Reanalysis_"${START_TIME}"
 mkdir "${REANALYSIS_DIR}"
 
-source "$SCRIPT_DIR/pipeline_params.sh"
-cp "$SCRIPT_DIR/pipeline_params.sh" "${REANALYSIS_DIR}"/pipeline_params.txt
-
-
-
 # Start the loop on each directory of demultiplexed tag folders.
 for i in $( ls ${EXISTING_DEMULTIPLEXED_DIR} )
-# ; do  echo "Processing ${EXISTING_DEMULTIPLEXED_DIR}/$i"; done
-
 do
 
 # CLUSTERING
