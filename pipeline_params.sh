@@ -52,4 +52,4 @@ MAXIMUM_MATCHES="20"
 COLLAPSE_RANK="Genus"
 
 # Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
-PERFORM_CLEANUP="NO"
+PERFORM_CLEANUP="YES"
