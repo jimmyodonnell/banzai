@@ -6,7 +6,6 @@
 SCRIPT_DIR="$(dirname "$0")"
 
 # What is the existing directory containing the demultiplexed tag folders?
-EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed'
 
 # I don't actually think we need this...
 # Assign everything before the last forward slash as the path to the analysis directory, which contains
@@ -19,18 +18,7 @@ mkdir "${REANALYSIS_DIR}"
 source "$SCRIPT_DIR/pipeline_params.sh"
 cp "$SCRIPT_DIR/pipeline_params.sh" "${REANALYSIS_DIR}"/pipeline_params.txt
 
-# DEMULTIPLEXING STARTS HERE
-# make a directory to put all the demultiplexed files in
 
-
-N_TAGS=$( wc -l < "${PRIMER_TAGS}" )
-
-# Write a file of sequence names to make a tag fasta file (necessary for reverse complementing)
-# for i in `seq ${N_TAGS}`; do echo \>tag"$i"; done > "${ANALYSIS_DIR}"/tag_names.txt
-# Alternately paste those names and the sequences to make a tag fasta file.
-# paste -d"\n" "${ANALYSIS_DIR}"/tag_names.txt "${PRIMER_TAGS}" > "${ANALYSIS_DIR}"/tags.fasta
-# Reverse complement the tags
-# seqtk seq -r "${ANALYSIS_DIR}"/tags.fasta > "${ANALYSIS_DIR}"/tags_RC.fasta
 
 # Start the loop on each directory of demultiplexed tag folders.
 for i in $( ls ${EXISTING_DEMULTIPLEXED_DIR} )
@@ -42,6 +30,10 @@ do
 
 mkdir "${REANALYSIS_DIR}"/${i}
 CURRENT_DIR="${REANALYSIS_DIR}"/${i}
+
+if [ ! -s "${EXISTING_DEMULTIPLEXED_DIR}/$i"/6_nosingle.fasta ]; then
+	gunzip "${EXISTING_DEMULTIPLEXED_DIR}/$i"/6_nosingle.fasta.gz
+fi
 
 # CLUSTER SEQUENCES
 CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Are the reads multiplexed with tagged primers? (YES/NO)
-MULTIPLEXED="YES"
+# If reanalyzing existing demultiplexed data, point this variable to the directory storing the individual tag folders.
+EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed'
 
 # What is the path to the primer tags?
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
