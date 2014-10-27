@@ -10,7 +10,7 @@ N_TAGS <- length(system(paste("ls ", ANALYSIS_DIRECTORY, sep=""), intern=TRUE))
 # Storing them as a list makes it easy to analyze them in loops or using the apply functions.
 TAGS <- list()
 for (i in 1:N_TAGS){
-	FILE <- paste(ANALYSIS_DIRECTORY, "/tag_", i, "/meganout_mod.csv", sep = "")	
+	FILE <- paste(ANALYSIS_DIRECTORY, "/tag_", i, "/meganout_mod.csv", sep = "")
 	tryCatch({
 		TAGS[[i]] <- read.csv(FILE, header = FALSE, col.names=c("ClusterID","N_Reads","Taxon"))
 	}, error=function(e){cat("ERROR :",conditionMessage(e), i, "\n")})
@@ -38,7 +38,7 @@ TAXA <- sort(unique(do.call(c, sapply(N_READS, names))))
 DATA <- matrix(data=NA, nrow = length(N_READS), ncol=length(TAXA), dimnames=list(names(TAGS), TAXA))
 
 for (i in 1:length(N_READS)){
-	DATA[i,] <- N_READS[[i]][match(TAXA, names(N_READS[[i]]))]	
+	DATA[i,] <- N_READS[[i]][match(TAXA, names(N_READS[[i]]))]
 }
 
 # Replace NAs with zeros
@@ -47,6 +47,7 @@ DATA[is.na(DATA)] <- 0
 # write the data frame
 write.csv(DATA, file = "Reads_per_tag_by_OTU.csv")
 
+# Examples:
 # Boxplot of number of reads by taxon
 par(mar=c(5,10,1,1))
 boxplot(DATA, horizontal=TRUE, las=2)
@@ -54,24 +55,3 @@ boxplot(DATA, horizontal=TRUE, las=2)
 # Boxplot of number of Scombridae reads by tag (or sample)
 barplot(DATA[,"Scombridae"], main = "Number of Scombridae reads per tag")
 barplot(DATA[,"Euteleostomi"], main = "Number of Eutelostomi reads per tag")
-
-
-
-################## JUNKYARD
-par(mfrow=c(1,3))
-for (i in 1:3){
-	barplot(N_READS[[i]], hor=TRUE, las=1, xlab="Number of reads")
-}
-class(N_READS[[1]])
-
-rbind(N_READS[[1]], N_READS[[2]], N_READS[[3]])
-matrix(data = , byrow = TRUE)
-
-N_READS_HITS <- N_READS[names(N_READS) != "No hits"]
-prop_no_hits <- N_READS[["No hits"]]/sum(DATA["N_Reads"])
-
-pdf(file="N_reads.pdf")
-par(mar=c(5,9,1,1))
-barplot(N_READS_HITS, hor=TRUE, las=1, xlab="Number of Reads")
-text(0,0, paste("proportion no BLAST hits = ", round(prop_no_hits, digits=3), sep=""), adj = c(-0.2,0))
-dev.off()
