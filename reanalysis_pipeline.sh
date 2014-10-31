@@ -32,19 +32,24 @@ if [ ! -s "${EXISTING_DEMULTIPLEXED_DIR}/$i"/6_nosingle.fasta ]; then
 fi
 
 # CLUSTER SEQUENCES
-CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-usearch -cluster_otus "${EXISTING_DEMULTIPLEXED_DIR}/$i"/6_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${CURRENT_DIR}"/7_OTUs.fasta -notmatched "${CURRENT_DIR}"/7_notmatched.fasta
+if [ "$BLAST_WITHOUT_CLUSTERING" = "NO" ]; then
+	CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
+	usearch -cluster_otus "${EXISTING_DEMULTIPLEXED_DIR}/$i"/6_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${CURRENT_DIR}"/7_OTUs.fasta -notmatched "${CURRENT_DIR}"/7_notmatched.fasta
+	# BLAST CLUSTERS
+	blastn -query "${CURRENT_DIR}"/7_OTUs.fasta -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${CURRENT_DIR}"/8_BLASTed.xml
+else
+	# BLAST READS
+	blastn -query "${EXISTING_DEMULTIPLEXED_DIR}/$i"/6_nosingle.fasta -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${CURRENT_DIR}"/8_BLASTed.xml
+fi
 
-# BLAST CLUSTERS
-blastn -query "${CURRENT_DIR}"/7_OTUs.fasta -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${CURRENT_DIR}"/8_BLASTed.xml
+
 
 # PERFORM COMMON ANCESTOR GROUPING IN MEGAN
 cat > "${CURRENT_DIR}"/megan_commands.txt <<EOF
-import blastfile='${CURRENT_DIR}/8_BLASTed.xml' meganfile='${CURRENT_DIR}/meganfile.rma';
-recompute minsupport=1 mincomplexity=0;
-uncollapse nodes=all;
+import blastFile='${CURRENT_DIR}/8_BLASTed.xml' meganFile='${CURRENT_DIR}/meganfile.rma' [minSupport=2] [minComplexity=0] [topPercent=2] [minSupportPercent=0] [minScore=150];
 update;
 collapse rank='$COLLAPSE_RANK';
+update;
 select nodes=all;
 export what=DSV format=readname_taxonname separator=comma file=${CURRENT_DIR}/meganout.csv;
 quit;

@@ -17,9 +17,10 @@ do
   for N in $(seq 0 1 9);
   do
     VAR+=$( grep -E "^.{$N}${TAG}" "${ANALYSIS_DIR}"/tag_"$i"/1_no5primetag.fasta | wc -l )
-    echo "$VAR" >> outputfile
-    unset VAR
   done
+
+  echo "$VAR" >> outputfile
+  unset VAR
 
 done
 

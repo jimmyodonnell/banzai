@@ -1,21 +1,28 @@
 #!/bin/bash
 
-cd '/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141023_0908'
+INFILE='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141023_0908/3_no_homopolymers.fasta'
 
-PRIMER_TAGS='/Users/threeprime/Documents/Data/IlluminaData/12S/12s_Tags.txt'
+PRIMER_TAGS='/Users/threeprime/Documents/Data/IlluminaData/12S/12s_Tags_error.txt'
 
-mkdir '/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141023_0908/demultiplex-awk'
+NEW_DIR="/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141023_0908/demultiplex-awk-parallel"
 
-N_TAGS=$( wc -l < "${PRIMER_TAGS}" )
+mkdir "${NEW_DIR}"
 
-for (( i=1; i<=${N_TAGS}; i++ ));
+# N_TAGS=$( wc -l < "${PRIMER_TAGS}" )
+
+TAGS=$(tr '\n' ' ' < "${PRIMER_TAGS}" )
+
+# for (( i=1; i<=${N_TAGS}; i++ ));
+
+for T in $TAGS
 
 do
-  TAG=$( sed -n $((i * 2))p '/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141023_0908/tags.fasta' )
+  # TAG=$( sed -n $((i * 2))p '/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141023_0908/tags.fasta' )
 
-  mkdir /Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141023_0908/demultiplex-awk/tag_"${i}"
+(  TAG_DIR="${NEW_DIR}"/tag_"${T}"
 
-  CURRENT_DIR=/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141023_0908/demultiplex-awk/tag_"${i}"
-  awk '/^.{0,9}'"$TAG"'/{if (a && a !~ /^.{0,9}'"$TAG"'/) print a,"TAG:""'"$TAG"'"; print} {a=$0}' 3_no_homopolymers.fasta > "${CURRENT_DIR}"/1_no5primetag.fasta
+   mkdir "${TAG_DIR}"
+
+   awk '/^.{0,9}'"$T"'/{if (a && a !~ /^.{0,9}'"$T"'/) print a,"TAG:""'"$T"'"; print} {a=$0}' "${INFILE}" > "${TAG_DIR}"/1_no5primetag.fasta ) &
 
 done

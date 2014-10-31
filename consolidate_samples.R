@@ -1,7 +1,7 @@
 # Assess the output from the analysis pipeline
 
 # In which directory are the demultiplexed data folders?
-ANALYSIS_DIRECTORY <- "~/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed"
+ANALYSIS_DIRECTORY <- "~/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/Reanalysis_20141028_1351"
 
 # assign the number of tags in that folder to the object N_TAGS
 N_TAGS <- length(system(paste("ls ", ANALYSIS_DIRECTORY, sep=""), intern=TRUE))
