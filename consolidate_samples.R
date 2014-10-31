@@ -31,6 +31,14 @@ for (i in 1:length(TAGS)){
 	N_READS[[i]] <- sort(sapply(split(TAGS[[i]]$N_Reads, TAGS[[i]]$Taxon), sum))
 }
 
+
+reads_per_tag <- vector()
+for(i in 1:60){
+	reads_per_tag[[i]] <- sum(all_tags[[i]][,2])
+}
+
+barplot(reads_per_tag, names=seq(1:length(reads_per_tag)), main="Reads per tagged primer set")
+
 # these are all of the taxon groups
 TAXA <- sort(unique(do.call(c, sapply(N_READS, names))))
 
