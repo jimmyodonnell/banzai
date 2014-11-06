@@ -45,8 +45,10 @@ fi
 
 
 # PERFORM COMMON ANCESTOR GROUPING IN MEGAN
+# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
+# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
 cat > "${CURRENT_DIR}"/megan_commands.txt <<EOF
-import blastFile='${CURRENT_DIR}/8_BLASTed.xml' meganFile='${CURRENT_DIR}/meganfile.rma' [minSupport=2] [minComplexity=0] [topPercent=2] [minSupportPercent=0] [minScore=150];
+import blastfile='${CURRENT_DIR}/8_BLASTed.xml' meganFile='${CURRENT_DIR}/meganfile.rma' [minSupport=${MINIMUM_SUPPORT}] [minComplexity=${MINIMUM_COMPLEXITY}] [topPercent=${TOP_PERCENT}] [minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] [minScore=${MINIMUM_SCORE}];
 update;
 collapse rank='$COLLAPSE_RANK';
 update;

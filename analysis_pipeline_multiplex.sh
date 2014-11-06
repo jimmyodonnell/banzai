@@ -43,7 +43,13 @@ PRIMER1RC_NON=$( echo $PRIMER1RC | sed "s/[^ATCG]/N/g" )
 PRIMER2RC_NON=$( echo $PRIMER2RC | sed "s/[^ATCG]/N/g" )
 
 #MERGE PAIRED-END READS (PEAR)
-pear -f "${READ1}" -r "${READ2}" -o "${ANALYSIS_DIR}"/1_merged -v $MINOVERLAP -m $ASSMAX -n $ASSMIN -t $TRIMMIN -q $QT -u $UNCALLEDMAX -g $TEST -p $PVALUE -s $SCORING -j $THREADS
+if [ "$ALREADY_PAIRED" = "YES" ]; then
+	MERGED_READS="$PEAR_OUTPUT"
+else
+	MERGED_READS_PREFIX="${ANALYSIS_DIR}"/1_merged
+	MERGED_READS="${ANALYSIS_DIR}"/1_merged.assembled.fastq
+	pear -f "${READ1}" -r "${READ2}" -o "${MERGED_READS_PREFIX}" -v $MINOVERLAP -m $ASSMAX -n $ASSMIN -t $TRIMMIN -q $QT -u $UNCALLEDMAX -g $TEST -p $PVALUE -s $SCORING -j $THREADS
+fi
 
 # FILTER READS (This is the last step that uses quality scores, so convert to fasta)
 # The 32bit version of usearch will not accept an input file greater than 4GB. The 64bit usearch is $900. Thus, for now:
@@ -112,7 +118,7 @@ echo "Demultiplexing..."
 for TAG_SEQ in $TAGS; do
 (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	mkdir "${TAG_DIR}"
-	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a,"TAG:""'"$TAG_SEQ"'"; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
+	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a,"TAG_""'"$TAG_SEQ"'"; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
 done
 
 wait
@@ -172,33 +178,33 @@ TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 # Remove PRIMER1 and PRIMER2 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
 cutadapt -g ^"${PRIMER1_NON}" -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL_removed.fasta
 # Remove the reverse complement of PRIMER1 and PRIMER2 from the end of the reads. NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
-cutadapt -a "${PRIMER1RC_NON}" -a "${PRIMER2RC_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/5_primerL_removed.fasta > "${TAG_DIR}"/5_primerR_removed.fasta
+cutadapt -a "${PRIMER1RC_NON}" -a "${PRIMER2RC_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/5_primerL_removed.fasta > "${TAG_DIR}"/6_primerR_removed.fasta
 
-DEREP_INPUT="${TAG_DIR}"/5_primerR_removed.fasta
+DEREP_INPUT="${TAG_DIR}"/6_primerR_removed.fasta
 
 # CONSOLIDATE IDENTICAL SEQUENCES.
-usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/6_derep.fasta
+usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
 
 # REMOVE SINGLETONS
-usearch -sortbysize "${TAG_DIR}"/6_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/7_nosingle.fasta
+usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
 
 # CLUSTER SEQUENCES
 if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
-	BLAST_INPUT="${TAG_DIR}"/7_nosingle.fasta
+	BLAST_INPUT="${TAG_DIR}"/8_nosingle.fasta
 else
 	CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-	usearch -cluster_otus "${TAG_DIR}"/6_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/8_OTUs.fasta -notmatched "${TAG_DIR}"/8_notmatched.fasta
-	BLAST_INPUT="${TAG_DIR}"/8_OTUs.fasta
+	usearch -cluster_otus "${TAG_DIR}"/8_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -notmatched "${TAG_DIR}"/9_notmatched.fasta
+	BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
 fi
 
 # BLAST CLUSTERS
-blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${TAG_DIR}"/9_BLASTed.xml
+blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${TAG_DIR}"/10_BLASTed.xml
 
 # Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
 # {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
 # PERFORM COMMON ANCESTOR GROUPING IN MEGAN
 cat > "${TAG_DIR}"/megan_commands.txt <<EOF
-import blastfile='${TAG_DIR}/9_BLASTed.xml' meganfile='${TAG_DIR}/meganfile.rma' [minSupport=${MINIMUM_SUPPORT}] [minComplexity=${MINIMUM_COMPLEXITY}] [topPercent=${TOP_PERCENT}] [minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] [minScore=${MINIMUM_SCORE}];
+import blastfile='${TAG_DIR}/10_BLASTed.xml' meganfile='${TAG_DIR}/meganfile.rma' [minSupport=${MINIMUM_SUPPORT}] [minComplexity=${MINIMUM_COMPLEXITY}] [topPercent=${TOP_PERCENT}] [minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] [minScore=${MINIMUM_SCORE}];
 update;
 collapse rank='$COLLAPSE_RANK';
 update;

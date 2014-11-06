@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# If reanalyzing existing demultiplexed data, point this variable to the directory storing the individual tag folders.
-EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed'
-
 # What is the path to the primer tags?
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
@@ -63,3 +60,16 @@ MINIMUM_SCORE="150"
 
 # Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
 PERFORM_CLEANUP="YES"
+
+
+####################### WOULD YOU LIKE TO PICK UP FROM AN EXISTING FILE?
+# If reanalyzing existing demultiplexed data, point this variable to the directory storing the individual tag folders.
+EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed'
+
+# Have the reads already been paired?
+ALREADY_PEARED="YES" # YES/NO
+PEAR_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141031_0540/1_merged.assembled.fastq.gz'
+
+# Have the merged reads been quality filtered?
+ALREADY_FILTERED="YES" # YES/NO
+FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141031_0540/2_filtered.fasta'
