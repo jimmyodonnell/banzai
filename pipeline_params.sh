@@ -7,10 +7,13 @@ PRIMER_TAGS='/Users/threeprime/Documents/Data/IlluminaData/16S/tags_16S.txt'
 # What is the maximum number of Ns to allow at the end of a sequence before a tag is reached? NOTE: currently, this will only matter for the tag on the 3' end.
 # TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
 
-# IF DATA NEEDS TO BE DEMULTIPLEXED FIRST:
 # What is the path to the reads?
 READ1='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/JP16spool_S1_L001_R1_001.fastq'
 READ2='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/JP16spool_S1_L001_R2_001.fastq'
+
+# Is it ok to rename the sequences within a fasta file
+# This will happen after the fastq has been converted to a fasta file at the quality filtering step.
+RENAME_READS="YES"
 
 # What is the maximum expected length of the fragment of interest, including primers?
 LENGTH_FRAG="180"
@@ -67,9 +70,13 @@ PERFORM_CLEANUP="YES"
 EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed'
 
 # Have the reads already been paired?
-ALREADY_PEARED="YES" # YES/NO
+ALREADY_PEARED="YES"
+# YES/NO
 PEAR_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141031_0540/1_merged.assembled.fastq.gz'
 
 # Have the merged reads been quality filtered?
 ALREADY_FILTERED="YES" # YES/NO
 FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141031_0540/2_filtered.fasta'
+
+# Should demultiplexed samples be concatenated for annotation as a single unit? (Each read can still be mapped back to samples)
+CONCATENATE_SAMPLES="YES"

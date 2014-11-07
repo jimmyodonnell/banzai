@@ -27,6 +27,9 @@ cp "${SCRIPT_DIR}"/analysis_pipeline_multiplex.sh "${ANALYSIS_DIR}"/analysis_pip
 cp "${SCRIPT_DIR}"/pipeline_params.sh "${ANALYSIS_DIR}"/pipeline_parameters.txt
 cp "${SCRIPT_DIR}"/pear_params.sh "${ANALYSIS_DIR}"/pear_parameters.txt
 
+# make tag sequences into a list
+TAGS=$(tr '\n' ' ' < "${PRIMER_TAGS}" )
+
 # Read in primers and their reverse complements.
 PRIMER1=$( awk 'NR==2' "${PRIMER_FILE}" )
 PRIMER2=$( awk 'NR==4' "${PRIMER_FILE}" )
@@ -43,8 +46,9 @@ PRIMER1RC_NON=$( echo $PRIMER1RC | sed "s/[^ATCG]/N/g" )
 PRIMER2RC_NON=$( echo $PRIMER2RC | sed "s/[^ATCG]/N/g" )
 
 #MERGE PAIRED-END READS (PEAR)
-if [ "$ALREADY_PAIRED" = "YES" ]; then
+if [ "$ALREADY_PEARED" = "YES" ]; then
 	MERGED_READS="$PEAR_OUTPUT"
+	echo "Paired reads have already been merged..."
 else
 	MERGED_READS_PREFIX="${ANALYSIS_DIR}"/1_merged
 	MERGED_READS="${ANALYSIS_DIR}"/1_merged.assembled.fastq
@@ -52,44 +56,60 @@ else
 fi
 
 # FILTER READS (This is the last step that uses quality scores, so convert to fasta)
-# The 32bit version of usearch will not accept an input file greater than 4GB. The 64bit usearch is $900. Thus, for now:
-echo "Calculating merged file size..."
-INFILE_SIZE=$(stat "${ANALYSIS_DIR}"/1_merged.assembled.fastq | awk '{ print $8 }')
-if [ ${INFILE_SIZE} -gt 4000000000 ]; then
-# Must first check the number of reads. If odd, file must be split so as not to split the middle read's sequence from its quality score.
-	echo "Splitting large input file for quality filtering..."
-	LINES_MERGED=$(wc -l < "${ANALYSIS_DIR}"/1_merged.assembled.fastq)
-	READS_MERGED=$(( LINES_MERGED / 4 ))
-	HALF_LINES=$((LINES_MERGED / 2))
-	if [ $((READS_MERGED%2)) -eq 0 ]; then
-		head -n ${HALF_LINES} "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq
-		tail -n ${HALF_LINES} "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq
-	else
-		head -n $(( HALF_LINES + 2 )) "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq
-		tail -n $(( HALF_LINES - 2 )) "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq
-	fi
-	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${ANALYSIS_DIR}"/2_filtered_A.fasta
-	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${ANALYSIS_DIR}"/2_filtered_B.fasta
-	cat "${ANALYSIS_DIR}"/2_filtered_A.fasta "${ANALYSIS_DIR}"/2_filtered_B.fasta > "${ANALYSIS_DIR}"/2_filtered.fasta
+if [ "${ALREADY_FILTERED}" = "YES" ]; then
+	echo "Using existing filtered reads in file $FILTERED_OUTPUT"
 else
-	usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${ANALYSIS_DIR}"/2_filtered.fasta
+	FILTERED_OUTPUT='"${ANALYSIS_DIR}"/2_filtered.fasta'
+# The 32bit version of usearch will not accept an input file greater than 4GB. The 64bit usearch is $900. Thus, for now:
+	echo "Calculating merged file size..."
+	INFILE_SIZE=$(stat "${MERGED_READS}" | awk '{ print $8 }')
+	if [ ${INFILE_SIZE} -gt 4000000000 ]; then
+	# Must first check the number of reads. If odd, file must be split so as not to split the middle read's sequence from its quality score.
+		echo "Splitting large input file for quality filtering..."
+		LINES_MERGED=$(wc -l < "${MERGED_READS}")
+		READS_MERGED=$(( LINES_MERGED / 4 ))
+		HALF_LINES=$((LINES_MERGED / 2))
+		if [ $((READS_MERGED%2)) -eq 0 ]; then
+			head -n ${HALF_LINES} "${MERGED_READS}" > "${MERGED_READS%.*}"_A.fastq
+			tail -n ${HALF_LINES} "${MERGED_READS}" > "${MERGED_READS%.*}"_B.fastq
+		else
+			head -n $(( HALF_LINES + 2 )) "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq
+			tail -n $(( HALF_LINES - 2 )) "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq
+		fi
+		usearch -fastq_filter "${MERGED_READS%.*}"_A.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${ANALYSIS_DIR}"/2_filtered_A.fasta
+		usearch -fastq_filter "${MERGED_READS%.*}"_B.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${ANALYSIS_DIR}"/2_filtered_B.fasta
+		cat "${ANALYSIS_DIR}"/2_filtered_A.fasta "${ANALYSIS_DIR}"/2_filtered_B.fasta > "${FILTERED_OUTPUT}"
+	else
+		usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${FILTERED_OUTPUT}"
+	fi
 fi
+
+if [ "${RENAME_READS}" = "YES" ]; then
+	echo "Renaming reads..."
+	sed -E "s/ (1|2):N:0:1/_/" "${FILTERED_OUTPUT}" > "${ANALYSIS_DIR}"/tmp.fasta
+	sed -E "s/>([a-zA-Z0-9-]*:){4}/>/" "${ANALYSIS_DIR}"/tmp.fasta > "${FILTERED_OUTPUT%.*}"_renamed.fasta
+	rm "${ANALYSIS_DIR}"/tmp.fasta
+	FILTERED_OUTPUT="${FILTERED_OUTPUT%.*}"_renamed.fasta
+else
+	echo "Reads not renamed"
+fi
+
 
 # REMOVE SEQUENCES CONTAINING HOMOPOLYMERS
 if [ "${REMOVE_HOMOPOLYMERS}" = "YES" ]; then
 	echo "Removing homopolymers..."
-	grep -E -i "(A|T|C|G)\1{$HOMOPOLYMER_MAX,}" "${ANALYSIS_DIR}"/2_filtered.fasta -B 1 -n | cut -f1 -d: | cut -f1 -d- | sed '/^$/d' > "${ANALYSIS_DIR}"/homopolymer_line_numbers.txt
+	grep -E -i "(A|T|C|G)\1{$HOMOPOLYMER_MAX,}" "${FILTERED_OUTPUT}" -B 1 -n | cut -f1 -d: | cut -f1 -d- | sed '/^$/d' > "${ANALYSIS_DIR}"/homopolymer_line_numbers.txt
 	if [ -s "${ANALYSIS_DIR}"/homopolymer_line_numbers.txt ]; then
-		awk 'NR==FNR{l[$0];next;} !(FNR in l)' "${ANALYSIS_DIR}"/homopolymer_line_numbers.txt "${ANALYSIS_DIR}"/2_filtered.fasta > "${ANALYSIS_DIR}"/3_no_homopolymers.fasta
-		awk 'NR==FNR{l[$0];next;} (FNR in l)' "${ANALYSIS_DIR}"/homopolymer_line_numbers.txt "${ANALYSIS_DIR}"/2_filtered.fasta > "${ANALYSIS_DIR}"/homopolymeric_reads.fasta
+		awk 'NR==FNR{l[$0];next;} !(FNR in l)' "${ANALYSIS_DIR}"/homopolymer_line_numbers.txt "${FILTERED_OUTPUT}" > "${ANALYSIS_DIR}"/3_no_homopolymers.fasta
+		awk 'NR==FNR{l[$0];next;} (FNR in l)' "${ANALYSIS_DIR}"/homopolymer_line_numbers.txt "${FILTERED_OUTPUT}" > "${ANALYSIS_DIR}"/homopolymeric_reads.fasta
 		DEMULTIPLEX_INPUT="${ANALYSIS_DIR}"/3_no_homopolymers.fasta
 	else
 		echo "No homopolymers found" > "${ANALYSIS_DIR}"/3_no_homopolymers.fasta
-		DEMULTIPLEX_INPUT="${ANALYSIS_DIR}"/2_filtered.fasta
+		DEMULTIPLEX_INPUT="${FILTERED_OUTPUT}"
 	fi
 else
 	echo "Homopolymers not removed."
-	DEMULTIPLEX_INPUT="${ANALYSIS_DIR}"/2_filtered.fasta
+	DEMULTIPLEX_INPUT="${FILTERED_OUTPUT}"
 fi
 
 # DEMULTIPLEXING STARTS HERE
@@ -110,8 +130,6 @@ N_TAGS=$( wc -l < "${PRIMER_TAGS}" )
 # for (( i=1; i<=${N_TAGS}; i++ ));
 
 # PARALLEL DEMULTIPLEXING
-# make tag sequences into a list
-TAGS=$(tr '\n' ' ' < "${PRIMER_TAGS}" )
 
 echo "Demultiplexing..."
 # Move sequences into separate directories based on tag sequence on left side of read
@@ -169,40 +187,62 @@ wait
 # This sed command looks really f***ing ugly; but I'm pretty sure it works.
 # sed -E 's/'"${TAG_RC}"'.{0,9}$//' "${CURRENT_DIR}"/3_prime_tagged.fasta > "${CURRENT_DIR}"/3prime_tag_rm.fasta
 
-# The following are already parallelized; thus keep everything wrapped in one loop
-for TAG_SEQ in $TAGS; do
+if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
+	for TAG_SEQ in $TAGS; do
+		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+		# REMOVE PRIMER SEQUENCES
+		# Remove PRIMER1 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
+		cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL1_removed.fasta
+		cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL2_removed.fasta
+		# Remove the reverse complement of PRIMER1 and PRIMER2 from the end of the reads. NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
+		cutadapt -a "${PRIMER2RC_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/5_primerL1_removed.fasta > "${TAG_DIR}"/6_primerR1_removed.fasta
+		cutadapt -a "${PRIMER1RC_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/5_primerL2_removed.fasta > "${TAG_DIR}"/6_primerR2_removed.fasta
+		seqtk seq -r "${TAG_DIR}"/6_primerR2_removed.fasta > "${TAG_DIR}"/6_primerR2_removed_rc.fasta
+		cat "${TAG_DIR}"/6_primerR1_removed.fasta "${TAG_DIR}"/6_primerR2_removed_rc.fasta > "${TAG_DIR}"/7_no_primers.fasta
+	done
+	for TAG_SEQ in $TAGS; do
+		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 
-TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
-
-# REMOVE PRIMER SEQUENCES
-# Remove PRIMER1 and PRIMER2 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
-cutadapt -g ^"${PRIMER1_NON}" -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL_removed.fasta
-# Remove the reverse complement of PRIMER1 and PRIMER2 from the end of the reads. NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
-cutadapt -a "${PRIMER1RC_NON}" -a "${PRIMER2RC_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/5_primerL_removed.fasta > "${TAG_DIR}"/6_primerR_removed.fasta
-
-DEREP_INPUT="${TAG_DIR}"/6_primerR_removed.fasta
-
-# CONSOLIDATE IDENTICAL SEQUENCES.
-usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
-
-# REMOVE SINGLETONS
-usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
-
-# CLUSTER SEQUENCES
-if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
-	BLAST_INPUT="${TAG_DIR}"/8_nosingle.fasta
 else
-	CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-	usearch -cluster_otus "${TAG_DIR}"/8_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -notmatched "${TAG_DIR}"/9_notmatched.fasta
-	BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
+	for TAG_SEQ in $TAGS; do
+
+		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+		# REMOVE PRIMER SEQUENCES
+		# Remove PRIMER1 and PRIMER2 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
+		cutadapt -g ^"${PRIMER1_NON}" -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL_removed.fasta
+		# Remove the reverse complement of PRIMER1 and PRIMER2 from the end of the reads. NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
+		cutadapt -a "${PRIMER1RC_NON}" -a "${PRIMER2RC_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/5_primerL_removed.fasta > "${TAG_DIR}"/6_primerR_removed.fasta
+	done
 fi
 
-# BLAST CLUSTERS
-blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${TAG_DIR}"/10_BLASTed.xml
+for TAG_SEQ in $TAGS; do
+	cat "${TAG_DIR}"/6_primerR_removed.fasta >> "${ANALYSIS_DIR}"/demultiplexed/1_demult_concat.fasta
+done
 
-# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
-# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
-# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
+for TAG_SEQ in $TAGS; do
+	DEREP_INPUT="${TAG_DIR}"/6_primerR_removed.fasta
+
+	# CONSOLIDATE IDENTICAL SEQUENCES.
+	usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
+
+	# REMOVE SINGLETONS
+	usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
+
+	# CLUSTER SEQUENCES
+	if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
+		BLAST_INPUT="${TAG_DIR}"/8_nosingle.fasta
+	else
+		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
+		usearch -cluster_otus "${TAG_DIR}"/8_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -notmatched "${TAG_DIR}"/9_notmatched.fasta
+		BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
+	fi
+
+	# BLAST CLUSTERS
+	blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${TAG_DIR}"/10_BLASTed.xml
+
+	# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
+	# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
+	# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
 cat > "${TAG_DIR}"/megan_commands.txt <<EOF
 import blastfile='${TAG_DIR}/10_BLASTed.xml' meganfile='${TAG_DIR}/meganfile.rma' [minSupport=${MINIMUM_SUPPORT}] [minComplexity=${MINIMUM_COMPLEXITY}] [topPercent=${TOP_PERCENT}] [minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] [minScore=${MINIMUM_SCORE}];
 update;
