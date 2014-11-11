@@ -3,11 +3,20 @@
 # Concatenate demultiplexed reads in order to cluster together
 
 # Option 1:
-DEMULTIPLEXED_DIR="/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141031_0540/demultiplexed"
+DEMULTIPLEXED_DIR="/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141110_1117/demultiplexed"
+
 for FOLDER in $( ls "${DEMULTIPLEXED_DIR}"); do
-  DEMULT_FILE="${DEMULTIPLEXED_DIR}"/${FOLDER}/6_primerR_removed.fasta
-  cat "${DEMULT_FILE}" >> "${DEMULTIPLEXED_DIR}"/1_demult_concat.fasta
+  cat "${DEMULTIPLEXED_DIR}"/${FOLDER}/7_no_primers.fasta >> "${DEMULTIPLEXED_DIR}"/1_demult_concat.fasta
 done
+
+
+
+# Rename reads
+sed 's/_ TAG_/_tag_/' "${DEMULTIPLEXED_DIR}"/1_demult_concat.fasta > "${DEMULTIPLEXED_DIR}"/tmp.fasta
+# this removes blank lines, but might screw other things up:
+sed '/^$/d' "${DEMULTIPLEXED_DIR}"/tmp.fasta > "${DEMULTIPLEXED_DIR}"/1_demult_concat.fasta
+rm "${DEMULTIPLEXED_DIR}"/tmp.fasta
+
 
 # Option 2:
 # if the files are zipped:

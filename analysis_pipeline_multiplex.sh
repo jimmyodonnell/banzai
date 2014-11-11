@@ -29,6 +29,7 @@ cp "${SCRIPT_DIR}"/pear_params.sh "${ANALYSIS_DIR}"/pear_parameters.txt
 
 # make tag sequences into a list
 TAGS=$(tr '\n' ' ' < "${PRIMER_TAGS}" )
+declare -a TAGS_ARRAY=($TAGS)
 
 # Read in primers and their reverse complements.
 PRIMER1=$( awk 'NR==2' "${PRIMER_FILE}" )
@@ -44,6 +45,11 @@ PRIMER1_NON=$( echo $PRIMER1 | sed "s/[^ATCG]/N/g" )
 PRIMER2_NON=$( echo $PRIMER2 | sed "s/[^ATCG]/N/g" )
 PRIMER1RC_NON=$( echo $PRIMER1RC | sed "s/[^ATCG]/N/g" )
 PRIMER2RC_NON=$( echo $PRIMER2RC | sed "s/[^ATCG]/N/g" )
+
+# Calculate the expected size of the region of interest, given the total size of fragments, and the length of primers and tags
+EXTRA_SEQ=${TAGS_ARRAY[0]}${TAGS_ARRAY[0]}$PRIMER1$PRIMER2
+LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
+LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
 #MERGE PAIRED-END READS (PEAR)
 if [ "$ALREADY_PEARED" = "YES" ]; then
@@ -73,14 +79,14 @@ else
 			head -n ${HALF_LINES} "${MERGED_READS}" > "${MERGED_READS%.*}"_A.fastq
 			tail -n ${HALF_LINES} "${MERGED_READS}" > "${MERGED_READS%.*}"_B.fastq
 		else
-			head -n $(( HALF_LINES + 2 )) "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_A.fastq
-			tail -n $(( HALF_LINES - 2 )) "${ANALYSIS_DIR}"/1_merged.assembled.fastq > "${ANALYSIS_DIR}"/1_merged.assembled_B.fastq
+			head -n $(( HALF_LINES + 2 )) "${MERGED_READS}" > "${MERGED_READS%.*}"_A.fastq
+			tail -n $(( HALF_LINES - 2 )) "${MERGED_READS}" > "${MERGED_READS%.*}"_B.fastq
 		fi
 		usearch -fastq_filter "${MERGED_READS%.*}"_A.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${ANALYSIS_DIR}"/2_filtered_A.fasta
 		usearch -fastq_filter "${MERGED_READS%.*}"_B.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${ANALYSIS_DIR}"/2_filtered_B.fasta
 		cat "${ANALYSIS_DIR}"/2_filtered_A.fasta "${ANALYSIS_DIR}"/2_filtered_B.fasta > "${FILTERED_OUTPUT}"
 	else
-		usearch -fastq_filter "${ANALYSIS_DIR}"/1_merged.assembled.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${FILTERED_OUTPUT}"
+		usearch -fastq_filter "${MERGED_READS}" -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${FILTERED_OUTPUT}"
 	fi
 fi
 
@@ -136,7 +142,7 @@ echo "Demultiplexing..."
 for TAG_SEQ in $TAGS; do
 (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	mkdir "${TAG_DIR}"
-	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a,"TAG_""'"$TAG_SEQ"'"; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
+	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a "tag_""'"$TAG_SEQ"'"; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
 done
 
 wait
@@ -192,16 +198,28 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 		# REMOVE PRIMER SEQUENCES
 		# Remove PRIMER1 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
-		cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL1_removed.fasta
-		cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL2_removed.fasta
-		# Remove the reverse complement of PRIMER1 and PRIMER2 from the end of the reads. NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
-		cutadapt -a "${PRIMER2RC_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/5_primerL1_removed.fasta > "${TAG_DIR}"/6_primerR1_removed.fasta
-		cutadapt -a "${PRIMER1RC_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/5_primerL2_removed.fasta > "${TAG_DIR}"/6_primerR2_removed.fasta
-		seqtk seq -r "${TAG_DIR}"/6_primerR2_removed.fasta > "${TAG_DIR}"/6_primerR2_removed_rc.fasta
-		cat "${TAG_DIR}"/6_primerR1_removed.fasta "${TAG_DIR}"/6_primerR2_removed_rc.fasta > "${TAG_DIR}"/7_no_primers.fasta
+		cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL1_removed.fasta
+		cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL2_removed.fasta
+		# Remove the primer on the other end of the reads by reverse-complementing the files and then trimming PRIMER1 and PRIMER2 from the left side.
+		# NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
+		seqtk seq -r "${TAG_DIR}"/5_primerL1_removed.fasta | cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${TAG_DIR}"/6_primerR1_removed.fasta
+		seqtk seq -r "${TAG_DIR}"/5_primerL2_removed.fasta | cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${TAG_DIR}"/6_primerR2_removed.fasta
+		seqtk seq -r "${TAG_DIR}"/6_primerR1_removed.fasta > "${TAG_DIR}"/6_primerR1_removedRC.fasta
+		cat "${TAG_DIR}"/6_primerR1_removedRC.fasta "${TAG_DIR}"/6_primerR2_removed.fasta > "${TAG_DIR}"/7_no_primers.fasta
 	done
+	echo "Concatenating fasta files..."
 	for TAG_SEQ in $TAGS; do
-		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+		cat "${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/7_no_primers.fasta >> "${ANALYSIS_DIR}"/demultiplexed/1_demult_concat.fasta
+	done
+
+	# CONSOLIDATE IDENTICAL SEQUENCES.
+	DEREP_INPUT="${ANALYSIS_DIR}"/demultiplexed/1_demult_concat.fasta
+
+	# python "$SCRIPT_DIR/pipeline_params.sh" "${DEREP_INPUT}"
+	usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
+
+	# REMOVE SINGLETONS
+	usearch -sortbysize "${DEREP_INPUT%/*}"/2_derep.fasta -minsize 2 -sizein -sizeout -output "${DEREP_INPUT%/*}"/3_nosingle.fasta
 
 else
 	for TAG_SEQ in $TAGS; do
@@ -215,9 +233,6 @@ else
 	done
 fi
 
-for TAG_SEQ in $TAGS; do
-	cat "${TAG_DIR}"/6_primerR_removed.fasta >> "${ANALYSIS_DIR}"/demultiplexed/1_demult_concat.fasta
-done
 
 for TAG_SEQ in $TAGS; do
 	DEREP_INPUT="${TAG_DIR}"/6_primerR_removed.fasta
