@@ -281,22 +281,15 @@ cd "${megan_exec%/*}"
 ./"${megan_exec##*/}" -g -E -c ${TAG_DIR}/megan_commands.txt
 EOF
 
+		# Run MEGAN
 		sh "${TAG_DIR}"/megan_script.sh
 
 		# Modify the MEGAN output so that it is a standard CSV file with cluterID, N_reads, and Taxon
 		sed 's|;size=|,|' <"${TAG_DIR}"/meganout.csv >"${TAG_DIR}"/meganout_mod.csv
 
-		# Copy the plotting script to the current directory
-		cp "${SCRIPT_DIR}"/megan_plotter.R "${TAG_DIR}"/megan_plotter.R
-
-		# PLOTTING ANNOTATIONS
-		# Add a line (before line 4) to change R's directory to the one the loop is working in (the variable ${CURRENT_DIR}), and copy to the current directory
-sed "4i\\
-setwd('"${TAG_DIR}"')
-" ${SCRIPT_DIR}/megan_plotter.R > ${TAG_DIR}/megan_plotter.R
-
-		Rscript "${TAG_DIR}"/megan_plotter.R
-
+		# Run the R script, passing the current tag directory as the directory to which R will "setwd()"
+		Rscript "$SCRIPT_DIR/megan_plotter.R" "${TAG_DIR}"
+		
 	done
 fi
 

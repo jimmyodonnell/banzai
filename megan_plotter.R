@@ -1,6 +1,7 @@
 #!usr/bin/Rscript
 # Assess the output from MEGAN
 
+setwd(commandArgs(TRUE)[1])
 
 DATA<-read.csv("meganout_mod.csv", header=FALSE)
 
