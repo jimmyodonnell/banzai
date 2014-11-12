@@ -239,8 +239,8 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# CONSOLIDATE IDENTICAL SEQUENCES.
 	DEREP_INPUT="${ANALYSIS_DIR}"/demultiplexed/1_demult_concat.fasta
 
-	# python "$SCRIPT_DIR/pipeline_params.sh" "${DEREP_INPUT}"
-	usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
+	python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
+	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
 	# REMOVE SINGLETONS
 	usearch -sortbysize "${DEREP_INPUT%/*}"/2_derep.fasta -minsize 2 -sizein -sizeout -output "${DEREP_INPUT%/*}"/3_nosingle.fasta
