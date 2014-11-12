@@ -152,7 +152,7 @@ echo "Demultiplexing: finding left tag (started at $(date +%H:%M))"
 for TAG_SEQ in $TAGS; do
 (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	mkdir "${TAG_DIR}"
-	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a "tag_""'"$TAG_SEQ"'"; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
+	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
 done
 
 wait
@@ -184,6 +184,13 @@ for TAG_SEQ in $TAGS; do
 done
 
 wait
+
+echo "Demultiplexing: adding tag sequence to sequenceID (started at $(date +%H:%M))"
+for TAG_SEQ in $TAGS; do
+(	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+	mkdir "${TAG_DIR}"
+	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a "tag_""'"$TAG_SEQ"'"; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
+done
 
 # Assign the current tag to to variable TAG, and its reverse complement to TAG_RC
 # TAG=$( sed -n $((i * 2))p "${ANALYSIS_DIR}"/tags.fasta )
@@ -289,7 +296,7 @@ EOF
 
 		# Run the R script, passing the current tag directory as the directory to which R will "setwd()"
 		Rscript "$SCRIPT_DIR/megan_plotter.R" "${TAG_DIR}"
-		
+
 	done
 fi
 

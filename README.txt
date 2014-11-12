@@ -22,3 +22,5 @@ homopolymer_line_numbers.txt
 1_merged.assembled.fastq
 1_merged.assembled_A.fastq
 1_merged.assembled_B.fastq
+
+- 2014 11 12: Noticed that the reverse tag removal step removes the tag label from the sequenceID line of fasta files if the tag sequence is RC-palindromic!

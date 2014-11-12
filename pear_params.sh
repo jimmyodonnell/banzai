@@ -31,7 +31,7 @@ ASSMAX=$(( $LENGTH_FRAG + 10 ))
 #                                        sequences.  Setting this value to 0 disables the restriction
 #                                        and assembled sequences may be arbitrary long. (default: 0)
 
-ASSMIN=$(( $LENGTH_FRAG - 10 ))
+ASSMIN=$(( $LENGTH_FRAG - 40 ))
 #  -n, --min-assembly-length   <int>     Specify   the  minimum  possible  length  of  the  assembled
 #                                        sequences.  Setting this value to 0 disables the restriction
 #                                        and  assembled  sequences  may be arbitrary short. (default:
