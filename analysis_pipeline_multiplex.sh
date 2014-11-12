@@ -12,6 +12,15 @@ SCRIPT_DIR="$(dirname "$0")"
 source "$SCRIPT_DIR/pipeline_params.sh"
 source "$SCRIPT_DIR/pear_params.sh"
 
+# Detect number of cores on machine; set variable
+N_CORES=$(sysctl -n hw.ncpu)
+if [ $N_CORES -gt 1 ]; then
+	echo "$N_CORES cores detected."
+else
+	N_CORES=1
+	echo "Multiple cores not detected."
+fi
+
 # Get the directory containing the READ1 file and assign it to variable READ_DIR.
 READ_DIR="${READ1%/*}"
 
@@ -137,8 +146,9 @@ N_TAGS=$( wc -l < "${PRIMER_TAGS}" )
 
 # PARALLEL DEMULTIPLEXING
 
-echo "Demultiplexing..."
 # Move sequences into separate directories based on tag sequence on left side of read
+# test for speed against removing the tag while finding it: wrap first tag regex in gsub(/pattern/,""):  awk 'gsub(/^.{0,9}'"$TAG_SEQ"'/,""){if . . .
+echo "Demultiplexing: finding left tag (started at $(date +%H:%M))"
 for TAG_SEQ in $TAGS; do
 (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	mkdir "${TAG_DIR}"
@@ -148,6 +158,7 @@ done
 wait
 
 # Remove tags from left side of read
+echo "Demultiplexing: removing left tag (started at $(date +%H:%M))"
 for TAG_SEQ in $TAGS; do
 (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	sed -E 's/^.{0,9}'"${TAG_SEQ}"'//' "${TAG_DIR}"/1_tagL_present.fasta > "${TAG_DIR}"/2_tagL_removed.fasta ) &
@@ -156,6 +167,7 @@ done
 wait
 
 # Identify reads containing tags towards the right side of the read
+echo "Demultiplexing: finding right tag (started at $(date +%H:%M))"
 for TAG_SEQ in $TAGS; do
 (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
@@ -164,6 +176,7 @@ done
 
 wait
 
+echo "Demultiplexing: removing right tag (started at $(date +%H:%M))"
 for TAG_SEQ in $TAGS; do
 (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
@@ -193,20 +206,24 @@ wait
 # This sed command looks really f***ing ugly; but I'm pretty sure it works.
 # sed -E 's/'"${TAG_RC}"'.{0,9}$//' "${CURRENT_DIR}"/3_prime_tagged.fasta > "${CURRENT_DIR}"/3prime_tag_rm.fasta
 
+# REMOVE PRIMERS
+echo "Removing primers..."
+for TAG_SEQ in $TAGS; do
+	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+	# REMOVE PRIMER SEQUENCES
+	# Remove PRIMER1 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
+	cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL1_removed.fasta
+	cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL2_removed.fasta
+	# Remove the primer on the other end of the reads by reverse-complementing the files and then trimming PRIMER1 and PRIMER2 from the left side.
+	# NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
+	seqtk seq -r "${TAG_DIR}"/5_primerL1_removed.fasta | cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${TAG_DIR}"/6_primerR1_removed.fasta
+	seqtk seq -r "${TAG_DIR}"/5_primerL2_removed.fasta | cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${TAG_DIR}"/6_primerR2_removed.fasta
+	seqtk seq -r "${TAG_DIR}"/6_primerR1_removed.fasta > "${TAG_DIR}"/6_primerR1_removedRC.fasta
+	cat "${TAG_DIR}"/6_primerR1_removedRC.fasta "${TAG_DIR}"/6_primerR2_removed.fasta > "${TAG_DIR}"/7_no_primers.fasta
+done
+
 if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
-	for TAG_SEQ in $TAGS; do
-		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
-		# REMOVE PRIMER SEQUENCES
-		# Remove PRIMER1 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
-		cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL1_removed.fasta
-		cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL2_removed.fasta
-		# Remove the primer on the other end of the reads by reverse-complementing the files and then trimming PRIMER1 and PRIMER2 from the left side.
-		# NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
-		seqtk seq -r "${TAG_DIR}"/5_primerL1_removed.fasta | cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${TAG_DIR}"/6_primerR1_removed.fasta
-		seqtk seq -r "${TAG_DIR}"/5_primerL2_removed.fasta | cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${TAG_DIR}"/6_primerR2_removed.fasta
-		seqtk seq -r "${TAG_DIR}"/6_primerR1_removed.fasta > "${TAG_DIR}"/6_primerR1_removedRC.fasta
-		cat "${TAG_DIR}"/6_primerR1_removedRC.fasta "${TAG_DIR}"/6_primerR2_removed.fasta > "${TAG_DIR}"/7_no_primers.fasta
-	done
+
 	echo "Concatenating fasta files..."
 	for TAG_SEQ in $TAGS; do
 		cat "${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/7_no_primers.fasta >> "${ANALYSIS_DIR}"/demultiplexed/1_demult_concat.fasta
@@ -223,41 +240,31 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 else
 	for TAG_SEQ in $TAGS; do
-
 		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
-		# REMOVE PRIMER SEQUENCES
-		# Remove PRIMER1 and PRIMER2 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
-		cutadapt -g ^"${PRIMER1_NON}" -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL_removed.fasta
-		# Remove the reverse complement of PRIMER1 and PRIMER2 from the end of the reads. NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
-		cutadapt -a "${PRIMER1RC_NON}" -a "${PRIMER2RC_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" --discard-untrimmed "${TAG_DIR}"/5_primerL_removed.fasta > "${TAG_DIR}"/6_primerR_removed.fasta
-	done
-fi
 
+		DEREP_INPUT="${TAG_DIR}"/7_no_primers.fasta
 
-for TAG_SEQ in $TAGS; do
-	DEREP_INPUT="${TAG_DIR}"/6_primerR_removed.fasta
+		# CONSOLIDATE IDENTICAL SEQUENCES.
+		usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
 
-	# CONSOLIDATE IDENTICAL SEQUENCES.
-	usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
+		# REMOVE SINGLETONS
+		usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
 
-	# REMOVE SINGLETONS
-	usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
+		# CLUSTER SEQUENCES
+		if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
+			BLAST_INPUT="${TAG_DIR}"/8_nosingle.fasta
+		else
+			CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
+			usearch -cluster_otus "${TAG_DIR}"/8_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -notmatched "${TAG_DIR}"/9_notmatched.fasta
+			BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
+		fi
 
-	# CLUSTER SEQUENCES
-	if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
-		BLAST_INPUT="${TAG_DIR}"/8_nosingle.fasta
-	else
-		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-		usearch -cluster_otus "${TAG_DIR}"/8_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -notmatched "${TAG_DIR}"/9_notmatched.fasta
-		BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
-	fi
+		# BLAST CLUSTERS
+		blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${TAG_DIR}"/10_BLASTed.xml
 
-	# BLAST CLUSTERS
-	blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${TAG_DIR}"/10_BLASTed.xml
-
-	# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
-	# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
-	# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
+		# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
+		# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
+		# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
 cat > "${TAG_DIR}"/megan_commands.txt <<EOF
 import blastfile='${TAG_DIR}/10_BLASTed.xml' meganfile='${TAG_DIR}/meganfile.rma' [minSupport=${MINIMUM_SUPPORT}] [minComplexity=${MINIMUM_COMPLEXITY}] [topPercent=${TOP_PERCENT}] [minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] [minScore=${MINIMUM_SCORE}];
 update;
@@ -274,23 +281,24 @@ cd "${megan_exec%/*}"
 ./"${megan_exec##*/}" -g -E -c ${TAG_DIR}/megan_commands.txt
 EOF
 
-sh "${TAG_DIR}"/megan_script.sh
+		sh "${TAG_DIR}"/megan_script.sh
 
-# Modify the MEGAN output so that it is a standard CSV file with cluterID, N_reads, and Taxon
-sed 's|;size=|,|' <"${TAG_DIR}"/meganout.csv >"${TAG_DIR}"/meganout_mod.csv
+		# Modify the MEGAN output so that it is a standard CSV file with cluterID, N_reads, and Taxon
+		sed 's|;size=|,|' <"${TAG_DIR}"/meganout.csv >"${TAG_DIR}"/meganout_mod.csv
 
-# Copy the plotting script to the current directory
-cp "${SCRIPT_DIR}"/megan_plotter.R "${TAG_DIR}"/megan_plotter.R
+		# Copy the plotting script to the current directory
+		cp "${SCRIPT_DIR}"/megan_plotter.R "${TAG_DIR}"/megan_plotter.R
 
-# PLOTTING ANNOTATIONS
-# Add a line (before line 4) to change R's directory to the one the loop is working in (the variable ${CURRENT_DIR}), and copy to the current directory
+		# PLOTTING ANNOTATIONS
+		# Add a line (before line 4) to change R's directory to the one the loop is working in (the variable ${CURRENT_DIR}), and copy to the current directory
 sed "4i\\
 setwd('"${TAG_DIR}"')
 " ${SCRIPT_DIR}/megan_plotter.R > ${TAG_DIR}/megan_plotter.R
 
-Rscript "${TAG_DIR}"/megan_plotter.R
+		Rscript "${TAG_DIR}"/megan_plotter.R
 
-done
+	done
+fi
 
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
 	echo "Compressing fasta and fastq files..."
