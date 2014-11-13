@@ -26,12 +26,12 @@ MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
 #                                        restricting  the  minimum overlap size to a proper value may
 #                                        reduce false-positive assembles. (default: 10)
 
-ASSMAX=$(( $LENGTH_FRAG + 10 ))
+ASSMAX=$(( $LENGTH_FRAG + 50 ))
 #  -m, --max-assembly-length   <int>     Specify   the  maximum  possible  length  of  the  assembled
 #                                        sequences.  Setting this value to 0 disables the restriction
 #                                        and assembled sequences may be arbitrary long. (default: 0)
 
-ASSMIN=$(( $LENGTH_FRAG - 40 ))
+ASSMIN=$(( $LENGTH_FRAG - 50 ))
 #  -n, --min-assembly-length   <int>     Specify   the  minimum  possible  length  of  the  assembled
 #                                        sequences.  Setting this value to 0 disables the restriction
 #                                        and  assembled  sequences  may be arbitrary short. (default:

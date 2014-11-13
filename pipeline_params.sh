@@ -63,7 +63,7 @@ MINIMUM_COMPLEXITY="0"
 TOP_PERCENT="3"
 MINIMUM_SUPPORT_PERCENT="0"
 MINIMUM_SCORE="140"
-LCA_PERCENT="80"
+LCA_PERCENT="70"
 MAX_EXPECTED="1e-25"
 
 # Do you want to perform a secondary MEGAN analysis, collapsing at a different taxonomic level?
