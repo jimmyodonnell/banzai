@@ -244,12 +244,35 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
-	# COUNT READS PER OTU AND REMOVE SINGLETONS
-	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">OTU_" NR ";" $0}' > ${DEREP_INPUT}.nosingle
+	# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
+	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT}_nosingle
 
-	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT}.nosingle > ${DEREP_INPUT%/*}/blast_input.fasta
+	# COUNT OCCURRENCES PER TAG PER DUPLICATE
+	for TAG_SEQ in $TAGS; do
+		( awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT}"_nosingle > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup ) &
+	done
+
+	wait
+
+	# Write a csv file of the number of occurrences of each duplicate sequence per tag.
+	find "${DEREP_INPUT%/*}" -type f -name '*.dup' -exec paste -d, {} \+ | awk '{ print "DUP_" NR-1 "," $0 }' > "${DEREP_INPUT%/*}"/dups.csv
+	rm ${DEREP_INPUT%/*}/*.dup
+
 	# Write fasta file in order to blast sequences
+	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT}.nosingle > ${DEREP_INPUT%/*}/blast_input.fasta
+	BLAST_INPUT="${DEREP_INPUT%/*}"/blast_input.fasta
 
+	# CLUSTER SEQUENCES
+	if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
+		BLAST_INPUT="${TAG_DIR}"/8_nosingle.fasta
+	else
+		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
+		usearch -cluster_otus "${TAG_DIR}"/8_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -notmatched "${TAG_DIR}"/9_notmatched.fasta
+		BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
+	fi
+
+	# BLAST CLUSTERS
+	blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -num_threads "$N_CORES" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${TAG_DIR}"/10_BLASTed.xml
 
 
 else
@@ -259,10 +282,17 @@ else
 		DEREP_INPUT="${TAG_DIR}"/7_no_primers.fasta
 
 		# CONSOLIDATE IDENTICAL SEQUENCES.
-		usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
+		# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
+		echo "Consolidating identical sequences..."
+		python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
 
 		# REMOVE SINGLETONS
-		usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
+		# usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
+		# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
+		awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT}_nosingle
+
+		# count the duplicates
+		awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT}"_nosingle > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup
 
 		# CLUSTER SEQUENCES
 		if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
