@@ -8,6 +8,8 @@
 # This command specifies the path to the directory containing the script
 SCRIPT_DIR="$(dirname "$0")"
 
+LENGTH_READ=$( sed '2q;d' "${READ1}" | awk '{ print length }' )
+
 # Read in the parameter files
 source "$SCRIPT_DIR/pipeline_params.sh"
 source "$SCRIPT_DIR/pear_params.sh"
@@ -74,7 +76,7 @@ fi
 if [ "${ALREADY_FILTERED}" = "YES" ]; then
 	echo "Using existing filtered reads in file $FILTERED_OUTPUT"
 else
-	FILTERED_OUTPUT='"${ANALYSIS_DIR}"/2_filtered.fasta'
+	FILTERED_OUTPUT="${ANALYSIS_DIR}"/2_filtered.fasta
 # The 32bit version of usearch will not accept an input file greater than 4GB. The 64bit usearch is $900. Thus, for now:
 	echo "Calculating merged file size..."
 	INFILE_SIZE=$(stat "${MERGED_READS}" | awk '{ print $8 }')
@@ -131,7 +133,7 @@ fi
 # make a directory to put all the demultiplexed files in
 mkdir "${ANALYSIS_DIR}"/demultiplexed
 
-N_TAGS=$( wc -l < "${PRIMER_TAGS}" )
+# N_TAGS=$( wc -l < "${PRIMER_TAGS}" )
 
 # Write a file of sequence names to make a tag fasta file (necessary for reverse complementing)
 # for i in `seq ${N_TAGS}`; do echo \>tag"$i"; done > "${ANALYSIS_DIR}"/tag_names.txt
@@ -188,7 +190,6 @@ wait
 echo "Demultiplexing: adding tag sequence to sequenceID (started at $(date +%H:%M))"
 for TAG_SEQ in $TAGS; do
 (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
-	mkdir "${TAG_DIR}"
 	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a "tag_""'"$TAG_SEQ"'"; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
 done
 
