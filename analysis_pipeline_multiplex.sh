@@ -169,29 +169,29 @@ wait
 # wait
 #
 # Identify reads containing tags towards the right side of the read
-echo "Demultiplexing: finding right tag (started at $(date +%H:%M))"
+# echo "Demultiplexing: finding right tag (started at $(date +%H:%M))"
+# for TAG_SEQ in $TAGS; do
+# (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+# 	TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
+# 	grep -E "${TAG_RC}.{0,9}$" -B 1 "${TAG_DIR}"/1_tagL_removed.fasta | grep -v -- "^--$"  > "${TAG_DIR}"/3_tagR_present.fasta ) &
+# done
+#
+# wait
+#
+echo "Demultiplexing: removing right tag and adding tag sequence to sequence ID (started at $(date +%H:%M))"
 for TAG_SEQ in $TAGS; do
 (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
-	grep -E "${TAG_RC}.{0,9}$" -B 1 "${TAG_DIR}"/1_tagL_removed.fasta | grep -v -- "^--$"  > "${TAG_DIR}"/3_tagR_present.fasta ) &
+	awk 'gsub(/'"$TAG_RC"'.{0,9}$/,"") {if (a && a !~ /'"$TAG_RC"'.{0,9}$/) print a "tag_""'"$TAG_SEQ"'"; print } {a = $0}' "${TAG_DIR}"/1_tagL_removed.fasta > "${TAG_DIR}"/2_notags.fasta ) &
 done
 
 wait
 
-echo "Demultiplexing: removing right tag (started at $(date +%H:%M))"
-for TAG_SEQ in $TAGS; do
-(	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
-	TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
-	sed -E 's/'"${TAG_RC}"'.{0,9}$//' "${TAG_DIR}"/3_tagR_present.fasta > "${TAG_DIR}"/4_tagR_removed.fasta ) &
-done
-
-wait
-
-echo "Demultiplexing: adding tag sequence to sequenceID (started at $(date +%H:%M))"
-for TAG_SEQ in $TAGS; do
-(	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
-	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a "tag_""'"$TAG_SEQ"'"; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
-done
+# echo "Demultiplexing: adding tag sequence to sequenceID (started at $(date +%H:%M))"
+# for TAG_SEQ in $TAGS; do
+# (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+# 	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a "tag_""'"$TAG_SEQ"'"; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
+# done
 
 # Assign the current tag to to variable TAG, and its reverse complement to TAG_RC
 # TAG=$( sed -n $((i * 2))p "${ANALYSIS_DIR}"/tags.fasta )
@@ -220,8 +220,8 @@ for TAG_SEQ in $TAGS; do
 	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	# REMOVE PRIMER SEQUENCES
 	# Remove PRIMER1 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
-	cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL1_removed.fasta
-	cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/4_tagR_removed.fasta > "${TAG_DIR}"/5_primerL2_removed.fasta
+	cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/2_notags.fasta > "${TAG_DIR}"/5_primerL1_removed.fasta
+	cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/2_notags.fasta > "${TAG_DIR}"/5_primerL2_removed.fasta
 	# Remove the primer on the other end of the reads by reverse-complementing the files and then trimming PRIMER1 and PRIMER2 from the left side.
 	# NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
 	seqtk seq -r "${TAG_DIR}"/5_primerL1_removed.fasta | cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${TAG_DIR}"/6_primerR1_removed.fasta
