@@ -8,10 +8,9 @@
 # This command specifies the path to the directory containing the script
 SCRIPT_DIR="$(dirname "$0")"
 
-LENGTH_READ=$( sed '2q;d' "${READ1}" | awk '{ print length }' )
-
-# Read in the parameter files
+# Read in the parameter files (read length needs to be calculated from length of line2 in READ1 file)
 source "$SCRIPT_DIR/pipeline_params.sh"
+LENGTH_READ=$( sed '2q;d' "${READ1}" | awk '{ print length }' )
 source "$SCRIPT_DIR/pear_params.sh"
 
 # Detect number of cores on machine; set variable
@@ -150,30 +149,31 @@ mkdir "${ANALYSIS_DIR}"/demultiplexed
 
 # Move sequences into separate directories based on tag sequence on left side of read
 # test for speed against removing the tag while finding it: wrap first tag regex in gsub(/pattern/,""):  awk 'gsub(/^.{0,9}'"$TAG_SEQ"'/,""){if . . .
-echo "Demultiplexing: finding left tag (started at $(date +%H:%M))"
+echo "Demultiplexing: removing left tag (started at $(date +%H:%M))"
 for TAG_SEQ in $TAGS; do
 (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	mkdir "${TAG_DIR}"
-	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
+	awk 'gsub(/^.{0,9}'"$TAG_SEQ"'/,"") {if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_removed.fasta ) &
+	# awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
 done
 
 wait
 
 # Remove tags from left side of read
-echo "Demultiplexing: removing left tag (started at $(date +%H:%M))"
-for TAG_SEQ in $TAGS; do
-(	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
-	sed -E 's/^.{0,9}'"${TAG_SEQ}"'//' "${TAG_DIR}"/1_tagL_present.fasta > "${TAG_DIR}"/2_tagL_removed.fasta ) &
-done
-
-wait
-
+# echo "Demultiplexing: removing left tag (started at $(date +%H:%M))"
+# for TAG_SEQ in $TAGS; do
+# (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+# 	sed -E 's/^.{0,9}'"${TAG_SEQ}"'//' "${TAG_DIR}"/1_tagL_present.fasta > "${TAG_DIR}"/2_tagL_removed.fasta ) &
+# done
+#
+# wait
+#
 # Identify reads containing tags towards the right side of the read
 echo "Demultiplexing: finding right tag (started at $(date +%H:%M))"
 for TAG_SEQ in $TAGS; do
 (	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
-	grep -E "${TAG_RC}.{0,9}$" -B 1 "${TAG_DIR}"/2_tagL_removed.fasta | grep -v -- "^--$"  > "${TAG_DIR}"/3_tagR_present.fasta ) &
+	grep -E "${TAG_RC}.{0,9}$" -B 1 "${TAG_DIR}"/1_tagL_removed.fasta | grep -v -- "^--$"  > "${TAG_DIR}"/3_tagR_present.fasta ) &
 done
 
 wait
