@@ -259,16 +259,15 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	rm ${DEREP_INPUT%/*}/*.dup
 
 	# Write fasta file in order to blast sequences
-	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT}.nosingle > ${DEREP_INPUT%/*}/blast_input.fasta
-	BLAST_INPUT="${DEREP_INPUT%/*}"/blast_input.fasta
+	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT}.nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 	# CLUSTER SEQUENCES
 	if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
-		BLAST_INPUT="${TAG_DIR}"/8_nosingle.fasta
+		BLAST_INPUT="${DEREP_INPUT%/*}"/no_duplicates.fasta
 	else
 		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-		usearch -cluster_otus "${TAG_DIR}"/8_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -notmatched "${TAG_DIR}"/9_notmatched.fasta
-		BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
+		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs.fasta -notmatched "${DEREP_INPUT%/*}"/9_notmatched.fasta
+		BLAST_INPUT="${DEREP_INPUT%/*}"/9_OTUs.fasta
 	fi
 
 	# BLAST CLUSTERS
@@ -310,7 +309,9 @@ else
 		# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
 		# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
 cat > "${TAG_DIR}"/megan_commands.txt <<EOF
-import blastfile='${TAG_DIR}/10_BLASTed.xml' meganfile='${TAG_DIR}/meganfile.rma' [minSupport=${MINIMUM_SUPPORT}] [minComplexity=${MINIMUM_COMPLEXITY}] [topPercent=${TOP_PERCENT}] [minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] [minScore=${MINIMUM_SCORE}] [lcapercent=${LCA_PERCENT}];
+import blastfile='${TAG_DIR}/10_BLASTed.xml' meganfile='${TAG_DIR}/meganfile.rma' [minSupport=${MINIMUM_SUPPORT}] [minComplexity=${MINIMUM_COMPLEXITY}] [maxExpected=${MAX_EXPECTED}] [topPercent=${TOP_PERCENT}] [minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] [minScore=${MINIMUM_SCORE}] [lcapercent=${LCA_PERCENT}];
+import blastfile=${CURRENT_DIR%}/8_BLASTed_nosingle.xml meganfile=${CURRENT_DIR}/meganfile.rma minScore=140 maxExpected=1e-25;
+
 update;
 collapse rank='$COLLAPSE_RANK';
 update;
@@ -319,11 +320,10 @@ export what=DSV format=readname_taxonname separator=comma file=${TAG_DIR}/megano
 quit;
 EOF
 
-cat > "${TAG_DIR}"/megan_script.sh <<EOF
-#!/bin/bash
-cd "${megan_exec%/*}"
-./"${megan_exec##*/}" -g -E -c ${TAG_DIR}/megan_commands.txt
-EOF
+		echo "#!/bin/bash" >> megan_script.sh
+		echo "cd "${megan_exec%/*}"" >> megan_script.sh
+		echo "./"${megan_exec##*/}" -g -E -c ${TAG_DIR}/megan_commands.txt" >> megan_script.sh
+
 
 		# Run MEGAN
 		sh "${TAG_DIR}"/megan_script.sh

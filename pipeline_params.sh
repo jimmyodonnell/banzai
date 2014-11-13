@@ -64,6 +64,7 @@ TOP_PERCENT="3"
 MINIMUM_SUPPORT_PERCENT="0"
 MINIMUM_SCORE="140"
 LCA_PERCENT="80"
+MAX_EXPECTED="1e-25"
 
 # Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
 PERFORM_CLEANUP="YES"
