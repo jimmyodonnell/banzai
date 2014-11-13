@@ -4,12 +4,15 @@
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
 PRIMER_TAGS='/Users/threeprime/Documents/Data/IlluminaData/16S/tags_16S.txt'
-# What is the maximum number of Ns to allow at the end of a sequence before a tag is reached? NOTE: currently, this will only matter for the tag on the 3' end.
+
+# How many nucleotides pad the 5' end of the tag sequence?
+TAG_Ns="3"
+# What is the maximum number of Ns to allow at the end of a sequence before a tag is reached?
 # TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
 
 # What is the path to the reads?
-READ1='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/R1_1M.fastq'
-READ2='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/R2_1M.fastq'
+READ1='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/JP16spool_S1_L001_R1_001.fastq'
+READ2='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/JP16spool_S1_L001_R2_001.fastq'
 
 # Is it ok to rename the sequences within a fasta file
 # This will happen after the fastq has been converted to a fasta file at the quality filtering step.
@@ -84,3 +87,6 @@ CONCATENATE_SAMPLES="YES"
 
 # Is the parallel compression utility 'pigz' installed? (Get it here: http://zlib.net/pigz/)
 PIGZ_INSTALLED="YES"
+
+# If you want to receive a text message when the pipeline finishes, input your number here:
+PHONE_NUMBER=""

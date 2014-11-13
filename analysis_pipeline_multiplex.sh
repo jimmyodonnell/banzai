@@ -217,7 +217,7 @@ wait
 # REMOVE PRIMERS
 echo "Removing primers..."
 for TAG_SEQ in $TAGS; do
-	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+(	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	# REMOVE PRIMER SEQUENCES
 	# Remove PRIMER1 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
 	cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/2_notags.fasta > "${TAG_DIR}"/5_primerL1_removed.fasta
@@ -227,19 +227,20 @@ for TAG_SEQ in $TAGS; do
 	seqtk seq -r "${TAG_DIR}"/5_primerL1_removed.fasta | cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${TAG_DIR}"/6_primerR1_removed.fasta
 	seqtk seq -r "${TAG_DIR}"/5_primerL2_removed.fasta | cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${TAG_DIR}"/6_primerR2_removed.fasta
 	seqtk seq -r "${TAG_DIR}"/6_primerR1_removed.fasta > "${TAG_DIR}"/6_primerR1_removedRC.fasta
-	cat "${TAG_DIR}"/6_primerR1_removedRC.fasta "${TAG_DIR}"/6_primerR2_removed.fasta > "${TAG_DIR}"/7_no_primers.fasta
+	cat "${TAG_DIR}"/6_primerR1_removedRC.fasta "${TAG_DIR}"/6_primerR2_removed.fasta > "${TAG_DIR}"/7_no_primers.fasta ) &
 done
 
 if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	echo "Concatenating fasta files..."
+	mkdir "$ANALYSIS_DIR"/concatenated
 	for TAG_SEQ in $TAGS; do
-		cat "${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/7_no_primers.fasta >> "${ANALYSIS_DIR}"/demultiplexed/1_demult_concat.fasta
+		cat "${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/7_no_primers.fasta >> "${ANALYSIS_DIR}"/concatenated/1_demult_concat.fasta
 	done
 
 	# CONSOLIDATE IDENTICAL SEQUENCES.
-	DEREP_INPUT="${ANALYSIS_DIR}"/demultiplexed/1_demult_concat.fasta
-
+	echo "Consolidating identical sequences..."
+	DEREP_INPUT="${ANALYSIS_DIR}"/concatenated/1_demult_concat.fasta
 	python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
@@ -319,3 +320,6 @@ if [ "$PERFORM_CLEANUP" = "YES" ]; then
 else
 	echo "Cleanup not performed."
 fi
+
+FINISH_TIME=$(date +%Y%m%d_%H%M)
+curl http://textbelt.com/text -d number=$PHONE_NUMBER -d message="Pipeline finished! Started $START_TIME Finished $FINISH_TIME"
