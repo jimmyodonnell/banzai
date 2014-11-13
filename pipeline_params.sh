@@ -45,21 +45,22 @@ BLAST_WITHOUT_CLUSTERING="YES"
 # BLAST:
 # Specify the path to the BLAST database.
 # Note this should be a path to any one of three files WITHOUT their extension *.nhr, *.nin, or *.nsq
-BLAST_DB='/Users/threeprime/Documents/Data/genbank/12S/Vert12sdb/Vert12S_BLAST_DB/Vert_full_mtDNA_genomes_RefSeq+Bony_Cart_Cetacean_12S_partial'
+BLAST_DB='/Users/threeprime/Documents/Data/genbank/16S/16Smetazoa/16Smetazoa'
 # BLAST PARAMETERS
-PERCENT_IDENTITY="95"
-WORD_SIZE="80"
-EVALUE="0.001"
+PERCENT_IDENTITY="90"
+WORD_SIZE="50"
+EVALUE="1e-20"
 # number of matches recorded in the alignment:
-MAXIMUM_MATCHES="5"
+MAXIMUM_MATCHES="25"
 
 # What is the lowest taxonomic rank at which MEGAN should group OTUs?
-COLLAPSE_RANK="Genus"
-MINIMUM_SUPPORT="2"
+COLLAPSE_RANK="Family"
+MINIMUM_SUPPORT="1"
 MINIMUM_COMPLEXITY="0"
-TOP_PERCENT="2"
+TOP_PERCENT="3"
 MINIMUM_SUPPORT_PERCENT="0"
-MINIMUM_SCORE="150"
+MINIMUM_SCORE="140"
+LCA_PERCENT="80"
 
 # Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
 PERFORM_CLEANUP="YES"
@@ -80,3 +81,6 @@ FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Anal
 
 # Should demultiplexed samples be concatenated for annotation as a single unit? (Each read can still be mapped back to samples)
 CONCATENATE_SAMPLES="YES"
+
+# Is the parallel compression utility 'pigz' installed? (Get it here: http://zlib.net/pigz/)
+PIGZ_INSTALLED="YES"

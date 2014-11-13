@@ -242,8 +242,13 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
-	# REMOVE SINGLETONS
-	usearch -sortbysize "${DEREP_INPUT%/*}"/2_derep.fasta -minsize 2 -sizein -sizeout -output "${DEREP_INPUT%/*}"/3_nosingle.fasta
+	# COUNT READS PER OTU AND REMOVE SINGLETONS
+	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">OTU_" NR ";" $0}' > ${DEREP_INPUT}.nosingle
+
+	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT}.nosingle > ${DEREP_INPUT%/*}/blast_input.fasta
+	# Write fasta file in order to blast sequences
+
+
 
 else
 	for TAG_SEQ in $TAGS; do
@@ -273,7 +278,7 @@ else
 		# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
 		# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
 cat > "${TAG_DIR}"/megan_commands.txt <<EOF
-import blastfile='${TAG_DIR}/10_BLASTed.xml' meganfile='${TAG_DIR}/meganfile.rma' [minSupport=${MINIMUM_SUPPORT}] [minComplexity=${MINIMUM_COMPLEXITY}] [topPercent=${TOP_PERCENT}] [minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] [minScore=${MINIMUM_SCORE}];
+import blastfile='${TAG_DIR}/10_BLASTed.xml' meganfile='${TAG_DIR}/meganfile.rma' [minSupport=${MINIMUM_SUPPORT}] [minComplexity=${MINIMUM_COMPLEXITY}] [topPercent=${TOP_PERCENT}] [minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] [minScore=${MINIMUM_SCORE}] [lcapercent=${LCA_PERCENT}];
 update;
 collapse rank='$COLLAPSE_RANK';
 update;
@@ -301,9 +306,14 @@ EOF
 fi
 
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
+	if [ "$PIGZ_INSTALLED" = "YES" ]; then
+		ZIPPER="pigz"
+	else
+		ZIPPER="gzip"
+	fi
 	echo "Compressing fasta and fastq files..."
-	find "${ANALYSIS_DIR}" -type f -name '*.fasta' -exec gzip "{}" \;
-	find "${ANALYSIS_DIR}" -type f -name '*.fastq' -exec gzip "{}" \;
+	find "${ANALYSIS_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
+	find "${ANALYSIS_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
 	echo "Cleanup performed."
 else
 	echo "Cleanup not performed."
