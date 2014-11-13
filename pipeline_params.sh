@@ -57,7 +57,7 @@ EVALUE="1e-20"
 MAXIMUM_MATCHES="25"
 
 # What is the lowest taxonomic rank at which MEGAN should group OTUs?
-COLLAPSE_RANK="Family"
+COLLAPSE_RANK1="Family"
 MINIMUM_SUPPORT="1"
 MINIMUM_COMPLEXITY="0"
 TOP_PERCENT="3"
@@ -65,6 +65,10 @@ MINIMUM_SUPPORT_PERCENT="0"
 MINIMUM_SCORE="140"
 LCA_PERCENT="80"
 MAX_EXPECTED="1e-25"
+
+# Do you want to perform a secondary MEGAN analysis, collapsing at a different taxonomic level?
+PERFORM_SECONDARY_MEGAN="YES"
+COLLAPSE_RANK2="Genus"
 
 # Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
 PERFORM_CLEANUP="YES"

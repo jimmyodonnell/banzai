@@ -304,32 +304,47 @@ else
 
 		# BLAST CLUSTERS
 		blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -num_threads "$N_CORES" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${TAG_DIR}"/10_BLASTed.xml
+		BLAST_XML="${TAG_DIR}"/10_BLASTed.xml
+
+
 
 		# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
 		# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
 		# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
-cat > "${TAG_DIR}"/megan_commands.txt <<EOF
-import blastfile='${TAG_DIR}/10_BLASTed.xml' meganfile='${TAG_DIR}/meganfile.rma' [minSupport=${MINIMUM_SUPPORT}] [minComplexity=${MINIMUM_COMPLEXITY}] [maxExpected=${MAX_EXPECTED}] [topPercent=${TOP_PERCENT}] [minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] [minScore=${MINIMUM_SCORE}] [lcapercent=${LCA_PERCENT}];
-import blastfile=${CURRENT_DIR%}/8_BLASTed_nosingle.xml meganfile=${CURRENT_DIR}/meganfile.rma minScore=140 maxExpected=1e-25;
+		MEGAN_COMMAND_FILE="${TAG_DIR}"/megan_commands.txt
+		MEGAN_RMA_FILE="${TAG_DIR}"/meganfile.rma
+		echo "import blastfile='${BLAST_XML}' meganfile='${MEGAN_RMA_FILE}' \
+[minSupport=${MINIMUM_SUPPORT}] \
+[minComplexity=${MINIMUM_COMPLEXITY}] \
+[maxExpected=${MAX_EXPECTED}] \
+[topPercent=${TOP_PERCENT}] \
+[minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] \
+[minScore=${MINIMUM_SCORE}] \
+[lcapercent=${LCA_PERCENT}];" >> "${MEGAN_COMMAND_FILE}"
+		echo "update;" >> "${MEGAN_COMMAND_FILE}"
+		echo "collapse rank='$COLLAPSE_RANK1';" >> "${MEGAN_COMMAND_FILE}"
+		echo "update;" >> "${MEGAN_COMMAND_FILE}"
+		echo "select nodes=all;" >> "${MEGAN_COMMAND_FILE}"
+		echo "export what=DSV format=readname_taxonname separator=comma file=${TAG_DIR}/meganout_${COLLAPSE_RANK1}.csv;" >> "${MEGAN_COMMAND_FILE}"
+		if [ "$PERFORM_SECONDARY_MEGAN" = "YES" ]; then
+			echo "collapse rank='$COLLAPSE_RANK2';" >> "${MEGAN_COMMAND_FILE}"
+			echo "update;" >> "${MEGAN_COMMAND_FILE}"
+			echo "select nodes=all;" >> "${MEGAN_COMMAND_FILE}"
+			echo "export what=DSV format=readname_taxonname separator=comma file=${TAG_DIR}/meganout_${COLLAPSE_RANK2}.csv;" >> "${MEGAN_COMMAND_FILE}"
+		fi
+		echo "quit;" >> "${MEGAN_COMMAND_FILE}"
 
-update;
-collapse rank='$COLLAPSE_RANK';
-update;
-select nodes=all;
-export what=DSV format=readname_taxonname separator=comma file=${TAG_DIR}/meganout.csv;
-quit;
-EOF
 
 		echo "#!/bin/bash" >> megan_script.sh
 		echo "cd "${megan_exec%/*}"" >> megan_script.sh
 		echo "./"${megan_exec##*/}" -g -E -c ${TAG_DIR}/megan_commands.txt" >> megan_script.sh
 
-
 		# Run MEGAN
 		sh "${TAG_DIR}"/megan_script.sh
 
 		# Modify the MEGAN output so that it is a standard CSV file with cluterID, N_reads, and Taxon
-		sed 's|;size=|,|' <"${TAG_DIR}"/meganout.csv >"${TAG_DIR}"/meganout_mod.csv
+		sed 's|;size=|,|' <"${TAG_DIR}"/meganout_${COLLAPSE_RANK1}.csv >"${TAG_DIR}"/meganout_${COLLAPSE_RANK1}_mod.csv
+		sed 's|;size=|,|' <"${TAG_DIR}"/meganout_${COLLAPSE_RANK2}.csv >"${TAG_DIR}"/meganout_${COLLAPSE_RANK2}_mod.csv
 
 		# Run the R script, passing the current tag directory as the directory to which R will "setwd()"
 		Rscript "$SCRIPT_DIR/megan_plotter.R" "${TAG_DIR}"
