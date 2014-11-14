@@ -217,7 +217,7 @@ wait
 # REMOVE PRIMERS
 echo "Removing primers..."
 for TAG_SEQ in $TAGS; do
-(	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+	TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	# REMOVE PRIMER SEQUENCES
 	# Remove PRIMER1 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
 	cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/2_notags.fasta > "${TAG_DIR}"/5_primerL1_removed.fasta
@@ -227,7 +227,7 @@ for TAG_SEQ in $TAGS; do
 	seqtk seq -r "${TAG_DIR}"/5_primerL1_removed.fasta | cutadapt -g ^"${PRIMER2_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${TAG_DIR}"/6_primerR1_removed.fasta
 	seqtk seq -r "${TAG_DIR}"/5_primerL2_removed.fasta | cutadapt -g ^"${PRIMER1_NON}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${TAG_DIR}"/6_primerR2_removed.fasta
 	seqtk seq -r "${TAG_DIR}"/6_primerR1_removed.fasta > "${TAG_DIR}"/6_primerR1_removedRC.fasta
-	cat "${TAG_DIR}"/6_primerR1_removedRC.fasta "${TAG_DIR}"/6_primerR2_removed.fasta > "${TAG_DIR}"/7_no_primers.fasta ) &
+	cat "${TAG_DIR}"/6_primerR1_removedRC.fasta "${TAG_DIR}"/6_primerR2_removed.fasta > "${TAG_DIR}"/7_no_primers.fasta
 done
 
 if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
@@ -245,11 +245,11 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
 	# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
-	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT}_nosingle
+	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle
 
 	# COUNT OCCURRENCES PER TAG PER DUPLICATE
 	for TAG_SEQ in $TAGS; do
-		( awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT}"_nosingle > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup ) &
+		( awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup ) &
 	done
 
 	wait
@@ -259,7 +259,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	rm ${DEREP_INPUT%/*}/*.dup
 
 	# Write fasta file in order to blast sequences
-	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT}.nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
+	awk -F';' '{ print $1 "_size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 	# CLUSTER SEQUENCES
 	if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
@@ -275,6 +275,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	BLAST_XML="${DEREP_INPUT%/*}"/10_BLASTed.xml
 
 else
+
 	for TAG_SEQ in $TAGS; do
 		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 
@@ -288,17 +289,20 @@ else
 		# REMOVE SINGLETONS
 		# usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
 		# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
-		awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT}_nosingle
+		awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle
 
 		# count the duplicates
-		awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT}"_nosingle > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup
+		awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT%/*}"/nosingle > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup
+
+		# Write fasta file in order to blast sequences
+		awk -F';' '{ print $1 "_size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 		# CLUSTER SEQUENCES
 		if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
-			BLAST_INPUT="${TAG_DIR}"/8_nosingle.fasta
+			BLAST_INPUT=${DEREP_INPUT%/*}/no_duplicates.fasta
 		else
 			CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-			usearch -cluster_otus "${TAG_DIR}"/8_nosingle.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -notmatched "${TAG_DIR}"/9_notmatched.fasta
+			usearch -cluster_otus "${DEREP_INPUT%/*}"/nosingle -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -notmatched "${TAG_DIR}"/9_notmatched.fasta
 			BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
 		fi
 
@@ -344,23 +348,23 @@ for DIR in "$DIRECTORIES"; do
 		fi
 		echo "quit;" >> "${MEGAN_COMMAND_FILE}"
 
-
-		echo "#!/bin/bash" >> megan_script.sh
-		echo "cd "${megan_exec%/*}"" >> megan_script.sh
-		echo "./"${megan_exec##*/}" -g -E -c ${DIR}/megan_commands.txt" >> megan_script.sh
+		MEGAN_SHELL_SCRIPT="${DIR}"/megan_script.sh
+		echo "#!/bin/bash" >> "$MEGAN_SHELL_SCRIPT"
+		echo "cd "${megan_exec%/*}"" >> "$MEGAN_SHELL_SCRIPT"
+		echo "./"${megan_exec##*/}" -g -E -c ${DIR}/megan_commands.txt" >> "$MEGAN_SHELL_SCRIPT"
 
 		# Run MEGAN
 		sh "${DIR}"/megan_script.sh
 
-		# Modify the MEGAN output so that it is a standard CSV file with cluterID, N_reads, and Taxon
-		sed 's|;size=|,|' <"${DIR}"/meganout_${COLLAPSE_RANK1}.csv >"${DIR}"/meganout_${COLLAPSE_RANK1}_mod.csv
-		sed 's|;size=|,|' <"${DIR}"/meganout_${COLLAPSE_RANK2}.csv >"${DIR}"/meganout_${COLLAPSE_RANK2}_mod.csv
+		# Modify the MEGAN output so that it is a standard CSV file with clusterID, N_reads, and Taxon
+		sed 's|_size=|,|' <"${DIR}"/meganout_${COLLAPSE_RANK1}.csv >"${DIR}"/meganout_${COLLAPSE_RANK1}_mod.csv
+		sed 's|_size=|,|' <"${DIR}"/meganout_${COLLAPSE_RANK2}.csv >"${DIR}"/meganout_${COLLAPSE_RANK2}_mod.csv
 
 		# Run the R script, passing the current tag directory as the directory to which R will "setwd()"
 		Rscript "$SCRIPT_DIR/megan_plotter.R" "${DIR}"
 
 	done
-fi
+
 
 
 
