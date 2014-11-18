@@ -102,7 +102,7 @@ fi
 
 if [ "${RENAME_READS}" = "YES" ]; then
 	echo "Renaming reads..."
-	sed -E "s/ (1|2):N:0:1/_/" "${FILTERED_OUTPUT}" > "${ANALYSIS_DIR}"/tmp.fasta
+	sed -E "s/ (1|2):N:0:[0-9]/_/" "${FILTERED_OUTPUT}" > "${ANALYSIS_DIR}"/tmp.fasta
 	sed -E "s/>([a-zA-Z0-9-]*:){4}/>/" "${ANALYSIS_DIR}"/tmp.fasta > "${FILTERED_OUTPUT%.*}"_renamed.fasta
 	rm "${ANALYSIS_DIR}"/tmp.fasta
 	FILTERED_OUTPUT="${FILTERED_OUTPUT%.*}"_renamed.fasta
@@ -249,7 +249,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# COUNT OCCURRENCES PER TAG PER DUPLICATE
 	for TAG_SEQ in $TAGS; do
-		( awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup ) &
+		( awk 'BEGIN {print "'$TAG_SEQ'" ; FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup ) &
 	done
 
 	wait
@@ -259,7 +259,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	rm ${DEREP_INPUT%/*}/*.dup
 
 	# Write fasta file in order to blast sequences
-	awk -F';' '{ print $1 "_size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
+	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 	# CLUSTER SEQUENCES
 	if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
@@ -295,7 +295,7 @@ else
 		awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT%/*}"/nosingle > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup
 
 		# Write fasta file in order to blast sequences
-		awk -F';' '{ print $1 "_size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
+		awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 		# CLUSTER SEQUENCES
 		if [ "$BLAST_WITHOUT_CLUSTERING" = "YES" ]; then
@@ -357,8 +357,8 @@ for DIR in "$DIRECTORIES"; do
 		sh "${DIR}"/megan_script.sh
 
 		# Modify the MEGAN output so that it is a standard CSV file with clusterID, N_reads, and Taxon
-		sed 's|_size=|,|' <"${DIR}"/meganout_${COLLAPSE_RANK1}.csv >"${DIR}"/meganout_${COLLAPSE_RANK1}_mod.csv
-		sed 's|_size=|,|' <"${DIR}"/meganout_${COLLAPSE_RANK2}.csv >"${DIR}"/meganout_${COLLAPSE_RANK2}_mod.csv
+		sed 's|;size=|,|' <"${DIR}"/meganout_${COLLAPSE_RANK1}.csv >"${DIR}"/meganout_${COLLAPSE_RANK1}_mod.csv
+		sed 's|;size=|,|' <"${DIR}"/meganout_${COLLAPSE_RANK2}.csv >"${DIR}"/meganout_${COLLAPSE_RANK2}_mod.csv
 
 		# Run the R script, passing the current tag directory as the directory to which R will "setwd()"
 		Rscript "$SCRIPT_DIR/megan_plotter.R" "${DIR}"

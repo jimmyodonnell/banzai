@@ -3,7 +3,7 @@
 # What is the path to the primer tags?
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
-PRIMER_TAGS='/Users/threeprime/Documents/Data/IlluminaData/12S/tags_12S.txt'
+PRIMER_TAGS='/Users/threeprime/Documents/Data/IlluminaData/16S/run_20141113_time_series/tags_16S.txt'
 
 # How many nucleotides pad the 5' end of the tag sequence?
 TAG_Ns="3"
@@ -11,15 +11,15 @@ TAG_Ns="3"
 # TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
 
 # What is the path to the reads?
-READ1='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/PCpoolC_S1_L001_R1_001.fastq'
-READ2='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/PCpoolC_S1_L001_R2_001.fastq'
+READ1='/Users/threeprime/Documents/Data/IlluminaData/16S/run_20141113_time_series/library3/RK16sTS3_S3_L001_R1_001.fastq'
+READ2='/Users/threeprime/Documents/Data/IlluminaData/16S/run_20141113_time_series/library3/RK16sTS3_S3_L001_R2_001.fastq'
 
 # Is it ok to rename the sequences within a fasta file
 # This will happen after the fastq has been converted to a fasta file at the quality filtering step.
-RENAME_READS="NO"
+RENAME_READS="YES"
 
 # What is the maximum expected length of the fragment of interest, including primers?
-LENGTH_FRAG="160"
+LENGTH_FRAG="180"
 
 # What is the length of the reads of the Illumina run? (i.e. how long are the sequences in each of the run fastq files (R1 and R2)?)
 # LENGTH_READ="150"
@@ -29,7 +29,7 @@ megan_exec='/Applications/megan/MEGAN'
 
 # PRIMER REMOVAL
 # Specify a path to the fasta file containing the two primers used to generate the amplicons you sequenced:
-PRIMER_FILE='/Users/threeprime/Documents/Data/IlluminaData/12S/primers_12S.fasta'
+PRIMER_FILE='/Users/threeprime/Documents/Data/IlluminaData/16S/run_20141113_time_series/primers_16S.fasta'
 PRIMER_MISMATCH_PROPORTION="0.10"
 
 # Would you like to remove reads containing runs of consecutive identical bases (homopolymers)?
@@ -48,7 +48,7 @@ BLAST_WITHOUT_CLUSTERING="YES"
 # BLAST:
 # Specify the path to the BLAST database.
 # Note this should be a path to any one of three files WITHOUT their extension *.nhr, *.nin, or *.nsq
-BLAST_DB='/Users/threeprime/Documents/Data/genbank/12S/Vert12sdb/Vert12S_BLAST_DB/Vert_full_mtDNA_genomes_RefSeq+Bony_Cart_Cetacean_12S_partial'
+BLAST_DB='/Users/threeprime/Documents/Data/genbank/16S/16S_20141107/16S_20141107'
 # BLAST PARAMETERS
 PERCENT_IDENTITY="90"
 WORD_SIZE="50"
@@ -71,7 +71,7 @@ PERFORM_SECONDARY_MEGAN="YES"
 COLLAPSE_RANK2="Genus"
 
 # Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
-PERFORM_CLEANUP="YES"
+PERFORM_CLEANUP="NO"
 
 
 ####################### WOULD YOU LIKE TO PICK UP FROM AN EXISTING FILE?
@@ -82,12 +82,12 @@ EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20
 CONCATENATE_SAMPLES="YES"
 
 # Have the reads already been paired?
-ALREADY_PEARED="YES"
+ALREADY_PEARED="NO"
 # YES/NO
 PEAR_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141030_2020/1_merged.assembled.fastq.gz'
 
 # Have the merged reads been quality filtered?
-ALREADY_FILTERED="YES" # YES/NO
+ALREADY_FILTERED="NO" # YES/NO
 FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141030_2020/2_filtered_renamed.fasta'
 
 
