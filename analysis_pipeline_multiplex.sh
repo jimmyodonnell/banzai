@@ -266,7 +266,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		BLAST_INPUT="${DEREP_INPUT%/*}"/no_duplicates.fasta
 	else
 		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs.fasta -notmatched "${DEREP_INPUT%/*}"/9_notmatched.fasta
+		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs.fasta -uc "${DEREP_INPUT%/*}"/9_clusters.uc -notmatched "${DEREP_INPUT%/*}"/9_notmatched.fasta
 		BLAST_INPUT="${DEREP_INPUT%/*}"/9_OTUs.fasta
 	fi
 
@@ -302,7 +302,7 @@ else
 			BLAST_INPUT=${DEREP_INPUT%/*}/no_duplicates.fasta
 		else
 			CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-			usearch -cluster_otus "${DEREP_INPUT%/*}"/nosingle -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -notmatched "${TAG_DIR}"/9_notmatched.fasta
+			usearch -cluster_otus "${DEREP_INPUT%/*}"/nosingle -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -uc "${TAG_DIR}"/9_clusters.uc -notmatched "${TAG_DIR}"/9_notmatched.fasta
 			BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
 		fi
 
