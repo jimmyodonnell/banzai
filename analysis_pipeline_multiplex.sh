@@ -325,13 +325,13 @@ for DIR in "$DIRECTORIES"; do
 		MEGAN_SHELL_SCRIPT="${DIR}"/megan_script.sh
 
 		echo "import blastfile='${BLAST_XML}' meganFile='${MEGAN_RMA_FILE}' \
-[minSupport=${MINIMUM_SUPPORT}] \
-[minComplexity=${MINIMUM_COMPLEXITY}] \
-[maxExpected=${MAX_EXPECTED}] \
-[topPercent=${TOP_PERCENT}] \
-[minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] \
-[minScore=${MINIMUM_SCORE}] \
-[lcapercent=${LCA_PERCENT}];" > "${MEGAN_COMMAND_FILE}"
+minScore=${MINIMUM_SCORE} \
+maxExpected=${MAX_EXPECTED} \
+topPercent=${TOP_PERCENT} \
+minSupportPercent=${MINIMUM_SUPPORT_PERCENT} \
+minSupport=${MINIMUM_SUPPORT} \
+minComplexity=${MINIMUM_COMPLEXITY} \
+lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 		echo "update;" >> "${MEGAN_COMMAND_FILE}"
 		echo "collapse rank='$COLLAPSE_RANK1';" >> "${MEGAN_COMMAND_FILE}"
 		echo "update;" >> "${MEGAN_COMMAND_FILE}"
