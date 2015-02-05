@@ -320,7 +320,7 @@ for DIR in "$DIRECTORIES"; do
 		# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
 		MEGAN_COMMAND_FILE="${DIR}"/megan_commands.txt
 		MEGAN_RMA_FILE="${DIR}"/meganfile.rma
-		echo "import blastfile='${BLAST_XML}' meganfile='${MEGAN_RMA_FILE}' \
+		echo "import blastfile='${BLAST_XML}' meganFile='${MEGAN_RMA_FILE}' \
 [minSupport=${MINIMUM_SUPPORT}] \
 [minComplexity=${MINIMUM_COMPLEXITY}] \
 [maxExpected=${MAX_EXPECTED}] \
