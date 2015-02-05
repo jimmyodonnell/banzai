@@ -265,7 +265,6 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# BLAST CLUSTERS
 	blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -num_threads "$N_CORES" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${DEREP_INPUT%/*}"/10_BLASTed.xml
-	BLAST_XML="${DEREP_INPUT%/*}"/10_BLASTed.xml
 
 else
 
@@ -301,7 +300,6 @@ else
 
 		# BLAST CLUSTERS
 		blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -num_threads "$N_CORES" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${TAG_DIR}"/10_BLASTed.xml
-		BLAST_XML="${TAG_DIR}"/10_BLASTed.xml
 	done
 fi
 
@@ -320,6 +318,7 @@ for DIR in "$DIRECTORIES"; do
 		# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
 
 		# Specify paths to megan-related files
+		BLAST_XML="${DIR}"/10_BLASTed.xml
 		MEGAN_COMMAND_FILE="${DIR}"/megan_commands.txt
 		MEGAN_RMA_FILE="${DIR}"/meganfile.rma
 		MEGAN_SHELL_SCRIPT="${DIR}"/megan_script.sh
