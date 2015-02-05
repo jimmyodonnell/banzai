@@ -318,8 +318,12 @@ for DIR in "$DIRECTORIES"; do
 		# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
 		# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
 		# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
+
+		# Specify paths to megan-related files
 		MEGAN_COMMAND_FILE="${DIR}"/megan_commands.txt
 		MEGAN_RMA_FILE="${DIR}"/meganfile.rma
+		MEGAN_SHELL_SCRIPT="${DIR}"/megan_script.sh
+
 		echo "import blastfile='${BLAST_XML}' meganFile='${MEGAN_RMA_FILE}' \
 [minSupport=${MINIMUM_SUPPORT}] \
 [minComplexity=${MINIMUM_COMPLEXITY}] \
@@ -327,7 +331,7 @@ for DIR in "$DIRECTORIES"; do
 [topPercent=${TOP_PERCENT}] \
 [minSupportPercent=${MINIMUM_SUPPORT_PERCENT}] \
 [minScore=${MINIMUM_SCORE}] \
-[lcapercent=${LCA_PERCENT}];" >> "${MEGAN_COMMAND_FILE}"
+[lcapercent=${LCA_PERCENT}];" > "${MEGAN_COMMAND_FILE}"
 		echo "update;" >> "${MEGAN_COMMAND_FILE}"
 		echo "collapse rank='$COLLAPSE_RANK1';" >> "${MEGAN_COMMAND_FILE}"
 		echo "update;" >> "${MEGAN_COMMAND_FILE}"
@@ -341,8 +345,7 @@ for DIR in "$DIRECTORIES"; do
 		fi
 		echo "quit;" >> "${MEGAN_COMMAND_FILE}"
 
-		MEGAN_SHELL_SCRIPT="${DIR}"/megan_script.sh
-		echo "#!/bin/bash" >> "$MEGAN_SHELL_SCRIPT"
+		echo "#!/bin/bash" > "$MEGAN_SHELL_SCRIPT"
 		echo "cd "${megan_exec%/*}"" >> "$MEGAN_SHELL_SCRIPT"
 		echo "./"${megan_exec##*/}" -g -E -c ${DIR}/megan_commands.txt" >> "$MEGAN_SHELL_SCRIPT"
 
