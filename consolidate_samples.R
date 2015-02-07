@@ -1,12 +1,12 @@
 # Assess the output from the analysis pipeline
 
 # In which directory are the demultiplexed data folders?
-ANALYSIS_DIRECTORY <- "/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141030_2020/demultiplexed"
+ANALYSIS_DIRECTORY <- "/Users/threeprime/Documents/GoogleDrive/Data_Illumina/12S/run_20140930/Analysis_20141030_2020/demultiplexed"
 
 # Identify a file containing sample metadata.
 # This must be a csv file with a header row that contains at least two columns, named "Tag_Sequence" and "Sample_Type"
 # column names must be EXACT, including capitalization and whitespace.
-SAMPLE_METADATA <- read.csv("~/Documents/Projects/eDNA_Hopkins/Data/12S_samples/12S_tagged_run_metadata.csv")
+SAMPLE_METADATA <- read.csv("/Users/threeprime/Documents/GoogleDrive/Data_Illumina/12S/run_20140930/sample_data/12S_tagged_run_metadata.csv")
 
 # assign the number of tags in that folder to the object N_TAGS
 TAG_FOLDERS <- system(paste("ls ", ANALYSIS_DIRECTORY, sep=""), intern=TRUE)
@@ -33,6 +33,7 @@ for (i in TAG_FOLDERS){
 EMPTY_TAGS <- names(TAGS[which(sapply(TAGS, nrow) == 0)])
 TAGS[which(sapply(TAGS, nrow) == 0)] <- NULL
 
+# create a list of vectors, one for each tag, of the number of reads for each annotated taxa, where names are the taxon names
 N_READS <- list()
 for (i in 1:length(TAGS)){
 	N_READS[[i]] <- sort(sapply(split(TAGS[[i]]$N_Reads, TAGS[[i]]$Taxon), sum))
@@ -40,9 +41,17 @@ for (i in 1:length(TAGS)){
 
 names(N_READS) <- gsub("tag_", "", names(TAGS))
 
+# create a vector of total reads per tag
 reads_per_tag <- sapply(N_READS, sum)
 
-READS <- reads_per_tag[match(SAMPLE_METADATA$Tag_Sequence, names(N_READS))]
+# create a vector of empty tags to bind to this vector
+EMPTY_TAG_READS <- vector(mode = "integer", length = length(EMPTY_TAGS))
+names(EMPTY_TAG_READS) <- gsub("tag_", "", EMPTY_TAGS)
+
+# bind the two together
+reads_per_tag <- c(reads_per_tag, EMPTY_TAG_READS)
+
+READS <- reads_per_tag[match(SAMPLE_METADATA$Tag_Sequence, names(reads_per_tag))]
 SAMPLE_METADATA <- cbind(SAMPLE_METADATA, READS)
 
 sample_size <- paste("N=",table(SAMPLE_METADATA$Sample_Type), sep="")
