@@ -2,6 +2,10 @@
 
 # In which directory are the demultiplexed data folders?
 ANALYSIS_DIRECTORY <- "/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141030_2020/demultiplexed"
+
+# Identify a file containing sample metadata.
+# This must be a csv file with a header row that contains at least two columns, named "Tag_Sequence" and "Sample_Type"
+# column names must be EXACT, including capitalization and whitespace.
 SAMPLE_METADATA <- read.csv("~/Documents/Projects/eDNA_Hopkins/Data/12S_samples/12S_tagged_run_metadata.csv")
 
 # assign the number of tags in that folder to the object N_TAGS
