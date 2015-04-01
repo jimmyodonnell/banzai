@@ -1,5 +1,19 @@
 #!/bin/bash
 
+
+# What is the path to the reads?
+READ1=''
+READ2=''
+
+# What is the maximum expected length of the fragment of interest, including primers? # AND TAGS?
+LENGTH_FRAG="180"
+
+# What is the length of the reads of the Illumina run? (i.e. how long are the sequences in each of the run fastq files (R1 and R2)?)
+# LENGTH_READ="150"
+
+################################################################################
+# DEMULTIPLEXING
+################################################################################
 # What is the path to the primer tags?
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
@@ -10,43 +24,34 @@ TAG_Ns=""
 # What is the maximum number of Ns to allow at the end of a sequence before a tag is reached?
 # TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
 
-
-
-# What is the path to the reads?
-READ1=''
-READ2=''
-
-# Is it ok to rename the sequences within a fasta file?
-# This will happen after the fastq has been converted to a fasta file at the quality filtering step.
-RENAME_READS="YES"
-
-# What is the maximum expected length of the fragment of interest, including primers? # AND TAGS?
-LENGTH_FRAG="180"
-
-# What is the length of the reads of the Illumina run? (i.e. how long are the sequences in each of the run fastq files (R1 and R2)?)
-# LENGTH_READ="150"
-
-# Specify the path to the MEGAN executable file you want to use.
-megan_exec='/Applications/megan/MEGAN'
+# Should demultiplexed samples be concatenated for annotation as a single unit? (Each read can still be mapped back to samples)
+# Recommended: YES
+CONCATENATE_SAMPLES="YES"
 
 ################################################################################
 # PRIMER REMOVAL
+################################################################################
 # Specify a path to the fasta file containing the two primers used to generate the amplicons you sequenced:
 PRIMER_FILE=''
 
 # What proportion of mismatches are you willing to accept when looking for primers?
+# Recommended: "0.10"
 PRIMER_MISMATCH_PROPORTION="0.10"
+
 
 ################################################################################
 # HOMOPOLYMERS
+################################################################################
 # Would you like to remove reads containing runs of consecutive identical bases (homopolymers)?
 REMOVE_HOMOPOLYMERS="NO"
 # What is the maximum homopolymer length you're willing to accept?
 # Reads containing runs of identical bases longer than this will be discarded.
 HOMOPOLYMER_MAX="7"
 
+
 ################################################################################
 # CLUSTERING:
+################################################################################
 # Would you like to cluster sequences into OTUs based on similarity?
 CLUSTER_OTUS="YES"
 
@@ -55,6 +60,8 @@ CLUSTER_OTUS="YES"
 CLUSTERING_PERCENT="99"
 
 
+################################################################################
+# TAXONOMIC ANNOTATION
 ################################################################################
 # BLAST:
 # Specify the path to the BLAST database.
@@ -66,6 +73,11 @@ WORD_SIZE="50"
 EVALUE="1e-20"
 # number of matches recorded in the alignment:
 MAXIMUM_MATCHES="25"
+
+################################################################################
+# MEGAN
+# Specify the path to the MEGAN executable file you want to use.
+megan_exec='/Applications/megan/MEGAN'
 
 # What is the lowest taxonomic rank at which MEGAN should group OTUs?
 COLLAPSE_RANK1="Family"
@@ -81,16 +93,13 @@ MAX_EXPECTED="1e-25"
 PERFORM_SECONDARY_MEGAN="YES"
 COLLAPSE_RANK2="Genus"
 
-# Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
-PERFORM_CLEANUP="NO"
 
-
-####################### WOULD YOU LIKE TO PICK UP FROM AN EXISTING FILE?
+################################################################################
+# REANALYSIS
+################################################################################
+# Would you like to pick up where a previous analysis left off?
 # If reanalyzing existing demultiplexed data, point this variable to the directory storing the individual tag folders.
-EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed'
-
-# Should demultiplexed samples be concatenated for annotation as a single unit? (Each read can still be mapped back to samples)
-CONCATENATE_SAMPLES="YES"
+# EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed'
 
 # Have the reads already been paired?
 ALREADY_PEARED="NO"
@@ -101,6 +110,16 @@ PEAR_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis
 ALREADY_FILTERED="NO" # YES/NO
 FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141030_2020/2_filtered_renamed.fasta'
 
+
+################################################################################
+# GENERAL SETTINGS
+################################################################################
+# Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
+PERFORM_CLEANUP="NO"
+
+# Is it ok to rename the sequences within a fasta file?
+# This will happen after the fastq has been converted to a fasta file at the quality filtering step.
+RENAME_READS="YES"
 
 # Is the parallel compression utility 'pigz' installed? (Get it here: http://zlib.net/pigz/)
 PIGZ_INSTALLED="YES"
