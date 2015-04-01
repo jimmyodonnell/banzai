@@ -3,22 +3,24 @@
 # What is the path to the primer tags?
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
-PRIMER_TAGS='/Users/threeprime/Documents/Data/IlluminaData/16S/run_20141113_time_series/tags_16S.txt'
+PRIMER_TAGS=''
 
 # How many nucleotides pad the 5' end of the tag sequence?
-TAG_Ns="3"
+TAG_Ns=""
 # What is the maximum number of Ns to allow at the end of a sequence before a tag is reached?
 # TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
 
-# What is the path to the reads?
-READ1='/Users/threeprime/Documents/Data/IlluminaData/16S/run_20141113_time_series/library3/RK16sTS3_S3_L001_R1_001.fastq'
-READ2='/Users/threeprime/Documents/Data/IlluminaData/16S/run_20141113_time_series/library3/RK16sTS3_S3_L001_R2_001.fastq'
 
-# Is it ok to rename the sequences within a fasta file
+
+# What is the path to the reads?
+READ1=''
+READ2=''
+
+# Is it ok to rename the sequences within a fasta file?
 # This will happen after the fastq has been converted to a fasta file at the quality filtering step.
 RENAME_READS="YES"
 
-# What is the maximum expected length of the fragment of interest, including primers?
+# What is the maximum expected length of the fragment of interest, including primers? # AND TAGS?
 LENGTH_FRAG="180"
 
 # What is the length of the reads of the Illumina run? (i.e. how long are the sequences in each of the run fastq files (R1 and R2)?)
@@ -27,24 +29,33 @@ LENGTH_FRAG="180"
 # Specify the path to the MEGAN executable file you want to use.
 megan_exec='/Applications/megan/MEGAN'
 
+################################################################################
 # PRIMER REMOVAL
 # Specify a path to the fasta file containing the two primers used to generate the amplicons you sequenced:
-PRIMER_FILE='/Users/threeprime/Documents/Data/IlluminaData/16S/run_20141113_time_series/primers_16S.fasta'
+PRIMER_FILE=''
+
+# What proportion of mismatches are you willing to accept when looking for primers?
 PRIMER_MISMATCH_PROPORTION="0.10"
 
+################################################################################
+# HOMOPOLYMERS
 # Would you like to remove reads containing runs of consecutive identical bases (homopolymers)?
 REMOVE_HOMOPOLYMERS="NO"
 # What is the maximum homopolymer length you're willing to accept?
 # Reads containing runs of identical bases longer than this will be discarded.
 HOMOPOLYMER_MAX="7"
 
+################################################################################
 # CLUSTERING:
+# Would you like to cluster sequences into OTUs based on similarity?
+CLUSTER_OTUS="YES"
+
+# What percent similarity must sequences share to be considered the same OTU?
 # Note that this must be an integer. Contact me if this is a problem
 CLUSTERING_PERCENT="99"
 
-# If you'd like to blast reads without clustering them first, set this to YES:
-BLAST_WITHOUT_CLUSTERING="YES"
 
+################################################################################
 # BLAST:
 # Specify the path to the BLAST database.
 # Note this should be a path to any one of three files WITHOUT their extension *.nhr, *.nin, or *.nsq

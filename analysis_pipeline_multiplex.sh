@@ -5,6 +5,14 @@
 # An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
 # set -e
 
+echo "Do you want an interactive session?"
+select yn in "Yes" "No"; do
+    case $yn in
+        Yes ) make install; break;;
+        No ) exit;;
+    esac
+done
+
 # This command specifies the path to the directory containing the script
 SCRIPT_DIR="$(dirname "$0")"
 
