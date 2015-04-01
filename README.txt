@@ -3,13 +3,14 @@ This project analyzes the sequencing results from an Illumina MiSeq, run on a sa
 The primary file is a Bash Shell script, which should run on Unix and Linux machines. The script makes heavy usage of Unix command line utilities (such as find, grep, sed, awk, and more) and is written for the BSD versions of those programs as found on standard installations of Mac OSX.
 
 Dependencies:
-seqtk
+seqtk # reverse complementing entire fastq/a files; perhaps unnecessary now.
 cutadapt # note that version 1.7 will support anchored 3' sequences.
-PEAR
-usearch
-blast+
-MEGAN
-R
+PEAR # merging paired-end reads
+usearch # various tasks, including OTU clustering
+blast+ # taxonomic assignment
+MEGAN # taxonomic assignment
+R # ecological analyses
+fastqc # quality control of raw sequencing fastq files
 
 Wishlist/notes to self:
 -(consider piping pear (and other/all?) output by adding > pear_log.txt to end of line)
