@@ -1,15 +1,21 @@
 #!/bin/bash
 
 
+################################################################################
+# RAW DATA
+################################################################################
+# What is the file path to the directory containing all of the libraries/reads?
+PARENT_DIR="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/test/raw_data"
+
 # What is the path to the reads?
-READ1=''
-READ2=''
+# READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
+# READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
 
 # What is the maximum expected length of the fragment of interest, including primers? # AND TAGS?
 LENGTH_FRAG="180"
 
 # What is the length of the reads of the Illumina run? (i.e. how long are the sequences in each of the run fastq files (R1 and R2)?)
-# LENGTH_READ="150"
+LENGTH_READ="150"
 
 ################################################################################
 # DEMULTIPLEXING
@@ -17,10 +23,10 @@ LENGTH_FRAG="180"
 # What is the path to the primer tags?
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
-PRIMER_TAGS=''
+PRIMER_TAGS='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/tags_16S.txt'
 
 # How many nucleotides pad the 5' end of the tag sequence?
-TAG_Ns=""
+TAG_Ns="3"
 # What is the maximum number of Ns to allow at the end of a sequence before a tag is reached?
 # TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
 
@@ -32,7 +38,7 @@ CONCATENATE_SAMPLES="YES"
 # PRIMER REMOVAL
 ################################################################################
 # Specify a path to the fasta file containing the two primers used to generate the amplicons you sequenced:
-PRIMER_FILE=''
+PRIMER_FILE='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/primers_16S.fasta'
 
 # What proportion of mismatches are you willing to accept when looking for primers?
 # Recommended: "0.10"
@@ -118,6 +124,7 @@ FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Anal
 PERFORM_CLEANUP="NO"
 
 # Is it ok to rename the sequences within a fasta file?
+# This will only remove info about the machine; reads can still be traced back to origin in fastq.
 # This will happen after the fastq has been converted to a fasta file at the quality filtering step.
 RENAME_READS="YES"
 
