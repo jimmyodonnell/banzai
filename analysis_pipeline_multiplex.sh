@@ -37,7 +37,7 @@ fi
 START_TIME=$(date +%Y%m%d_%H%M)
 
 # And make an analysis directory with that timestamp
-ANALYSIS_DIR="${PARENT_DIR}"/Analysis_"${START_TIME}"
+ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
 mkdir "${ANALYSIS_DIR}"
 
 # Copy these files into that directory as a verifiable log you can refer back to.
@@ -123,7 +123,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	if [ "${RENAME_READS}" = "YES" ]; then
 		echo "Renaming reads..."
-		sed -E "s/ (1|2):N:0:[0-9]/_"${CURRENT_LIB##*/}"/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
+		sed -E "s/ (1|2):N:0:[0-9]/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
 		sed -E "s/>([a-zA-Z0-9-]*:){4}/>/" "${CURRENT_LIB}"/tmp.fasta > "${FILTERED_OUTPUT%.*}"_renamed.fasta
 		rm "${CURRENT_LIB}"/tmp.fasta
 		FILTERED_OUTPUT="${FILTERED_OUTPUT%.*}"_renamed.fasta
@@ -246,6 +246,17 @@ done
 
 
 ################################################################################
+# CONCATENATE SAMPLES
+################################################################################
+if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
+
+	echo "Concatenating fasta files..."
+	mkdir "$ANALYSIS_DIR"/concatenated
+	for TAG_SEQ in $TAGS; do
+		cat "${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/7_no_primers.fasta >> "${ANALYSIS_DIR}"/concatenated/1_demult_concat.fasta
+	done
+
+################################################################################
 # PRIMER REMOVAL
 ################################################################################
 echo "Removing primers..."
@@ -262,17 +273,6 @@ for TAG_SEQ in $TAGS; do
 	seqtk seq -r "${TAG_DIR}"/6_primerR1_removed.fasta > "${TAG_DIR}"/6_primerR1_removedRC.fasta
 	cat "${TAG_DIR}"/6_primerR1_removedRC.fasta "${TAG_DIR}"/6_primerR2_removed.fasta > "${TAG_DIR}"/7_no_primers.fasta
 done
-
-################################################################################
-# CONCATENATE SAMPLES
-################################################################################
-if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
-
-	echo "Concatenating fasta files..."
-	mkdir "$ANALYSIS_DIR"/concatenated
-	for TAG_SEQ in $TAGS; do
-		cat "${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/7_no_primers.fasta >> "${ANALYSIS_DIR}"/concatenated/1_demult_concat.fasta
-	done
 
 	################################################################################
 	# CONSOLIDATE IDENTICAL SEQUENCES

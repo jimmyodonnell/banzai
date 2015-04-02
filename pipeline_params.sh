@@ -7,6 +7,10 @@
 # What is the file path to the directory containing all of the libraries/reads?
 PARENT_DIR="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/test/raw_data"
 
+# This script will generate a directory (folder) containing the output of the script.
+# Where do you want this new folder to go?
+ANALYSIS_DIRECTORY="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/test"
+
 # What is the path to the reads?
 # READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
 # READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
