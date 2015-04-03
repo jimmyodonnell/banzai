@@ -11,6 +11,13 @@ PARENT_DIR="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/test/raw_d
 # Where do you want this new folder to go?
 ANALYSIS_DIRECTORY="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/test"
 
+# Where is the sequencing pool file? (SEE FORMATTING GUIDELINES IN README!)
+SEQUENCING_POOL_DATA="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/20150317_sequencing_pool.csv"
+
+# You can specify a folder into which the script places a PDF containing some results. By default, this will be the analysis folder
+# If you set this to a folder in your dropbox, you can check it out from anywhere.
+OUTPUT_PDF_DIR="/Users/threeprime/Documents/Dropbox/Kelly_Lab"
+
 # What is the path to the reads?
 # READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
 # READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
@@ -125,7 +132,7 @@ FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Anal
 # GENERAL SETTINGS
 ################################################################################
 # Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
-PERFORM_CLEANUP="NO"
+PERFORM_CLEANUP="YES"
 
 # Is it ok to rename the sequences within a fasta file?
 # This will only remove info about the machine; reads can still be traced back to origin in fastq.

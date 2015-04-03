@@ -1,15 +1,19 @@
-# analyze time series data
+#!/usr/bin/Rscript
+
+# analyze the data from a collection of runs -- input is a two CSV files
+
+args<-commandArgs(TRUE)
 
 # initialize PDF
 # pdf(file = "analysis_output.pdf")
-pdf(file = "/Users/threeprime/Documents/Dropbox/Kelly_Lab/")
+pdf(file = args[1])
 
 # READ IN THE DATA
 # unclustered:
 # DATA <- read.csv("~/Documents/Data/IlluminaData/16S/run_20141113_time_series/all_libraries/dups.csv")
 # clustered:
 # DATA <- read.csv("/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20141113_time_series/all_libraries/all_clusters.csv", row.names = 1)
-DATA <- read.csv("/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/test/Analysis_20150403_0109/all_lib/dups.csv", row.names = 1)
+DATA <- read.csv(args[2], row.names = 1)
 
 # for clustered data, replace "DUP" with "OTU"
 # rownames(DATA) <- gsub("DUP", "OTU", rownames(DATA))
@@ -21,7 +25,7 @@ DATA <- t(as.matrix(DATA))
 DATA <- DATA[,order(colSums(DATA), decreasing = TRUE)]
 
 # check matrix is the expected dimensions
-dim(DATA)
+# dim(DATA)
 
 # view number of reads per sample:
 reads_per_sample <- rowSums(DATA)
@@ -40,7 +44,7 @@ DATA.df <- cbind(TAG_LIB, as.data.frame(DATA))
 
 # Read in spreadsheet from labwork, which contains columns of sample names and corresponding tag sequences
 # for original formatting see "/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20141113_time_series/sample_data.csv"
-SAMPLES <- read.csv("/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/20150317_sequencing_pool.csv")
+SAMPLES <- read.csv(args[3])
 
 # Order the OTU data the same as the sequencing pool sample data
 
@@ -54,14 +58,14 @@ DATA.df <- DATA.df[match(interaction(SAMPLES[c("tag_sequence", "library")]), int
 # sample_name <- SAMPLES$sample_name[match(interaction(DATA.df[c("Tag", "Lib")]), interaction(SAMPLES[c("tag_sequence", "library")]))]
 # note I think it is safer to reorder the OTU data to match up with the sequencing pool first,
 # thus, just use
-SAMPLES$sample_name
+# SAMPLES$sample_name
 
 # for some reason there was an empty level, which caused problems down the road
 # sample_name <- droplevels(sample_name)
 
 # SAMPLE TYPE
 # Extract the data from the sequencing sample pool spreadsheet
-SAMPLES$sample_type
+# SAMPLES$sample_type
 # make a vector of sample types (environmental, tissue, filter blank)
 # first just make them all environmental
 # sample_type <- rep("environ", nrow(DATA.df))
@@ -71,7 +75,7 @@ SAMPLES$sample_type
 
 # add those to the data frame and check it out
 DATA.df <- cbind(sample_name = SAMPLES$sample_name, sample_type = SAMPLES$sample_type, DATA.df)
-DATA.df[,1:5]
+# DATA.df[,1:5]
 
 # Order by sample name
 DATA.df <- DATA.df[order(DATA.df$sample_name),]
@@ -91,7 +95,7 @@ sample_reads <- as.numeric(rowSums(DATA.df[,5:ncol(DATA.df)])); plot(sample_read
 # PLOT RICHNESS AGAINST READS
 plot(sample_reads, sample_rich, xlab="Reads per Sample", ylab = "Total Number of Clusters")
 lm_rich_reads <- lm(sample_rich~sample_reads)
-summary(lm_rich_reads)
+# summary(lm_rich_reads) # MAKE THIS PRINT
 
 split_shan <- split(sample_shan, paste(DATA.df[, "sample_name"], DATA.df[, "Tag"], DATA.df[, "Lib"]))
 split_rich <- split(sample_rich, paste(DATA.df[, "sample_name"], DATA.df[, "Tag"], DATA.df[, "Lib"]))
@@ -160,12 +164,12 @@ stripchart(
 	# group.names=as.character(reps)
 )
 abline(h = which(!duplicated(rev(DATA.df[,"sample_name"]))) -0.5, lty = 2, col = "lightgrey")
-dev.off()
+# dev.off()
 
 
 ##########################################################################################################
 # Correct richness for number of reads
-library(vegan)
+# library(vegan)
 # S <- specnumber(BCI) ## rowSums(BCI > 0) does the same...
 # plot(S, Srare, xlab = "Observed No. of Species", ylab = "Rarefied No. of Species")
 # abline(0, 1)
@@ -176,7 +180,7 @@ DATA.env <- DATA.df[DATA.df$sample_type=="environmental",]
 DATA.env <- droplevels(DATA.env)
 rownames(DATA.env) <- paste(DATA.env$sample_name, DATA.env$Tag, DATA.env$Lib)
 DATA.mat <- as.matrix(DATA.env[,5:ncol(DATA.env)])
-DATA.env[,1:6]
+# DATA.env[,1:6]
 
 # Calculate richness for the environmental samples
 rich_env <- as.numeric(rowSums(DATA.env[,5:ncol(DATA.df)] > 0))
@@ -217,9 +221,9 @@ rich_df <- data.frame(DATA.env[,1:4], tag_levels, rarefied_richness=as.numeric(R
 
 aov_rich <- aov(rarefied_richness ~ sample_name + tag_levels*Lib, data = rich_df)
 aov_rich <- aov(rarefied_richness ~ sample_name + Lib*tag_levels, data = rich_df)
-summary(aov_rich)
-as.matrix(aov_rich)
-capture.output(summary(aov_rich),file="/Users/threeprime/test.txt")
+# summary(aov_rich)
+# as.matrix(aov_rich)
+# capture.output(summary(aov_rich),file="/Users/threeprime/test.txt")
 
 
 # mean(rich_df$rarefied_richness)
@@ -293,6 +297,7 @@ BC_between_tag_mean <- sapply(BC_between_tag, lower_quadrant_mean)
 # GENERATE A STRIPCHART
 ########################################################################################################
 # pdf(file = "BC_dis_stripchart.pdf")
+par(mfrow=c(1,1))
 stripchart(
 	x = list(BC_within_tag, BC_between_tag_mean),
 	vertical = TRUE,
@@ -344,7 +349,7 @@ top10OTU_env <- names(sort(propOTU_total_env, decreasing = TRUE)[1:10])
 DATA.prop <- data.frame(DATA.df[1:4], DATA.df[,5:ncol(DATA.df)] / rowSums(DATA.df[,5:ncol(DATA.df)]))
 
 # to confirm this worked, make sure columns sum to 1!
-rowSums(DATA.prop[,5:ncol(DATA.prop)])
+# rowSums(DATA.prop[,5:ncol(DATA.prop)])
 
 # consider only the environmental samples, and only the top ten most abundant OTUs:
 DATA.prop_env <- DATA.prop[DATA.prop$sample_type == "environmental", c(colnames(DATA.prop)[1:4],  top10OTU_env)]
