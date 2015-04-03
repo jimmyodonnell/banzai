@@ -76,7 +76,7 @@ CLUSTERING_PERCENT="99"
 # BLAST:
 # Specify the path to the BLAST database.
 # Note this should be a path to any one of three files WITHOUT their extension *.nhr, *.nin, or *.nsq
-BLAST_DB='/Users/threeprime/Documents/Data/genbank/16S/16S_20141107/16S_20141107'
+BLAST_DB='/Users/threeprime/Documents/GoogleDrive/Data_NCBI/16S/16S_20141107/16S_20141107'
 # BLAST PARAMETERS
 PERCENT_IDENTITY="90"
 WORD_SIZE="50"
