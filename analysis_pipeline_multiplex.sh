@@ -254,7 +254,7 @@ done
 ################################################################################
 if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
-	echo "Concatenating fasta files..."
+	echo $(date +%H:%M) "Concatenating fasta files..."
 	CONCAT_DIR="$ANALYSIS_DIR"/all_lib
 	mkdir "${CONCAT_DIR}"
 
@@ -272,7 +272,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 ################################################################################
 # PRIMER REMOVAL
 ################################################################################
-	echo "Removing primers..."
+	echo $(date +%H:%M) "Removing primers..."
 	# for TAG_SEQ in $TAGS; do
 		# TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 		# Remove PRIMER1 and PRIMER2 from the BEGINNING of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
@@ -292,20 +292,19 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 ################################################################################
 # CONSOLIDATE IDENTICAL SEQUENCES
 ################################################################################
-	echo "Consolidating identical sequences... (python)"
+	echo $(date +%H:%M) "Consolidating identical sequences... (python)"
 	python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
 	# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
-	echo "Consolidating identical sequences... (awk)"
+	echo $(date +%H:%M) "Consolidating identical sequences... (awk)"
 	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle
 
 	# COUNT OCCURRENCES PER SAMPLE (LIBRARY + TAG) PER DUPLICATE
-	echo "Consolidating identical sequences per sample... (awk)"
+	echo $(date +%H:%M) "Consolidating identical sequences per sample... (awk)"
 	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		for TAG_SEQ in $TAGS; do
 			LIB_TAG="${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
-			# echo "${LIB_TAG}"
 			( awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
 		done
 	done
@@ -317,7 +316,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	rm ${DEREP_INPUT%/*}/*.dup
 
 	# Write fasta file in order to blast sequences
-	echo "Writing fasta file for duplicate (unBLASTed sequences)"
+	echo $(date +%H:%M) "Writing fasta file for duplicate (unBLASTed sequences)"
 	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 ################################################################################
@@ -327,13 +326,14 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		BLAST_INPUT="${DEREP_INPUT%/*}"/no_duplicates.fasta
 	else
 		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs.fasta -uc "${DEREP_INPUT%/*}"/9_clusters.uc -notmatched "${DEREP_INPUT%/*}"/9_notmatched.fasta
+		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uc "${DEREP_INPUT%/*}"/9_clusters.uc -notmatched "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
 
 		# remove the annoying line breaks
-		echo "I don't know why Robert Edgar (usearch) adds line breaks within fasta sequences, but I'm removing them here."
-		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_OTUs.fasta > "${DEREP_INPUT%/*}"/9_OTUs_nobreaks.fasta
-		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_notmatched.fasta > "${DEREP_INPUT%/*}"/9_notmatched_nobreaks.fasta
+		echo $(date +%H:%M) "I don't know why Robert Edgar (usearch) insists on adding line breaks within fasta sequences, but I'm removing them now..."
+		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta > "${DEREP_INPUT%/*}"/9_OTUs.fasta
+		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta > "${DEREP_INPUT%/*}"/9_notmatched.fasta
 
+		rm "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta
 		BLAST_INPUT="${DEREP_INPUT%/*}"/9_OTUs.fasta
 	fi
 
@@ -345,7 +345,7 @@ else
 	################################################################################
 	# PRIMER REMOVAL
 	################################################################################
-	echo "Removing primers..."
+	echo $(date +%H:%M) "Removing primers..."
 	for TAG_SEQ in $TAGS; do
 		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 		# REMOVE PRIMER SEQUENCES
@@ -367,7 +367,7 @@ else
 
 		# CONSOLIDATE IDENTICAL SEQUENCES.
 		# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
-		echo "Consolidating identical sequences..."
+		echo $(date +%H:%M) "Consolidating identical sequences..."
 		python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
 
 		# REMOVE SINGLETONS
@@ -462,11 +462,11 @@ lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 
 OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
-echo "passing args to R script:"
-echo "$SCRIPT_DIR/analyses_prelim.R"
-echo "${OUTPUT_PDF}"
-echo "${DEREP_INPUT%/*}"/dups.csv
-echo "${SEQUENCING_POOL_DATA}"
+echo $(date +%H:%M) "passing args to R..."
+# echo "$SCRIPT_DIR/analyses_prelim.R"
+# echo "${OUTPUT_PDF}"
+# echo "${DEREP_INPUT%/*}"/dups.csv
+# echo "${SEQUENCING_POOL_DATA}"
 Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${DEREP_INPUT%/*}"/dups.csv "${SEQUENCING_POOL_DATA}"
 
 
@@ -480,12 +480,12 @@ if [ "$PERFORM_CLEANUP" = "YES" ]; then
 	else
 		ZIPPER="gzip"
 	fi
-	echo "Compressing fasta and fastq files..."
+	echo $(date +%H:%M) "Compressing fasta and fastq files..."
 	find "${ANALYSIS_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
 	find "${ANALYSIS_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
-	echo "Cleanup performed."
+	echo $(date +%H:%M) "Cleanup performed."
 else
-	echo "Cleanup not performed."
+	echo $(date +%H:%M) "Cleanup not performed."
 fi
 
 FINISH_TIME=$(date +%Y%m%d_%H%M)
