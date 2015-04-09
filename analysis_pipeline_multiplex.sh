@@ -297,7 +297,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
 	# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
-	echo $(date +%H:%M) "Consolidating identical sequences... (awk)"
+	echo $(date +%H:%M) "Counting duplicates per identical sequence... (awk)"
 	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle
 
 	# COUNT OCCURRENCES PER SAMPLE (LIBRARY + TAG) PER DUPLICATE
@@ -325,6 +325,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	if [ "$CLUSTER_OTUS" = "NO" ]; then
 		BLAST_INPUT="${DEREP_INPUT%/*}"/no_duplicates.fasta
 	else
+		echo $(date +%H:%M) "Clustering OTUs..."
 		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
 		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uc "${DEREP_INPUT%/*}"/9_clusters.uc -notmatched "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
 
@@ -338,6 +339,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	fi
 
 	# BLAST CLUSTERS
+	echo $(date +%H:%M) "BLASTing..."
 	blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -num_threads "$N_CORES" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${DEREP_INPUT%/*}"/10_BLASTed.xml
 
 else
@@ -365,7 +367,9 @@ else
 
 		DEREP_INPUT="${TAG_DIR}"/7_no_primers.fasta
 
+		################################################################################
 		# CONSOLIDATE IDENTICAL SEQUENCES.
+		################################################################################
 		# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
 		echo $(date +%H:%M) "Consolidating identical sequences..."
 		python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
