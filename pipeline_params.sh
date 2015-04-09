@@ -5,17 +5,18 @@
 # RAW DATA
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/raw_data"
+PARENT_DIR="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/test/raw_data"
 
 # This script will generate a directory (folder) containing the output of the script.
 # Where do you want this new folder to go?
-ANALYSIS_DIRECTORY="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401"
+ANALYSIS_DIRECTORY="/Users/threeprime/Desktop"
 
 # Where is the sequencing pool file? (SEE FORMATTING GUIDELINES IN README!)
 SEQUENCING_POOL_DATA="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/20150317_sequencing_pool.csv"
 
-# You can specify a folder into which the script places a PDF containing some results. By default, this will be the analysis folder
-# If you set this to a folder in your dropbox, you can check it out from anywhere.
+# You can optionally specify a folder into which the script copies a PDF containing some results.
+# The pdf is created by default in the analysis folder specified above, but
+# if you set this to a folder in your dropbox, you can check it out from anywhere.
 OUTPUT_PDF_DIR="/Users/threeprime/Documents/Dropbox/Kelly_Lab"
 
 # What is the path to the reads?

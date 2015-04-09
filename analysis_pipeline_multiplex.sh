@@ -456,7 +456,7 @@ lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 ################################################################################
 # Once you have a final CSV file of the number of occurences of each OTU in each sample, run some preliminary analyses in R
 
-OUTPUT_PDF="${OUTPUT_PDF_DIR}"/analysis_results_"${START_TIME}".pdf
+OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
 echo "passing args to R script:"
 echo "$SCRIPT_DIR/analyses_prelim.R"
@@ -466,7 +466,8 @@ echo "${SEQUENCING_POOL_DATA}"
 Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${DEREP_INPUT%/*}"/dups.csv "${SEQUENCING_POOL_DATA}"
 
 
-
+REMOTE_PDF="${OUTPUT_PDF_DIR}"/analysis_results_"${START_TIME}".pdf
+cp "${OUTPUT_PDF}" "${REMOTE_PDF}"
 
 
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
