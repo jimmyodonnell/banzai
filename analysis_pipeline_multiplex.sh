@@ -292,14 +292,16 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 ################################################################################
 # CONSOLIDATE IDENTICAL SEQUENCES
 ################################################################################
-	echo "Consolidating identical sequences..."
+	echo "Consolidating identical sequences... (python)"
 	python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
 	# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
+	echo "Consolidating identical sequences... (awk)"
 	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle
 
 	# COUNT OCCURRENCES PER SAMPLE (LIBRARY + TAG) PER DUPLICATE
+	echo "Consolidating identical sequences per sample... (awk)"
 	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		for TAG_SEQ in $TAGS; do
 			LIB_TAG="${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
@@ -315,6 +317,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	rm ${DEREP_INPUT%/*}/*.dup
 
 	# Write fasta file in order to blast sequences
+	echo "Writing fasta file for duplicate (unBLASTed sequences)"
 	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 ################################################################################
@@ -327,6 +330,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs.fasta -uc "${DEREP_INPUT%/*}"/9_clusters.uc -notmatched "${DEREP_INPUT%/*}"/9_notmatched.fasta
 
 		# remove the annoying line breaks
+		echo "I don't know why Robert Edgar (usearch) adds line breaks within fasta sequences, but I'm removing them here."
 		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_OTUs.fasta > "${DEREP_INPUT%/*}"/9_OTUs_nobreaks.fasta
 		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_notmatched.fasta > "${DEREP_INPUT%/*}"/9_notmatched_nobreaks.fasta
 
