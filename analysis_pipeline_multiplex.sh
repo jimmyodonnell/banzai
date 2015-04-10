@@ -9,6 +9,17 @@
 # RAW DATA, ANALYSIS PARAMETERS, AND GENERAL SETTINGS
 ################################################################################
 
+# Define a variable called START_TIME
+START_TIME=$(date +%Y%m%d_%H%M)
+
+# And make an analysis directory with that timestamp
+ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
+mkdir "${ANALYSIS_DIR}"
+
+# Write a log file of output from this script (everything that prints to terminal)
+exec > >(tee "${ANALYSIS_DIRECTORY}"/logfile.txt)
+exec 2>&1
+
 # This command specifies the path to the directory containing this script
 SCRIPT_DIR="$(dirname "$0")"
 
@@ -32,13 +43,6 @@ fi
 
 # Get the directory containing the READ1 file and assign it to variable READ_DIR.
 # READ_DIR="${READ1%/*}"
-
-# Define a variable called START_TIME
-START_TIME=$(date +%Y%m%d_%H%M)
-
-# And make an analysis directory with that timestamp
-ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
-mkdir "${ANALYSIS_DIR}"
 
 # Copy these files into that directory as a verifiable log you can refer back to.
 cp "${SCRIPT_DIR}"/analysis_pipeline_multiplex.sh "${ANALYSIS_DIR}"/analysis_pipeline_used.txt
