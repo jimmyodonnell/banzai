@@ -27,3 +27,14 @@ homopolymer_line_numbers.txt
 - 2014 11 12: Noticed that the reverse tag removal step removes the tag label from the sequenceID line of fasta files if the tag sequence is RC-palindromic!
 
 ADD LIBRARY NAMES VARIABLE
+
+###############
+# LOG FILE
+###############
+# logging implemented! But...
+
+INVOKE THE SCRIPT BY TYPING 'bash script.sh' NOT 'sh script.sh' !!!!!
+
+
+# Alternatively, to have the pipeline print to terminal AND file:
+sh script.sh  2>&1 | tee ~/Desktop/logfile.txt

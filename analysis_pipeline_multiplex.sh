@@ -12,19 +12,20 @@
 # Define a variable called START_TIME
 START_TIME=$(date +%Y%m%d_%H%M)
 
-# And make an analysis directory with that timestamp
-ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
-mkdir "${ANALYSIS_DIR}"
-
-# Write a log file of output from this script (everything that prints to terminal)
-exec > >(tee "${ANALYSIS_DIRECTORY}"/logfile.txt)
-exec 2>&1
-
 # This command specifies the path to the directory containing this script
 SCRIPT_DIR="$(dirname "$0")"
 
 # Read in the parameter file
 source "$SCRIPT_DIR/pipeline_params.sh"
+
+# make an analysis directory with starting time timestamp
+ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
+mkdir "${ANALYSIS_DIR}"
+
+# Write a log file of output from this script (everything that prints to terminal)
+exec > >(tee "${ANALYSIS_DIR}"/logfile.txt)
+exec 2>&1
+
 
 # Compute read length (read length is calculated from length of the second line in READ1 file)
 # LENGTH_READ=$( sed '2q;d' "${READ1}" | awk '{ print length }' )
@@ -498,3 +499,5 @@ fi
 
 FINISH_TIME=$(date +%Y%m%d_%H%M)
 curl http://textbelt.com/text -d number=$PHONE_NUMBER -d message="Pipeline finished! Started $START_TIME Finished $FINISH_TIME"
+
+echo "All finished!"
