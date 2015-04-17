@@ -10,7 +10,7 @@ import sys
 try:
 	infile = sys.argv[1]
 except:
-	raise RuntimeError, '\n\n\n\tusage: ./jimmyjam.py <filename_to_sort>\n\n'
+	raise RuntimeError, '\n\n\n\tusage: ./dereplicate_fasta.py <filename_to_sort>\n\n'
 
 kwargs = {
 		#_file to sort

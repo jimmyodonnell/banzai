@@ -2,7 +2,7 @@
 
 # Pipeline for analysis of MULTIPLEXED Illumina data, a la Jimmy
 
-# An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
+# TODO An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
 # set -e
 
 ################################################################################
@@ -27,9 +27,6 @@ exec > >(tee "${ANALYSIS_DIR}"/logfile.txt)
 exec 2>&1
 
 
-# Compute read length (read length is calculated from length of the second line in READ1 file)
-# LENGTH_READ=$( sed '2q;d' "${READ1}" | awk '{ print length }' )
-
 # Read in the PEAR parameter files
 source "$SCRIPT_DIR/pear_params.sh"
 
@@ -42,8 +39,6 @@ else
 	echo "Multiple cores not detected."
 fi
 
-# Get the directory containing the READ1 file and assign it to variable READ_DIR.
-# READ_DIR="${READ1%/*}"
 
 # Copy these files into that directory as a verifiable log you can refer back to.
 cp "${SCRIPT_DIR}"/analysis_pipeline_multiplex.sh "${ANALYSIS_DIR}"/analysis_pipeline_used.txt
@@ -57,8 +52,6 @@ declare -a TAGS_ARRAY=($TAGS)
 # Read in primers and their reverse complements.
 PRIMER1=$( awk 'NR==2' "${PRIMER_FILE}" )
 PRIMER2=$( awk 'NR==4' "${PRIMER_FILE}" )
-# PRIMER1RC=$( seqtk seq -r "${PRIMER_FILE}" | awk 'NR==2' )
-# PRIMER2RC=$( seqtk seq -r "${PRIMER_FILE}" | awk 'NR==4' )
 PRIMER1RC=$( echo ${PRIMER1} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
 PRIMER2RC=$( echo ${PRIMER2} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
 
@@ -69,7 +62,7 @@ LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
 LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq' -print0 | xargs -0 -n1 dirname | sort --unique )
 
-# WOULD LIKE TO ADD A LIBRARY NAMES VARIABLE
+# TODO WOULD LIKE TO ADD A LIBRARY NAMES VARIABLE
 # LIBRARY_NAMES=$( ls "$PARENT_DIR" )
 # declare -a LIBRARY_NAMES_A=($LIBRARY_NAMES)
 
@@ -111,7 +104,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		INFILE_SIZE=$(stat "${MERGED_READS}" | awk '{ print $8 }')
 		if [ ${INFILE_SIZE} -gt 4000000000 ]; then
 		# Must first check the number of reads. If odd, file must be split so as not to split the middle read's sequence from its quality score.
-			echo "Splitting large input file for quality filtering..."
+			echo $(date +%H:%M) "Splitting large input file for quality filtering..."
 			LINES_MERGED=$(wc -l < "${MERGED_READS}")
 			READS_MERGED=$(( LINES_MERGED / 4 ))
 			HALF_LINES=$((LINES_MERGED / 2))
@@ -126,12 +119,13 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			usearch -fastq_filter "${MERGED_READS%.*}"_B.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta
 			cat "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta > "${FILTERED_OUTPUT}"
 		else
+			echo  $(date +%H:%M) "usearch is performing quality control on merged reads..."
 			usearch -fastq_filter "${MERGED_READS}" -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${FILTERED_OUTPUT}"
 		fi
 	fi
 
 	if [ "${RENAME_READS}" = "YES" ]; then
-		echo "Renaming reads..."
+		echo $(date +%H:%M) "Renaming reads..."
 		sed -E "s/ (1|2):N:0:[0-9]/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
 		sed -E "s/>([a-zA-Z0-9-]*:){4}/>/" "${CURRENT_LIB}"/tmp.fasta > "${FILTERED_OUTPUT%.*}"_renamed.fasta
 		rm "${CURRENT_LIB}"/tmp.fasta
@@ -145,7 +139,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	# HOMOPOLYMERS
 	################################################################################
 	if [ "${REMOVE_HOMOPOLYMERS}" = "YES" ]; then
-		echo "Removing homopolymers..."
+		echo $(date +%H:%M) "Removing homopolymers..."
 		grep -E -i "(A|T|C|G)\1{$HOMOPOLYMER_MAX,}" "${FILTERED_OUTPUT}" -B 1 -n | cut -f1 -d: | cut -f1 -d- | sed '/^$/d' > "${CURRENT_LIB}"/homopolymer_line_numbers.txt
 		if [ -s "${CURRENT_LIB}"/homopolymer_line_numbers.txt ]; then
 			awk 'NR==FNR{l[$0];next;} !(FNR in l)' "${CURRENT_LIB}"/homopolymer_line_numbers.txt "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/3_no_homopolymers.fasta
@@ -166,23 +160,8 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	# make a directory to put all the demultiplexed files in
 	mkdir "${LIB_OUTPUT_DIR}"/demultiplexed
 
-	# N_TAGS=$( wc -l < "${PRIMER_TAGS}" )
-
-	# Write a file of sequence names to make a tag fasta file (necessary for reverse complementing)
-	# for i in `seq ${N_TAGS}`; do echo \>tag"$i"; done > "${CURRENT_LIB}"/tag_names.txt
-	# Alternately paste those names and the sequences to make a tag fasta file.
-	# paste -d"\n" "${CURRENT_LIB}"/tag_names.txt "${PRIMER_TAGS}" > "${CURRENT_LIB}"/tags.fasta
-	# Reverse complement the tags
-	# seqtk seq -r "${CURRENT_LIB}"/tags.fasta > "${CURRENT_LIB}"/tags_RC.fasta
-
-
-	# The old loop: Start the loop, do one loop for each of the number of lines in the tag file.
-	# for (( i=1; i<=${N_TAGS}; i++ ));
-
-	# PARALLEL DEMULTIPLEXING
-
-	# Move sequences into separate directories based on tag sequence on left side of read
-	# test for speed against removing the tag while finding it: wrap first tag regex in gsub(/pattern/,""):  awk 'gsub(/^.{0,9}'"$TAG_SEQ"'/,""){if . . .
+	# Copy sequences to fasta files into separate directories based on tag sequence on left side of read
+	# TODO test for speed against removing the tag while finding it: wrap first tag regex in gsub(/pattern/,""):  awk 'gsub(/^.{0,9}'"$TAG_SEQ"'/,""){if . . .
 	echo "Demultiplexing: removing left tag (started at $(date +%H:%M))"
 	for TAG_SEQ in $TAGS; do
 	(	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
@@ -193,25 +172,6 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	wait
 
-	# Remove tags from left side of read
-	# echo "Demultiplexing: removing left tag (started at $(date +%H:%M))"
-	# for TAG_SEQ in $TAGS; do
-	# (	TAG_DIR="${CURRENT_LIB}"/demultiplexed/tag_"${TAG_SEQ}"
-	# 	sed -E 's/^.{0,9}'"${TAG_SEQ}"'//' "${TAG_DIR}"/1_tagL_present.fasta > "${TAG_DIR}"/2_tagL_removed.fasta ) &
-	# done
-	#
-	# wait
-	#
-	# Identify reads containing tags towards the right side of the read
-	# echo "Demultiplexing: finding right tag (started at $(date +%H:%M))"
-	# for TAG_SEQ in $TAGS; do
-	# (	TAG_DIR="${CURRENT_LIB}"/demultiplexed/tag_"${TAG_SEQ}"
-	# 	TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
-	# 	grep -E "${TAG_RC}.{0,9}$" -B 1 "${TAG_DIR}"/1_tagL_removed.fasta | grep -v -- "^--$"  > "${TAG_DIR}"/3_tagR_present.fasta ) &
-	# done
-	#
-	# wait
-	#
 	echo "Demultiplexing: removing right tag and adding tag sequence to sequence ID (started at $(date +%H:%M))"
 	for TAG_SEQ in $TAGS; do
 	(	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
@@ -221,32 +181,6 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	wait
 
-	# echo "Demultiplexing: adding tag sequence to sequenceID (started at $(date +%H:%M))"
-	# for TAG_SEQ in $TAGS; do
-	# (	TAG_DIR="${CURRENT_LIB}"/demultiplexed/tag_"${TAG_SEQ}"
-	# 	awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a "tag_""'"$TAG_SEQ"'"; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
-	# done
-
-	# Assign the current tag to to variable TAG, and its reverse complement to TAG_RC
-	# TAG=$( sed -n $((i * 2))p "${CURRENT_LIB}"/tags.fasta )
-	# TAG_RC=$( sed -n $((i * 2))p "${CURRENT_LIB}"/tags_RC.fasta )
-
-	# Create a directory for the tag
-	# mkdir "${CURRENT_LIB}"/demultiplexed/tag_"${i}"
-
-	# Make a variable (CURRENT_DIR) with the current tag's directory for ease of reading and writing.
-	# CURRENT_DIR="${CURRENT_LIB}"/demultiplexed/tag_"${i}"
-
-	# REMOVE TAG SEQUENCES
-	# remove the tag from the beginning of the sequence (5' end) in it's current orientation
-	# cutadapt -g ^NNN"${TAG}" -e 0 --discard-untrimmed "${DEMULTIPLEX_INPUT}" > "${CURRENT_DIR}"/5prime_tag_rm.fasta
-
-	# Need to first grep lines containing pattern first, THEN following sed command with remove them
-	# grep -E "${TAG_RC}.{0,9}$" -B 1 "${CURRENT_DIR}"/5prime_tag_rm.fasta | grep -v -- "^--$"  > "${CURRENT_DIR}"/3_prime_tagged.fasta
-	# Turn the following line on to write chimaeras to a file.
-	# grep -E -v "${TAG_RC}.{0,9}$" "${CURRENT_DIR}"/5prime_tag_rm.fasta > "${CURRENT_DIR}"/chimaeras.fasta
-	# This sed command looks really f***ing ugly; but I'm pretty sure it works.
-	# sed -E 's/'"${TAG_RC}"'.{0,9}$//' "${CURRENT_DIR}"/3_prime_tagged.fasta > "${CURRENT_DIR}"/3prime_tag_rm.fasta
 
 done
 ################################################################################
@@ -355,7 +289,6 @@ else
 	echo $(date +%H:%M) "Removing primers..."
 	for TAG_SEQ in $TAGS; do
 		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
-		# REMOVE PRIMER SEQUENCES
 		# Remove PRIMER1 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
 		cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/2_notags.fasta > "${TAG_DIR}"/5_primerL1_removed.fasta
 		cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/2_notags.fasta > "${TAG_DIR}"/5_primerL2_removed.fasta
@@ -462,8 +395,6 @@ lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 	done
 
 
-
-
 ################################################################################
 # PRELIMINARY ANALYSES
 ################################################################################
@@ -472,10 +403,6 @@ lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
 echo $(date +%H:%M) "passing args to R..."
-# echo "$SCRIPT_DIR/analyses_prelim.R"
-# echo "${OUTPUT_PDF}"
-# echo "${DEREP_INPUT%/*}"/dups.csv
-# echo "${SEQUENCING_POOL_DATA}"
 Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${DEREP_INPUT%/*}"/dups.csv "${SEQUENCING_POOL_DATA}"
 
 
@@ -498,6 +425,6 @@ else
 fi
 
 FINISH_TIME=$(date +%Y%m%d_%H%M)
-curl http://textbelt.com/text -d number=$PHONE_NUMBER -d message="Pipeline finished! Started $START_TIME Finished $FINISH_TIME"
+curl -sS http://textbelt.com/text -d number=$PHONE_NUMBER -d message="Pipeline finished! Started $START_TIME Finished $FINISH_TIME"
 
 echo "All finished!"
