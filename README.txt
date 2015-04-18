@@ -2,6 +2,9 @@ This project analyzes the sequencing results from an Illumina MiSeq, run on a sa
 
 The primary file is a Bash Shell script, which should run on Unix and Linux machines. The script makes heavy usage of Unix command line utilities (such as find, grep, sed, awk, and more) and is written for the BSD versions of those programs as found on standard installations of Mac OSX.
 
+# Basic implementation:
+configu
+
 Dependencies:
 seqtk # reverse complementing entire fastq/a files
 cutadapt # note that version 1.7 will support anchored 3' sequences.
@@ -12,7 +15,8 @@ MEGAN # taxonomic assignment
 R # ecological analyses
 fastqc # quality control of raw sequencing fastq files
 
-Wishlist/notes to self:
+Wishlist/TODO/notes to self:
+- streamline config file
 
 - Potential files to be removed as part of cleanup at the end of script:
 homopolymer_line_numbers.txt
@@ -35,3 +39,20 @@ INVOKE THE SCRIPT BY TYPING 'bash script.sh' NOT 'sh script.sh' !!!!!
 
 # Alternatively, to have the pipeline print to terminal AND file:
 sh script.sh  2>&1 | tee ~/Desktop/logfile.txt
+
+
+
+# Removal of duplicate sequences (dereplicate_fasta.py)
+Input: a fasta file (e.g. 'infile.fasta')
+Output: two files, with the same name as the input but with the added extensions '.seq' and '.all' (e.g. 'infile.fasta.all', 'infile.fasta.seq')
+The most important output is a file which contains each unique DNA sequence in the fasta file, followed by the labels of the reads with this sequence
+Thus, if an input fasta file consisted of three reads with identical DNA sequences:
+  >READ1
+  AATAGCGCTACGT
+  >READ2
+  AATAGCGCTACGT
+  >READ3
+  AATAGCGCTACGT
+
+The output file would be as follows:
+AATAGCGCTACGT ; READ1; READ2; READ3
