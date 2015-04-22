@@ -44,8 +44,8 @@ sh script.sh  2>&1 | tee ~/Desktop/logfile.txt
 
 # Removal of duplicate sequences (dereplicate_fasta.py)
 Input: a fasta file (e.g. 'infile.fasta')
-Output: two files, with the same name as the input but with the added extensions '.seq' and '.all' (e.g. 'infile.fasta.all', 'infile.fasta.seq')
-The most important output is a file which contains each unique DNA sequence in the fasta file, followed by the labels of the reads with this sequence
+Output: a file with the same name as the input but with the added extension '.all' (e.g. 'infile.fasta.all')
+This file contains each unique DNA sequence from the fasta file, followed by the labels of the reads matching this sequence
 Thus, if an input fasta file consisted of three reads with identical DNA sequences:
   >READ1
   AATAGCGCTACGT
@@ -54,5 +54,7 @@ Thus, if an input fasta file consisted of three reads with identical DNA sequenc
   >READ3
   AATAGCGCTACGT
 
-The output file would be as follows:
+The output file is as follows:
 AATAGCGCTACGT ; READ1; READ2; READ3
+
+# Note that the original script also ouput a file of the sequences only (no names), but I removed this functionality on 20150417
