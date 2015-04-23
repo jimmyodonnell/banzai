@@ -16,7 +16,7 @@ START_TIME=$(date +%Y%m%d_%H%M)
 SCRIPT_DIR="$(dirname "$0")"
 
 # Read in the parameter file
-source "$SCRIPT_DIR/pipeline_params.sh"
+source "$SCRIPT_DIR/banzai_params.sh"
 
 # make an analysis directory with starting time timestamp
 ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
@@ -214,7 +214,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	CONCAT_DIR="$ANALYSIS_DIR"/all_lib
 	mkdir "${CONCAT_DIR}"
 
-	# could move this into above loop after demultiplexing?
+	# TODO could move this into above loop after demultiplexing?
 	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 		LIB_OUTPUT_DIR="${ANALYSIS_DIR}"/${CURRENT_LIB##*/}
@@ -270,6 +270,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# Write a csv file of the number of occurrences of each duplicate sequence per tag.
 	find "${DEREP_INPUT%/*}" -type f -name '*.dup' -exec paste -d, {} \+ | awk '{ print "DUP_" NR-1 "," $0 }' > "${DEREP_INPUT%/*}"/dups.csv
+	# delete all of the '.dup' files
 	rm ${DEREP_INPUT%/*}/*.dup
 
 	# Write fasta file in order to blast sequences
@@ -290,16 +291,17 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uc "${UC_FILE}" -notmatched "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
 
 		# remove the annoying line breaks
-		echo $(date +%H:%M) "I don't know why Robert Edgar (usearch) insists on adding line breaks within fasta sequences, but I'm removing them now..."
+		echo $(date +%H:%M) "I don't know why Robert Edgar (usearch) adds line breaks within fasta sequences, but I'm removing them now..."
 		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta > "${DEREP_INPUT%/*}"/9_OTUs.fasta
 		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta > "${DEREP_INPUT%/*}"/9_notmatched.fasta
 
-		rm "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta
+		rm "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
 
 		################################################################################
 		# RESOLVE OTUS AND DUPLICATES
 		################################################################################
-		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($1 == "S") {print $9 "," $9} else if ($1 == "H") print $9 "," $12 }' $INFILE
+		DUPS_TO_OTUS="${DEREP_INPUT%/*}"/dups_to_otus.csv
+		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($1 == "S") {print $9 "," $9} else if ($1 == "H") print $9 "," $12 }' "${UC_FILE}" > "${DUPS_TO_OTUS}"
 
 		BLAST_INPUT="${DEREP_INPUT%/*}"/9_OTUs.fasta
 	fi
