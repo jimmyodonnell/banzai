@@ -80,7 +80,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	mkdir "${LIB_OUTPUT_DIR}"
 
 	################################################################################
-	#MERGE PAIRED-END READS (PEAR)
+	# MERGE PAIRED-END READS (PEAR)
 	################################################################################
 	if [ "$ALREADY_PEARED" = "YES" ]; then
 		MERGED_READS="$PEAR_OUTPUT"
@@ -92,7 +92,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	fi
 
 	################################################################################
-	# QUALITY FILTERING
+	# QUALITY FILTERING (usearch)
 	################################################################################
 	# FILTER READS (This is the last step that uses quality scores, so convert to fasta)
 	if [ "${ALREADY_FILTERED}" = "YES" ]; then
@@ -136,7 +136,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 
 	################################################################################
-	# HOMOPOLYMERS
+	# HOMOPOLYMERS (grep, awk)
 	################################################################################
 	if [ "${REMOVE_HOMOPOLYMERS}" = "YES" ]; then
 		echo $(date +%H:%M) "Removing homopolymers..."
@@ -155,10 +155,11 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	fi
 
 	################################################################################
-	# DEMULTIPLEXING
+	# DEMULTIPLEXING (awk)
 	################################################################################
 	# make a directory to put all the demultiplexed files in
-	mkdir "${LIB_OUTPUT_DIR}"/demultiplexed
+	DEMULTIPLEXED_DIR="${LIB_OUTPUT_DIR}"/demultiplexed
+	mkdir "${DEMULTIPLEXED_DIR}"
 
 	# Copy sequences to fasta files into separate directories based on tag sequence on left side of read
 	# TODO test for speed against removing the tag while finding it: wrap first tag regex in gsub(/pattern/,""):  awk 'gsub(/^.{0,9}'"$TAG_SEQ"'/,""){if . . .
@@ -181,22 +182,39 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	wait
 
-
 done
 ################################################################################
 # END LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
 ################################################################################
 
 
+
+
+
+
+
+
+
+
+# TODO add single if/else for CONCATENATE_SAMPLES: assign directory as appropriate, correct references within loop to be extendable
+if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
+	# do the stuff here
+	WORKING_DIR="${CONCAT_DIR}"
+else
+	WORKING_DIR="${LIBRARY_DIRECTORIES}"
+fi
+
 ################################################################################
 # CONCATENATE SAMPLES
 ################################################################################
+# TODO could move this first step up above any loops (no else)
 if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	echo $(date +%H:%M) "Concatenating fasta files..."
 	CONCAT_DIR="$ANALYSIS_DIR"/all_lib
 	mkdir "${CONCAT_DIR}"
 
+	# could move this into above loop after demultiplexing?
 	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 		LIB_OUTPUT_DIR="${ANALYSIS_DIR}"/${CURRENT_LIB##*/}
@@ -208,9 +226,9 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	done
 
-################################################################################
-# PRIMER REMOVAL
-################################################################################
+	################################################################################
+	# PRIMER REMOVAL
+	################################################################################
 	echo $(date +%H:%M) "Removing primers..."
 	# for TAG_SEQ in $TAGS; do
 		# TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
@@ -228,9 +246,9 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		DEREP_INPUT="${CONCAT_DIR}"/7_no_primers.fasta
 	# done
 
-################################################################################
-# CONSOLIDATE IDENTICAL SEQUENCES
-################################################################################
+	################################################################################
+	# CONSOLIDATE IDENTICAL SEQUENCES
+	################################################################################
 	echo $(date +%H:%M) "Consolidating identical sequences... (python)"
 	python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
@@ -258,15 +276,18 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	echo $(date +%H:%M) "Writing fasta file for duplicate (unBLASTed sequences)"
 	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
-################################################################################
-# CLUSTER OTUS
-################################################################################
+	################################################################################
+	# CLUSTER OTUS
+	################################################################################
+	# Note that identical (duplicate) sequences were consolidated earlier;
+	# This step outputs a file (*.uc) that lists, for every sequence, which sequence it clusters with
 	if [ "$CLUSTER_OTUS" = "NO" ]; then
 		BLAST_INPUT="${DEREP_INPUT%/*}"/no_duplicates.fasta
 	else
 		echo $(date +%H:%M) "Clustering OTUs..."
 		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uc "${DEREP_INPUT%/*}"/9_clusters.uc -notmatched "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
+		UC_FILE="${DEREP_INPUT%/*}"/9_clusters.uc
+		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uc "${UC_FILE}" -notmatched "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
 
 		# remove the annoying line breaks
 		echo $(date +%H:%M) "I don't know why Robert Edgar (usearch) insists on adding line breaks within fasta sequences, but I'm removing them now..."
@@ -274,14 +295,27 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta > "${DEREP_INPUT%/*}"/9_notmatched.fasta
 
 		rm "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta
+
+		################################################################################
+		# RESOLVE OTUS AND DUPLICATES
+		################################################################################
+		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($1 == "S") {print $9 "," $9} else if ($1 == "H") print $9 "," $12 }' $INFILE
+
 		BLAST_INPUT="${DEREP_INPUT%/*}"/9_OTUs.fasta
 	fi
+
+
 
 	# BLAST CLUSTERS
 	echo $(date +%H:%M) "BLASTing..."
 	blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -num_threads "$N_CORES" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${DEREP_INPUT%/*}"/10_BLASTed.xml
 
+
+
 else
+################################################################################
+# DON'T CONCATENATE SAMPLES
+################################################################################
 
 	################################################################################
 	# PRIMER REMOVAL
@@ -300,14 +334,14 @@ else
 		cat "${TAG_DIR}"/6_primerR1_removedRC.fasta "${TAG_DIR}"/6_primerR2_removed.fasta > "${TAG_DIR}"/7_no_primers.fasta
 	done
 
+	################################################################################
+	# CONSOLIDATE IDENTICAL SEQUENCES
+	################################################################################
 	for TAG_SEQ in $TAGS; do
 		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 
 		DEREP_INPUT="${TAG_DIR}"/7_no_primers.fasta
 
-		################################################################################
-		# CONSOLIDATE IDENTICAL SEQUENCES.
-		################################################################################
 		# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
 		echo $(date +%H:%M) "Consolidating identical sequences..."
 		python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
@@ -427,4 +461,4 @@ fi
 FINISH_TIME=$(date +%Y%m%d_%H%M)
 curl -sS http://textbelt.com/text -d number=$PHONE_NUMBER -d message="Pipeline finished! Started $START_TIME Finished $FINISH_TIME"
 
-echo "All finished!"
+echo -e '\nAll finished!'
