@@ -249,7 +249,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	################################################################################
 	# CONSOLIDATE IDENTICAL SEQUENCES
 	################################################################################
-	echo $(date +%H:%M) "Consolidating identical sequences... (python)"
+	echo $(date +%H:%M) "Identifying identical sequences... (python)"
 	python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 

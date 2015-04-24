@@ -17,7 +17,7 @@ kwargs = {
 		'fname'		: infile,
 
 		#_what you want between string1 and uniq_id1, uniq_id2 sections
-		'sep'		: ' ; ',
+		'sep'		: ';',
 
 		#_name of output file for col1 == dna str, col2-coln == uniq id lists
 		'outall'	: '{0:s}.all'.format(infile),
