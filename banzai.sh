@@ -255,14 +255,14 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
 	echo $(date +%H:%M) "Counting duplicates per identical sequence... (awk)"
-	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle
+	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle.txt
 
 	# COUNT OCCURRENCES PER SAMPLE (LIBRARY + TAG) PER DUPLICATE
 	echo $(date +%H:%M) "Consolidating identical sequences per sample... (awk)"
 	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		for TAG_SEQ in $TAGS; do
 			LIB_TAG="${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
-			( awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
+			( awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
 		done
 	done
 
@@ -275,7 +275,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# Write fasta file in order to blast sequences
 	echo $(date +%H:%M) "Writing fasta file for duplicate (unBLASTed sequences)"
-	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
+	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 	################################################################################
 	# CLUSTER OTUS
@@ -288,7 +288,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		echo $(date +%H:%M) "Clustering OTUs..."
 		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
 		UC_FILE="${DEREP_INPUT%/*}"/9_clusters.uc
-		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uc "${UC_FILE}" -notmatched "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
+		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uc "${UC_FILE}" ‑uparseout "${DEREP_INPUT%/*}"/uparse_output.txt -notmatched "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
 
 		# remove the annoying line breaks
 		echo $(date +%H:%M) "I don't know why Robert Edgar (usearch) adds line breaks within fasta sequences, but I'm removing them now..."
@@ -351,20 +351,20 @@ else
 		# REMOVE SINGLETONS
 		# usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
 		# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
-		awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle
+		awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle.txt
 
 		# count the duplicates
-		awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT%/*}"/nosingle > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup
+		awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT%/*}"/nosingle.txt > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup
 
 		# Write fasta file in order to blast sequences
-		awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle > ${DEREP_INPUT%/*}/no_duplicates.fasta
+		awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 		# CLUSTER SEQUENCES
 		if [ "$CLUSTER_OTUS" = "NO" ]; then
 			BLAST_INPUT=${DEREP_INPUT%/*}/no_duplicates.fasta
 		else
 			CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-			usearch -cluster_otus "${DEREP_INPUT%/*}"/nosingle -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -uc "${TAG_DIR}"/9_clusters.uc -notmatched "${TAG_DIR}"/9_notmatched.fasta
+			usearch -cluster_otus "${DEREP_INPUT%/*}"/nosingle.txt -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -uc "${TAG_DIR}"/9_clusters.uc -notmatched "${TAG_DIR}"/9_notmatched.fasta
 			BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
 		fi
 
