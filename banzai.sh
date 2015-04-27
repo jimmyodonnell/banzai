@@ -287,8 +287,8 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	else
 		echo $(date +%H:%M) "Clustering OTUs..."
 		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-		UC_FILE="${DEREP_INPUT%/*}"/9_clusters.uc
-		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uc "${UC_FILE}" ‑uparseout "${DEREP_INPUT%/*}"/uparse_output.txt -notmatched "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
+		UPARSE_OUT="${DEREP_INPUT%/*}"/OTU_uparse.txt
+		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta ‑uparseout "${UPARSE_OUT}"
 
 		# remove the annoying line breaks
 		echo $(date +%H:%M) "I don't know why Robert Edgar (usearch) adds line breaks within fasta sequences, but I'm removing them now..."
@@ -301,7 +301,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		# RESOLVE OTUS AND DUPLICATES
 		################################################################################
 		DUPS_TO_OTUS="${DEREP_INPUT%/*}"/dups_to_otus.csv
-		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($1 == "S") {print $9 "," $9} else if ($1 == "H") print $9 "," $12 }' "${UC_FILE}" > "${DUPS_TO_OTUS}"
+		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($1 == "S") {print $9 "," $9} else if ($1 == "H") print $9 "," $12 }' "${UPARSE_OUT}" > "${DUPS_TO_OTUS}"
 
 		BLAST_INPUT="${DEREP_INPUT%/*}"/9_OTUs.fasta
 	fi
@@ -364,7 +364,8 @@ else
 			BLAST_INPUT=${DEREP_INPUT%/*}/no_duplicates.fasta
 		else
 			CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-			usearch -cluster_otus "${DEREP_INPUT%/*}"/nosingle.txt -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -uc "${TAG_DIR}"/9_clusters.uc -notmatched "${TAG_DIR}"/9_notmatched.fasta
+			UPARSE_OUT="${DEREP_INPUT%/*}"/OTU_uparse.txt
+			usearch -cluster_otus "${DEREP_INPUT%/*}"/nosingle.txt -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -uparseout "${UPARSE_OUT}"
 			BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
 		fi
 
