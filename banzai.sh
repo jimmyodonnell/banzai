@@ -41,8 +41,8 @@ fi
 
 
 # Copy these files into that directory as a verifiable log you can refer back to.
-cp "${SCRIPT_DIR}"/analysis_pipeline_multiplex.sh "${ANALYSIS_DIR}"/analysis_pipeline_used.txt
-cp "${SCRIPT_DIR}"/pipeline_params.sh "${ANALYSIS_DIR}"/pipeline_parameters.txt
+cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
+cp "${SCRIPT_DIR}"/banzai_params.sh "${ANALYSIS_DIR}"/analysis_parameters.txt
 cp "${SCRIPT_DIR}"/pear_params.sh "${ANALYSIS_DIR}"/pear_parameters.txt
 
 # make tag sequences into a list
@@ -78,6 +78,9 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	LIB_OUTPUT_DIR="${ANALYSIS_DIR}"/${CURRENT_LIB##*/}
 	mkdir "${LIB_OUTPUT_DIR}"
+
+	# TODO remove whitespace from sequence labels
+	# sed 's/ /_/'
 
 	################################################################################
 	# MERGE PAIRED-END READS (PEAR)
@@ -120,15 +123,19 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			cat "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta > "${FILTERED_OUTPUT}"
 		else
 			echo  $(date +%H:%M) "usearch is performing quality control on merged reads..."
-			usearch -fastq_filter "${MERGED_READS}" -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${FILTERED_OUTPUT}"
+			usearch -fastq_filter "${MERGED_READS}" -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${FILTERED_OUTPUT}"_linebreaks
+			echo  $(date +%H:%M) "removing fasta linebreaks..."
+			awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${FILTERED_OUTPUT}"_linebreaks > "${FILTERED_OUTPUT}"
 		fi
 	fi
 
 	if [ "${RENAME_READS}" = "YES" ]; then
 		echo $(date +%H:%M) "Renaming reads..."
-		sed -E "s/ (1|2):N:0:[0-9]/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
+		# usearch7:	sed -E "s/ (1|2):N:0:[0-9]/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
+		# usearch8, which without warning removes any part of the sequence ID following a space.
+		sed -E "s/$/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
 		sed -E "s/>([a-zA-Z0-9-]*:){4}/>/" "${CURRENT_LIB}"/tmp.fasta > "${FILTERED_OUTPUT%.*}"_renamed.fasta
-		rm "${CURRENT_LIB}"/tmp.fasta
+		# rm "${CURRENT_LIB}"/tmp.fasta
 		FILTERED_OUTPUT="${FILTERED_OUTPUT%.*}"_renamed.fasta
 	else
 		echo "Reads not renamed"
@@ -288,14 +295,15 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		echo $(date +%H:%M) "Clustering OTUs..."
 		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
 		UPARSE_OUT="${DEREP_INPUT%/*}"/OTU_uparse.txt
-		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta ‑uparseout "${UPARSE_OUT}"
+		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uparseout "${UPARSE_OUT}"
 
 		# remove the annoying line breaks
 		echo $(date +%H:%M) "I don't know why Robert Edgar (usearch) adds line breaks within fasta sequences, but I'm removing them now..."
 		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta > "${DEREP_INPUT%/*}"/9_OTUs.fasta
-		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta > "${DEREP_INPUT%/*}"/9_notmatched.fasta
+		# usearch option -notmatched disappeared with version 8
+		# awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta > "${DEREP_INPUT%/*}"/9_notmatched.fasta
 
-		rm "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
+		rm "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta # "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
 
 		################################################################################
 		# RESOLVE OTUS AND DUPLICATES
