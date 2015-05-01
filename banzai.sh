@@ -135,7 +135,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		# usearch8, which without warning removes any part of the sequence ID following a space.
 		sed -E "s/$/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
 		sed -E "s/>([a-zA-Z0-9-]*:){4}/>/" "${CURRENT_LIB}"/tmp.fasta > "${FILTERED_OUTPUT%.*}"_renamed.fasta
-		# rm "${CURRENT_LIB}"/tmp.fasta
+		rm "${CURRENT_LIB}"/tmp.fasta
 		FILTERED_OUTPUT="${FILTERED_OUTPUT%.*}"_renamed.fasta
 	else
 		echo "Reads not renamed"
@@ -309,7 +309,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		# RESOLVE OTUS AND DUPLICATES
 		################################################################################
 		DUPS_TO_OTUS="${DEREP_INPUT%/*}"/dups_to_otus.csv
-		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($1 == "S") {print $9 "," $9} else if ($1 == "H") print $9 "," $12 }' "${UPARSE_OUT}" > "${DUPS_TO_OTUS}"
+		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($2 == "otu") {print $1 "," $1} else if ($2 == "match") print $1 "," $5 }' "${UPARSE_OUT}" > "${DUPS_TO_OTUS}"
 
 		BLAST_INPUT="${DEREP_INPUT%/*}"/9_OTUs.fasta
 	fi
