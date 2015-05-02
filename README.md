@@ -1,19 +1,25 @@
-This project analyzes the sequencing results from an Illumina MiSeq, run on a sample of PCR amplicons.
+# banzai! #
 
+This project analyzes the sequencing results from an Illumina MiSeq, run on a set of PCR amplicons.
+It was written for a set of PCR amplicons which have been
 The primary file is a Bash Shell script, which should run on Unix and Linux machines. The script makes heavy usage of Unix command line utilities (such as find, grep, sed, awk, and more) and is written for the BSD versions of those programs as found on standard installations of Mac OSX.
 
-# Basic implementation:
-configu
+## Basic implementation ##
+Simply edit the parameters in the file 'banzai_params.sh', then type into a terminal:
+```sh
+bash /Users/user_name/path/to/the/file/banzai.sh
+```
 
-Dependencies:
-seqtk # reverse complementing entire fastq/a files
-cutadapt # note that version 1.7 will support anchored 3' sequences.
-PEAR # merging paired-end reads
-usearch # various tasks, including OTU clustering
-blast+ # taxonomic assignment
-MEGAN # taxonomic assignment
-R # ecological analyses
-fastqc # quality control of raw sequencing fastq files
+
+## Dependencies ##
+* seqtk # reverse complementing entire fastq/a files
+* cutadapt # note that version 1.7 will support anchored 3' sequences.
+* PEAR # merging paired-end reads
+* usearch # quality filtering of merged paired-end fastq files, OTU clustering
+* blast+ # taxonomic assignment
+* MEGAN # taxonomic assignment
+* R # ecological analyses. Requires the packages
+* fastqc # quality control of raw sequencing fastq files
 
 Wishlist/TODO/notes to self:
 - streamline config file

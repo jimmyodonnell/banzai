@@ -308,8 +308,14 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		################################################################################
 		# RESOLVE OTUS AND DUPLICATES
 		################################################################################
+		# Note that this drops sequences determined to be chimeras by usearch
 		DUPS_TO_OTUS="${DEREP_INPUT%/*}"/dups_to_otus.csv
-		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($2 == "otu") {print $1 "," $1} else if ($2 == "match") print $1 "," $5 }' "${UPARSE_OUT}" > "${DUPS_TO_OTUS}"
+		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") print $1 "," $7 }' "${UPARSE_OUT}" > "${DUPS_TO_OTUS}"
+
+		# Write OTU using R script
+		# Rscript "$SCRIPT_DIR/SCRIPTNAME.R" "${CONCAT_DIR}"
+
+
 
 		BLAST_INPUT="${DEREP_INPUT%/*}"/9_OTUs.fasta
 	fi

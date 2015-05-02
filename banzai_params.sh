@@ -5,19 +5,19 @@
 # RAW DATA
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/test/raw_data"
+PARENT_DIR="/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Raw/16S/test/raw_data"
 
 # This script will generate a directory (folder) containing the output of the script.
 # Where do you want this new folder to go?
 ANALYSIS_DIRECTORY="/Users/threeprime/Desktop"
 
 # Where is the sequencing pool file? (SEE FORMATTING GUIDELINES IN README!)
-SEQUENCING_POOL_DATA="/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/20150317_sequencing_pool.csv"
+SEQUENCING_POOL_DATA="/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Raw/16S/run_20150401/20150317_sequencing_pool.csv"
 
 # You can optionally specify a folder into which the script copies a PDF containing some results.
 # The pdf is created by default in the analysis folder specified above, but
 # if you set this to a folder in your dropbox, you can check it out from anywhere.
-OUTPUT_PDF_DIR="/Users/threeprime/Documents/Dropbox/Kelly_Lab"
+OUTPUT_PDF_DIR="/Users/threeprime/Documents/GoogleDrive/Kelly_Lab"
 
 # What is the path to the reads?
 # READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
@@ -36,7 +36,7 @@ LENGTH_READ="150"
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
 # TODO This can be read from the sequencing pool file if desired.
-PRIMER_TAGS='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/tags_16S.txt'
+PRIMER_TAGS='/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Raw/16S/run_20150401/tags_16S.txt'
 
 # How many nucleotides pad the 5' end of the tag sequence?
 TAG_Ns="3"
@@ -52,7 +52,7 @@ CONCATENATE_SAMPLES="YES"
 ################################################################################
 # Specify a path to the fasta file containing the two primers used to generate the amplicons you sequenced:
 # TODO This can be read from the sequencing pool file if desired.
-PRIMER_FILE='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/primers_16S.fasta'
+PRIMER_FILE='/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Raw/16S/run_20150401/primers_16S.fasta'
 
 # What proportion of mismatches are you willing to accept when looking for primers?
 # Recommended: "0.10"
@@ -86,7 +86,7 @@ CLUSTERING_PERCENT="99"
 # BLAST:
 # Specify the path to the BLAST database.
 # Note this should be a path to any one of three files WITHOUT their extension *.nhr, *.nin, or *.nsq
-BLAST_DB='/Users/threeprime/Documents/GoogleDrive/Data_NCBI/16S/16S_20141107/16S_20141107'
+BLAST_DB='/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/NCBI_Data/16S/16S_20141107/16S_20141107'
 # BLAST PARAMETERS
 PERCENT_IDENTITY="90"
 WORD_SIZE="50"
