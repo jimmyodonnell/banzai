@@ -1,7 +1,7 @@
 # translate duplicates to OTUs: was named collapse_dup_by_OTU
 
 # Set working directory
-# setwd("/Users/threeprime/Desktop/Analysis_20150501_1427/all_lib")
+# setwd("/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Analyzed/16S/run_20150401/Analysis_20150403_1906/all_lib")
 
 # automated script:
 args <- commandArgs(TRUE)

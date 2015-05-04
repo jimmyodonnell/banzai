@@ -1,7 +1,7 @@
 #banzai!#
 =========
 
-**banzai** is a BASH shell script that links together the disparate analyses needed to process the sequencing results from an Illumina MiSeq run, the eventual goal being a table of the number of sequences per taxon found in a set of samples. Preliminary ecological analyses are included as well.
+**banzai** is a BASH shell script that links together the disparate analyses needed to process the raw sequencing results from an Illumina run, the eventual goal being a table of the number of sequences per taxon found in a set of samples. Preliminary ecological analyses are included as well.
 
 The script should run on Unix and Linux machines. The script makes heavy usage of Unix command line utilities (such as find, grep, sed, awk, and more) and is written for the BSD versions of those programs as found on standard installations of Mac OSX. I tried to use POSIX-compliant commands wherever possible.
 

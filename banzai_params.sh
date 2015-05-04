@@ -32,11 +32,14 @@ LENGTH_READ="150"
 ################################################################################
 # DEMULTIPLEXING
 ################################################################################
-# What is the path to the primer tags?
+# Specify the nucleotide sequences that differentiate multiplexed samples ("tags", and in the case of the Kelly Lab, primer tags)
+# You can grab these from the file specified above (SEQUENCING_POOL_DATA) by specifying the column name holding tags.
+# Or you can specify a text file containing only these tags (choose "NO", and then specify path to the tag file).
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
-# TODO This can be read from the sequencing pool file if desired.
-PRIMER_TAGS='/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Raw/16S/run_20150401/tags_16S.txt'
+READ_TAGS_FROM_SEQUENCING_POOL_DATA="YES" # ["YES"|"NO"] if NO, you must specify the TAG_FILE below
+TAG_COLUMN_NAME="tag_sequence"
+TAG_FILE='/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Raw/16S/run_20150401/tags_16S.txt'
 
 # How many nucleotides pad the 5' end of the tag sequence?
 TAG_Ns="3"
@@ -50,8 +53,13 @@ CONCATENATE_SAMPLES="YES"
 ################################################################################
 # PRIMER REMOVAL
 ################################################################################
-# Specify a path to the fasta file containing the two primers used to generate the amplicons you sequenced:
-# TODO This can be read from the sequencing pool file if desired.
+# Specify the primers used to generate these amplicons.
+# As with the multiplex tags, you can grab these from the file SEQUENCING_POOL_DATA.
+# In that case, you must indicate the column names of the forward and reverse primers
+READ_PRIMERS_FROM_SEQUENCING_POOL_DATA="YES" # ["YES"|"NO"] if NO, you must specify the PRIMER_FILE below
+PRIMER_1_COLUMN_NAME="primer_sequence_F"
+PRIMER_2_COLUMN_NAME="primer_sequence_R"
+# Alternatively, you can specify the path to a fasta file containing the two primers used to generate the amplicons you sequenced:
 PRIMER_FILE='/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Raw/16S/run_20150401/primers_16S.fasta'
 
 # What proportion of mismatches are you willing to accept when looking for primers?
