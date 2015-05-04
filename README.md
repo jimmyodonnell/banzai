@@ -1,5 +1,4 @@
 #banzai!#
-=========
 
 **banzai** is a BASH shell script that links together the disparate analyses needed to process the raw sequencing results from an Illumina run, the eventual goal being a table of the number of sequences per taxon found in a set of samples. Preliminary ecological analyses are included as well.
 
