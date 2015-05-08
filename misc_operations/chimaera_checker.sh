@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141023_0908/demultiplexed'
 echo "tag_directory" "five_prime_tagged" "three_prime_tagged">> "${DEMULTIPLEXED_DIR}"/tag_chimaeras.txt

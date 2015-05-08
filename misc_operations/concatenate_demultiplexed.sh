@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Concatenate demultiplexed reads in order to cluster together
 

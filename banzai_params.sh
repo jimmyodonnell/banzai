@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 
 ################################################################################
@@ -100,7 +100,7 @@ PERCENT_IDENTITY="90"
 WORD_SIZE="50"
 EVALUE="1e-20"
 # number of matches recorded in the alignment:
-MAXIMUM_MATCHES="25"
+MAXIMUM_MATCHES="200"
 
 ################################################################################
 # MEGAN

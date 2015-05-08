@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # The correct way to do this is to demultiplex, then concatenate, then remove primers and correct orientation for the concatenated sequences.
 # This would make more efficient use of cutadapt.
