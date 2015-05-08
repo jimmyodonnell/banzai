@@ -23,8 +23,8 @@ ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
 mkdir "${ANALYSIS_DIR}"
 
 # Write a log file of output from this script (everything that prints to terminal)
-exec > >(tee "${ANALYSIS_DIR}"/logfile.txt)
-exec 2>&1
+exec > >(tee "${ANALYSIS_DIR}"/logfile.txt) 2>&1
+# exec 2>&1
 
 
 # Read in the PEAR parameter files
