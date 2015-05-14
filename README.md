@@ -11,6 +11,12 @@ Simply edit the parameters in the file 'banzai_params.sh', then type into a term
 bash /Users/user_name/path/to/the/file/banzai.sh
 ```
 
+### This could take a while... #
+In Mac OS Mountain Lion and later, you can override your computer's sleep settings by running the script like so:
+
+```sh
+caffeinate -i -s bash /Users/user_name/path/to/the/file/banzai.sh
+```
 
 ## Dependencies ##
 Aside from the standard command line utilities that are already included on Unix machines (awk, sed, grep, etc), this script relies on the following tools:
@@ -49,7 +55,6 @@ INVOKE THE SCRIPT BY TYPING 'bash script.sh' NOT 'sh script.sh' !!!!!
 
 # Alternatively, to have the pipeline print to terminal AND file:
 sh script.sh  2>&1 | tee ~/Desktop/logfile.txt
-
 
 
 # Removal of duplicate sequences (dereplicate_fasta.py)

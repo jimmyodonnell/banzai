@@ -5,7 +5,11 @@
 # RAW DATA
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="/Users/threeprime/temp_big/test/raw_data/"
+PARENT_DIR="/Users/threeprime/temp_big/run_20150401"
+
+# What is the path to the reads?
+# READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
+# READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
 
 # This script will generate a directory (folder) containing the output of the script.
 # Where do you want this new folder to go?
@@ -16,12 +20,9 @@ SEQUENCING_POOL_DATA="/Users/threeprime/temp_big/run_20150401/20150317_sequencin
 
 # You can optionally specify a folder into which the script copies a PDF containing some results.
 # The pdf is created by default in the analysis folder specified above, but
-# if you set this to a folder in your dropbox, you can check it out from anywhere.
-OUTPUT_PDF_DIR="/Users/threeprime/Documents/GoogleDrive/Kelly_Lab"
+# if you set this to your DropBox or Google Drive Folder, you can check it out from anywhere.
+OUTPUT_PDF_DIR="/Users/threeprime/Desktop"
 
-# What is the path to the reads?
-# READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
-# READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
 
 # TODO grab this from a fragment_size column in the sequencing pool file
 # What is the maximum expected length of the fragment of interest, including primers? # AND TAGS?
@@ -29,6 +30,33 @@ LENGTH_FRAG="180"
 
 # What is the length of the reads of the Illumina run? (i.e. how long are the sequences in each of the run fastq files (R1 and R2)?)
 LENGTH_READ="150"
+
+
+################################################################################
+# MERGE PAIRED READS
+################################################################################
+# TODO Move PEAR settings here
+# For more information on these parameters, type into a terminal window: pear -help
+
+
+################################################################################
+# QUALITY FILTERING
+################################################################################
+# TODO add quality filtering parameters (mix with PEAR)
+# For more information on these parameters, look up the usearch help on Google
+# MAXIMUM_EXPECTED_ERRORS
+# MINIMUM_SEQUENCE_LENGTH
+
+
+################################################################################
+# HOMOPOLYMERS
+################################################################################
+# Would you like to remove reads containing runs of consecutive identical bases (homopolymers)?
+REMOVE_HOMOPOLYMERS="NO"
+# What is the maximum homopolymer length you're willing to accept?
+# Reads containing runs of identical bases longer than this will be discarded.
+HOMOPOLYMER_MAX="7"
+
 
 ################################################################################
 # DEMULTIPLEXING
@@ -68,18 +96,9 @@ PRIMER_FILE='/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data
 PRIMER_MISMATCH_PROPORTION="0.10"
 
 
-################################################################################
-# HOMOPOLYMERS
-################################################################################
-# Would you like to remove reads containing runs of consecutive identical bases (homopolymers)?
-REMOVE_HOMOPOLYMERS="NO"
-# What is the maximum homopolymer length you're willing to accept?
-# Reads containing runs of identical bases longer than this will be discarded.
-HOMOPOLYMER_MAX="7"
-
 
 ################################################################################
-# CLUSTERING:
+# CLUSTER OTUs
 ################################################################################
 # Would you like to cluster sequences into OTUs based on similarity?
 CLUSTER_OTUS="YES"
@@ -92,20 +111,24 @@ CLUSTERING_PERCENT="99"
 ################################################################################
 # TAXONOMIC ANNOTATION
 ################################################################################
-# BLAST:
+## BLAST ##
+# For more information on these parameters, type into a terminal window: blastn -help
 # Specify the path to the BLAST database.
 # Note this should be a path to any one of three files WITHOUT their extension *.nhr, *.nin, or *.nsq
-BLAST_DB='/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/NCBI_Data/16S/16S_20141107/16S_20141107'
+BLAST_DB='/Users/threeprime/temp_big/NCBI/nt_DB/16S_20150511/Metazoa16S20141113.fasta'
 # BLAST PARAMETERS
-PERCENT_IDENTITY="90"
-WORD_SIZE="50"
+PERCENT_IDENTITY="97"
+WORD_SIZE="11"
 EVALUE="1e-20"
 # number of matches recorded in the alignment:
-MAXIMUM_MATCHES="200"
+MAXIMUM_MATCHES="400"
 
 ################################################################################
-# MEGAN
+## MEGAN ##
+# For more information, see the manual provided with the software
 # Specify the path to the MEGAN executable file you want to use.
+# Note that in recent versions an executable was not provided; in that case use this:
+# /Applications/Megan/MEGAN.app/Contents/MacOS/JavaApplicationStub -g
 megan_exec='/Applications/megan/MEGAN'
 
 # What is the lowest taxonomic rank at which MEGAN should group OTUs?
@@ -131,8 +154,7 @@ COLLAPSE_RANK2="Genus"
 # EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed'
 
 # Have the reads already been paired?
-ALREADY_PEARED="NO"
-# YES/NO
+ALREADY_PEARED="NO" # YES/NO
 PEAR_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141030_2020/1_merged.assembled.fastq.gz'
 
 # Have the merged reads been quality filtered?
@@ -143,7 +165,7 @@ FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Anal
 ################################################################################
 # GENERAL SETTINGS
 ################################################################################
-# Would you like to delete extraneous intermediate files once the analysis is finished? YES/NO
+# Would you like to compress extraneous intermediate files once the analysis is finished? YES/NO
 PERFORM_CLEANUP="YES"
 
 # Is it ok to rename the sequences within a fasta file?

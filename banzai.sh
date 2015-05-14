@@ -26,6 +26,7 @@ mkdir "${ANALYSIS_DIR}"
 exec > >(tee "${ANALYSIS_DIR}"/logfile.txt) 2>&1
 # exec 2>&1
 
+echo "Analysis started at ""${START_TIME}"
 
 # Read in the PEAR parameter files
 source "$SCRIPT_DIR/pear_params.sh"
@@ -350,6 +351,18 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 else
 ################################################################################
 # DON'T CONCATENATE SAMPLES
@@ -412,6 +425,9 @@ fi
 
 
 
+################################################################################
+# TAXONOMIC ANNOTATION
+################################################################################
 if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	DIRECTORIES="${DEREP_INPUT%/*}"
 else
@@ -477,7 +493,6 @@ OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
 echo $(date +%H:%M) "passing args to R..."
 Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${DEREP_INPUT%/*}"/dups.csv "${SEQUENCING_POOL_DATA}"
-
 
 REMOTE_PDF="${OUTPUT_PDF_DIR}"/analysis_results_"${START_TIME}".pdf
 cp "${OUTPUT_PDF}" "${REMOTE_PDF}"
