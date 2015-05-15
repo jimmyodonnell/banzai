@@ -32,11 +32,11 @@ echo "Analysis started at ""${START_TIME}"
 source "$SCRIPT_DIR/pear_params.sh"
 
 # Detect number of cores on machine; set variable
-N_CORES=$(sysctl -n hw.ncpu)
-if [ $N_CORES -gt 1 ]; then
-	echo "$N_CORES cores detected."
+n_cores=$(getconf _NPROCESSORS_ONLN)
+if [ $n_cores -gt 1 ]; then
+	echo "$n_cores cores detected."
 else
-	N_CORES=1
+	n_cores=1
 	echo "Multiple cores not detected."
 fi
 
@@ -347,7 +347,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# BLAST CLUSTERS
 	################################################################################
 	echo $(date +%H:%M) "BLASTing..."
-	blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -num_threads "$N_CORES" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${DEREP_INPUT%/*}"/10_BLASTed.xml
+	blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -num_threads "$n_cores" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${DEREP_INPUT%/*}"/10_BLASTed.xml
 
 
 
@@ -419,7 +419,7 @@ else
 		fi
 
 		# BLAST CLUSTERS
-		blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -num_threads "$N_CORES" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${TAG_DIR}"/10_BLASTed.xml
+		blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -num_threads "$n_cores" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${TAG_DIR}"/10_BLASTed.xml
 	done
 fi
 
