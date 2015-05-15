@@ -1,6 +1,10 @@
 #!/usr/bin/Rscript
 
-# analyze the data from a collection of runs -- input is a two CSV files
+# analyze the data from a collection of runs
+# Input:
+# 1. (PDF) File path to the PDF that will be generated
+# 2. (CSV) A table of counts of things (DNA sequences, clusters, duplicates, OTUs, taxa), where samples are columns, and things counted (DNA sequences, OTUs, taxa) are rows.
+# 3. (CSV) A sequencing pool spreadsheet
 
 args<-commandArgs(TRUE)
 
@@ -18,7 +22,11 @@ DATA <- read.csv(args[2], row.names = 1)
 # for clustered data, replace "DUP" with "OTU"
 # rownames(DATA) <- gsub("DUP", "OTU", rownames(DATA))
 
-# transpose to the appropriate orientation (samples are rows, OTUs are columns)
+# Read in spreadsheet from labwork, which contains columns of sample names and corresponding tag sequences
+# for original formatting see "/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20141113_time_series/sample_data.csv"
+SAMPLES <- read.csv(args[3])
+
+# transpose OTU data to the appropriate orientation (samples are rows, OTUs are columns)
 DATA <- t(as.matrix(DATA))
 
 # order the duplicates/OTUs by decreasing order of abundance
@@ -27,11 +35,29 @@ DATA <- DATA[,order(colSums(DATA), decreasing = TRUE)]
 # check matrix is the expected dimensions
 # dim(DATA)
 
-# view number of reads per sample:
+
+
+# make a vector that will link the OTU file and the sequencing pool
+row_check <- paste(SAMPLES$library, "tag", SAMPLES$tag_sequence, sep = "_")
+SAMPLES <- cbind(SAMPLES, row_check)
+
+# link the SAMPLES file to the OTU file
+tag_to_sequencing_data <- match(rownames(DATA), SAMPLES$row_check)
+tag_to_samplename <- SAMPLES[tag_to_sequencing_data, "sample_name"]
+
+# plot the number of reads per sample binned by sample origin (environmental samples and controls)
+stripchart(split(rowSums(DATA), tag_to_samplename), las = 2, cex.axis = 0.8, pch = 1, vertical = TRUE, main = "Reads per sample")
+SD_reads <- c(median(rowSums(DATA)) - sd(rowSums(DATA)), median(rowSums(DATA)) + sd(rowSums(DATA)))
+polygon(x = c(0, 14, 14, 0), y = rep(SD_reads, each = 2), col = "#BEBEBE50", border = NA)
+abline(h = median(rowSums(DATA)), lty = 2)
+
+
+
+# plot number of reads per sample:
 reads_per_sample <- rowSums(DATA)
 plot(reads_per_sample, main = "reads per sample")
 
-# view total sum of reads per dup/OTU across samples
+# plot total sum of reads per dup/OTU across samples
 plot(colSums(DATA), pch = 20, cex = 0.5, main = "total reads per OTU")
 
 # create matrix of tag sequence and library number
@@ -42,9 +68,6 @@ colnames(TAG_LIB) <- c("Tag", "Lib")
 # bind tag sequence and library number to OTU table; must be a dataframe to store numbers/text
 DATA.df <- cbind(TAG_LIB, as.data.frame(DATA))
 
-# Read in spreadsheet from labwork, which contains columns of sample names and corresponding tag sequences
-# for original formatting see "/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20141113_time_series/sample_data.csv"
-SAMPLES <- read.csv(args[3])
 
 # Order the OTU data the same as the sequencing pool sample data
 
