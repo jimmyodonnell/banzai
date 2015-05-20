@@ -55,7 +55,8 @@ abline(h = median(rowSums(DATA)), lty = 2)
 
 # plot number of reads per sample:
 reads_per_sample <- rowSums(DATA)
-plot(reads_per_sample, main = "reads per sample")
+plot(sort(reads_per_sample), main = "reads per sample")
+# legend("topright", legend = , col = )
 
 # plot total sum of reads per dup/OTU across samples
 plot(colSums(DATA), pch = 20, cex = 0.5, main = "total reads per OTU")
