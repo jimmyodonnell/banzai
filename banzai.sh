@@ -155,11 +155,16 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	if [ "${RENAME_READS}" = "YES" ]; then
 		echo $(date +%H:%M) "Renaming reads..."
-		# usearch7:	sed -E "s/ (1|2):N:0:[0-9]/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
-		# usearch8, which without warning removes any part of the sequence ID following a space.
-		sed -E "s/$/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
-		sed -E "s/>([a-zA-Z0-9-]*:){4}/>/" "${CURRENT_LIB}"/tmp.fasta > "${FILTERED_OUTPUT%.*}"_renamed.fasta
-		rm "${CURRENT_LIB}"/tmp.fasta
+		# original (usearch7):	sed -E "s/ (1|2):N:0:[0-9]/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
+		# update for usearch8, which without warning removes any part of the sequence ID following a space.
+		# holy shit this ads the _"${CURRENT_LIB##*/}"_ to EVERY line
+		# sed -E "s/$/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
+		# sed -E "s/>([a-zA-Z0-9-]*:){4}/>/" "${CURRENT_LIB}"/tmp.fasta > "${FILTERED_OUTPUT%.*}"_renamed.fasta
+		# rm "${CURRENT_LIB}"/tmp.fasta
+
+		# updated 20150521; one step solution using awk
+		awk 'BEGIN { FS=":" } { if ( />/ ) print ">"$4":"$5":"$6":"$7"_'${CURRENT_LIB##*/}'_"; else print $0}''' "${FILTERED_OUTPUT}" > "${FILTERED_OUTPUT%.*}"_renamed.fasta
+
 		FILTERED_OUTPUT="${FILTERED_OUTPUT%.*}"_renamed.fasta
 	else
 		echo "Reads not renamed"

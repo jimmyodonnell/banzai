@@ -5,13 +5,13 @@ args=("$@")
 
 start_time=$(date +%Y%m%d_%H%M%S)
 
-outfile=$( echo "counted_sequences_""${start_time}"".txt" )
+outfile=$( echo "${args[0]}"/"counted_sequences_""${start_time}"".txt" )
 
 files=$(find "${args[0]}" -type f -name *.fasta )
 declare -a files_array=($files)
 for i in "${files_array[@]}"; do
 	seqs=$( grep -c '^>' "${i}" )
-	echo ${i/"${args[0]}"/} $seqs | sed 's|[/ ]|,|g' >> "${outfile}"
+	echo ${i/"${args[0]}"/} $seqs | sed 's|[/ ]|,|g' | sed 's|^,||' >> "${outfile}"
 done
 
 # echo ${i/"$args"/}
