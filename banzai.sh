@@ -147,9 +147,9 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			cat "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta > "${FILTERED_OUTPUT}"
 		else
 			echo  $(date +%H:%M) "usearch is performing quality control on merged reads..."
-			usearch -fastq_filter "${MERGED_READS}" -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${FILTERED_OUTPUT}"_linebreaks
+			usearch -fastq_filter "${MERGED_READS}" -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
 			echo  $(date +%H:%M) "removing fasta linebreaks..."
-			awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${FILTERED_OUTPUT}"_linebreaks > "${FILTERED_OUTPUT}"
+			awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${FILTERED_OUTPUT%.*}"_linebreaks.fasta > "${FILTERED_OUTPUT}"
 		fi
 	fi
 
