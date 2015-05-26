@@ -3,8 +3,8 @@
 # Pipeline for analysis of MULTIPLEXED Illumina data, a la Jimmy
 
 # TODO An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
-set -e
-
+# set -e is not the right solution because it will cause the script to exit immediately (without cleaning up after itself or notifying the user) if there is a problem with the megan file or the R script.
+# Instead, I should probably build in checks of the input files (sequencing metadata)
 ################################################################################
 # RAW DATA, ANALYSIS PARAMETERS, AND GENERAL SETTINGS
 ################################################################################
@@ -52,10 +52,12 @@ cp "${SCRIPT_DIR}"/pear_params.sh "${ANALYSIS_DIR}"/pear_parameters.txt
 if [ "${READ_TAGS_FROM_SEQUENCING_POOL_DATA}" = "YES" ]; then
 	TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == TAG_COL_NAME) print i; exit}' $SEQUENCING_POOL_DATA)
 	TAGS=$(awk -F',' -v TAGCOL=$TAG_COL 'NR>1 {print $TAGCOL}' $SEQUENCING_POOL_DATA | sort | uniq)
-	echo "Multiplex tags read from sequencing pool data:" "${TAGS}"
+	N_index_sequences=$(echo $TAGS | awk '{print NF}')
+	echo "Multiplex tags read from sequencing pool data (""${N_index_sequences}"") total"
 else
 	TAGS=$(tr '\n' ' ' < "${TAG_FILE}" )
-	echo "Multiplex tags read from tag file:" "${TAGS}"
+	N_index_sequences=$(echo $TAGS | awk '{print NF}')
+	echo "Multiplex tags read from tag file (""${N_index_sequences}"") total"
 fi
 # make tag sequences into an array
 declare -a TAGS_ARRAY=($TAGS)
@@ -499,7 +501,8 @@ lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
 echo $(date +%H:%M) "passing args to R..."
-Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${DEREP_INPUT%/*}"/dups.csv "${SEQUENCING_POOL_DATA}"
+Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${DEREP_INPUT%/*}"/OTU_table.csv "${SEQUENCING_POOL_DATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}"
+
 
 REMOTE_PDF="${OUTPUT_PDF_DIR}"/analysis_results_"${START_TIME}".pdf
 cp "${OUTPUT_PDF}" "${REMOTE_PDF}"

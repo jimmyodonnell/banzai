@@ -2,26 +2,30 @@
 
 
 ################################################################################
-# RAW DATA
+# INPUT
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="/Users/threeprime/temp_big/12sHopkins/run_20140930/test"
+PARENT_DIR="/Users/threeprime/temp_big/12sHopkins/run_20140930"
 
 # What is the path to the reads?
 # READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
 # READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
 
+# Where is the sequencing pool file? (SEE FORMATTING GUIDELINES IN README!)
+SEQUENCING_POOL_DATA="/Users/threeprime/temp_big/12sHopkins/sample_data/12S_tagged_run_metadata_20150525.csv"
+
+
+################################################################################
+# OUTPUT
+################################################################################
 # This script will generate a directory (folder) containing the output of the script.
 # Where do you want this new folder to go?
 ANALYSIS_DIRECTORY="/Users/threeprime/Desktop"
 
-# Where is the sequencing pool file? (SEE FORMATTING GUIDELINES IN README!)
-SEQUENCING_POOL_DATA="/Users/threeprime/temp_big/12sHopkins/run_20140930/sample_data/12S_tagged_run_metadata_20150525.csv"
-
 # You can optionally specify a folder into which the script copies a PDF containing some results.
 # The pdf is created by default in the analysis folder specified above, but
 # if you set this to your DropBox or Google Drive Folder, you can check it out from anywhere.
-OUTPUT_PDF_DIR="/Users/threeprime/Desktop/stuff"
+OUTPUT_PDF_DIR="/Users/threeprime/Desktop"
 
 
 # TODO grab this from a fragment_size column in the sequencing pool file
@@ -67,8 +71,13 @@ HOMOPOLYMER_MAX="7"
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
 READ_TAGS_FROM_SEQUENCING_POOL_DATA="YES" # ["YES"|"NO"] if NO, you must specify the TAG_FILE below
-TAG_COLUMN_NAME="Tag_Sequence"
+TAG_COLUMN_NAME="tag_sequence"
 TAG_FILE='/Users/threeprime/temp_big/12sHopkins/run_20140930/test/oligotags_6bp_d3.txt'
+
+# Your metadata must also have a column indicating which library each sample belongs to.
+# These names must correspond to the names of the subfolders containing the raw reads!!!
+# In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
+LIBRARY_COLUMN_NAME="library"
 
 # How many nucleotides pad the 5' end of the tag sequence?
 # TODO build in flexibility (this number is unused right now)

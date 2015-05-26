@@ -40,6 +40,9 @@ I might also consider adding:
 ## Sequencing Pool Metadata ##
 If you provide a CSV spreadsheet that contains metadata about the samples, banzai can read some of the parameters from it, like the primers and multiplex index sequences. You need to provide the file path to the spreadsheet, and the relevant column names.
 
+It is VERY important that this file be encoded with UNIX line breaks. You can do this from Excel and TextWrangler. It doesn't appear to be critical that the text is encoded using UTF-8, though this is certainly the safest option. Early in the logfile you can check to be sure the correct number of tags and primer sequences were found.
+
+
 ## A note on removal of duplicate sequences##
 
 ###  (dereplicate_fasta.py) ###

@@ -3,28 +3,31 @@
 # analyze the data from a collection of runs
 # Input:
 # 1. (PDF) File path to the PDF that will be generated
-# 2. (CSV) A table of counts of things (DNA sequences, clusters, duplicates, OTUs, taxa), where samples are columns, and things counted (DNA sequences, OTUs, taxa) are rows.
-# 3. (CSV) A sequencing pool spreadsheet
+# 2. (CSV) File path to a table of counts of things (DNA sequences, clusters, duplicates, OTUs, taxa), where columns are samples, and rows are things counted (DNA sequences, OTUs, taxa).
+# 3. (CSV) File path to a sequencing pool metadata spreadsheet
+# 4. (string) Name of the column of the metadata file containing library names
+# 5. (string) Name of the column of the metadata file containing tag sequences
+# SHOULD ADD ARGUMENTS FOR COLUMN NAMES FROM SEQUENCING METADATA
 
-args<-commandArgs(TRUE)
+arguments<-commandArgs(TRUE)
+# arguments <- c("/Users/threeprime/Desktop/debug.pdf", "/Users/threeprime/Desktop/Analysis_20150526_1223/all_lib/OTU_table.csv", "/Users/threeprime/temp_big/12sHopkins/sample_data/12S_tagged_run_metadata_20150525.csv", "library", "tag_sequence")
 
 # initialize PDF
-# pdf(file = "analysis_output.pdf")
-pdf(file = args[1])
+pdf(file = arguments[1])
 
 # READ IN THE DATA
 # unclustered:
 # DATA <- read.csv("~/Documents/Data/IlluminaData/16S/run_20141113_time_series/all_libraries/dups.csv")
 # clustered:
 # DATA <- read.csv("/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20141113_time_series/all_libraries/all_clusters.csv", row.names = 1)
-DATA <- read.csv(args[2], row.names = 1)
+DATA <- read.csv(arguments[2], row.names = 1)
 
 # for clustered data, replace "DUP" with "OTU"
 # rownames(DATA) <- gsub("DUP", "OTU", rownames(DATA))
 
 # Read in spreadsheet from labwork, which contains columns of sample names and corresponding tag sequences
 # for original formatting see "/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20141113_time_series/sample_data.csv"
-SAMPLES <- read.csv(args[3])
+SAMPLES <- read.csv(arguments[3])
 
 # transpose OTU data to the appropriate orientation (samples are rows, OTUs are columns)
 DATA <- t(as.matrix(DATA))
