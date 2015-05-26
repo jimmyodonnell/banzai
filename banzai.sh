@@ -3,7 +3,7 @@
 # Pipeline for analysis of MULTIPLEXED Illumina data, a la Jimmy
 
 # TODO An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
-# set -e
+set -e
 
 ################################################################################
 # RAW DATA, ANALYSIS PARAMETERS, AND GENERAL SETTINGS
@@ -50,12 +50,12 @@ cp "${SCRIPT_DIR}"/pear_params.sh "${ANALYSIS_DIR}"/pear_parameters.txt
 # LOAD MULTIPLEX TAGS
 ################################################################################
 if [ "${READ_TAGS_FROM_SEQUENCING_POOL_DATA}" = "YES" ]; then
-	TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i ~ TAG_COL_NAME) print i; exit}' $SEQUENCING_POOL_DATA)
+	TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == TAG_COL_NAME) print i; exit}' $SEQUENCING_POOL_DATA)
 	TAGS=$(awk -F',' -v TAGCOL=$TAG_COL 'NR>1 {print $TAGCOL}' $SEQUENCING_POOL_DATA | sort | uniq)
-	echo "Multiplex tags read from sequencing pool data."
+	echo "Multiplex tags read from sequencing pool data:" "${TAGS}"
 else
 	TAGS=$(tr '\n' ' ' < "${TAG_FILE}" )
-	echo "Multiplex tags read from tag file."
+	echo "Multiplex tags read from tag file:" "${TAGS}"
 fi
 # make tag sequences into an array
 declare -a TAGS_ARRAY=($TAGS)
@@ -65,11 +65,11 @@ declare -a TAGS_ARRAY=($TAGS)
 # Read in primers and create reverse complements.
 ################################################################################
 if [ "${READ_PRIMERS_FROM_SEQUENCING_POOL_DATA}" = "YES" ]; then
-	PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$PRIMER_1_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i ~ PRIMER1_COL) print i; exit}' $SEQUENCING_POOL_DATA)
-	PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$PRIMER_2_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i ~ PRIMER2_COL) print i; exit}' $SEQUENCING_POOL_DATA)
+	PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$PRIMER_1_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER1_COL) print i; exit}' $SEQUENCING_POOL_DATA)
+	PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$PRIMER_2_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER2_COL) print i; exit}' $SEQUENCING_POOL_DATA)
 	PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM 'NR==2 {print $PRIMER1_COL}' $SEQUENCING_POOL_DATA)
 	PRIMER2=$(awk -F',' -v PRIMER2_COL=$PRIMER2_COLNUM 'NR==2 {print $PRIMER2_COL}' $SEQUENCING_POOL_DATA)
-	echo "Primers read from sequencing pool data."
+	echo "Primers read from sequencing pool data:" "${PRIMER1}" "${PRIMER2}"
 else
 	PRIMER1=$( awk 'NR==2' "${PRIMER_FILE}" )
 	PRIMER2=$( awk 'NR==4' "${PRIMER_FILE}" )

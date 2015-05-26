@@ -5,7 +5,7 @@
 # RAW DATA
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="/Users/threeprime/temp_big/12sHopkins/run_20140930"
+PARENT_DIR="/Users/threeprime/temp_big/12sHopkins/run_20140930/test"
 
 # What is the path to the reads?
 # READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
@@ -66,7 +66,7 @@ HOMOPOLYMER_MAX="7"
 # Or you can specify a text file containing only these tags (choose "NO", and then specify path to the tag file).
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
-READ_TAGS_FROM_SEQUENCING_POOL_DATA="NO" # ["YES"|"NO"] if NO, you must specify the TAG_FILE below
+READ_TAGS_FROM_SEQUENCING_POOL_DATA="YES" # ["YES"|"NO"] if NO, you must specify the TAG_FILE below
 TAG_COLUMN_NAME="Tag_Sequence"
 TAG_FILE='/Users/threeprime/temp_big/12sHopkins/run_20140930/test/oligotags_6bp_d3.txt'
 
@@ -86,7 +86,7 @@ CONCATENATE_SAMPLES="YES"
 # Specify the primers used to generate these amplicons.
 # As with the multiplex tags, you can grab these from the file SEQUENCING_POOL_DATA.
 # In that case, you must indicate the column names of the forward and reverse primers
-READ_PRIMERS_FROM_SEQUENCING_POOL_DATA="NO" # ["YES"|"NO"] if NO, you must specify the PRIMER_FILE below
+READ_PRIMERS_FROM_SEQUENCING_POOL_DATA="YES" # ["YES"|"NO"] if NO, you must specify the PRIMER_FILE below
 PRIMER_1_COLUMN_NAME="primer_sequence_F"
 PRIMER_2_COLUMN_NAME="primer_sequence_R"
 # Alternatively, you can specify the path to a fasta file containing the two primers used to generate the amplicons you sequenced:

@@ -13,7 +13,7 @@ bash /Users/user_name/path/to/the/file/banzai.sh
 
 It's important to use `bash` rather than `sh` or `.` to invoke the script. Someday I'll figure out a better workaround, but for now this was the only way I could guarantee the log file was created in the way I wanted.
 
-### This could take a while... #
+### This could take a while... ###
 In Mac OS Mountain Lion and later, you can override your computer's sleep settings by running the script like so:
 
 ```sh
@@ -36,6 +36,9 @@ I might also consider adding:
 
 * **fastqc**: quality control of raw sequencing fastq files
 
+
+## Sequencing Pool Metadata ##
+If you provide a CSV spreadsheet that contains metadata about the samples, banzai can read some of the parameters from it, like the primers and multiplex index sequences. You need to provide the file path to the spreadsheet, and the relevant column names.
 
 ## A note on removal of duplicate sequences##
 
@@ -73,11 +76,10 @@ Note that the original script also ouput a file of the sequences only (no names)
  - 1_merged.assembled_A.fastq
  - 1_merged.assembled_B.fastq
 
- 
+
 ###Notes###
 
 2014 11 12: Noticed that the reverse tag removal step removes the tag label from the sequenceID line of fasta files if the tag sequence is RC-palindromic!
 
 An alternate hack to have the pipeline print to terminal AND file, in case logging breaks:
 sh script.sh  2>&1 | tee ~/Desktop/logfile.txt
-
