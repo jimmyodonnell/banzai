@@ -2,19 +2,25 @@
 
 # Set working directory
 # setwd("/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Analyzed/16S/run_20150401/Analysis_20150403_1906/all_lib")
+# arguments: 
+# 1: duplicate table
+# 2: dup to otu table
+# 3: otu table path
+# 4: concatenated directory (obsolete?))
 
 # automated script:
-args <- commandArgs(TRUE)
-setwd(args[1])
+arguments <- commandArgs(TRUE)
+setwd(arguments[4])
 
 # load gtools to use function mixedsort
 library(gtools)
 
 # Read in duplicates files
-dups <- read.csv("dups.csv", row.names = 1)
+# read.csv("dups.csv", row.names = 1)
+dups <- read.csv(arguments[1], row.names = 1)
 
 # Read in dups to OTUs files
-dups_to_OTUs <- read.csv("dups_to_OTUs.csv", header=TRUE, stringsAsFactor=FALSE)
+dups_to_OTUs <- read.csv(arguments[2], header=TRUE, stringsAsFactor=FALSE)
 
 OTUs <- dups_to_OTUs$Match[
   match(
@@ -36,7 +42,7 @@ OTU_table <- OTU_table[,-1]
 OTU_table <- OTU_table[mixedsort(rownames(OTU_table)),]
 
 # write output to CSV file
-write.csv(OTU_table, "OTU_table.csv")
+write.csv(x = OTU_table, file = arguments[3])
 
 
 

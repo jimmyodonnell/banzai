@@ -17,27 +17,27 @@
 
 #Optional:
 
-OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
+# 20150526 moved to main script OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
 # Alternate: OVERLAP_EXPECTED=$(($LENGTH_READ - ($LENGTH_FRAG - $LENGTH_READ)))
 
-MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
+# 20150526 moved to main script MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
 #  -v, --min-overlap           <int>     Specify the minimum overlap size. The minimum overlap may be
 #                                        set to 1 when the statistical test is used. However, further
 #                                        restricting  the  minimum overlap size to a proper value may
 #                                        reduce false-positive assembles. (default: 10)
 
-ASSMAX=$(( $LENGTH_FRAG + 50 ))
+# 20150526 moved to main script ASSMAX=$(( $LENGTH_FRAG + 50 ))
 #  -m, --max-assembly-length   <int>     Specify   the  maximum  possible  length  of  the  assembled
 #                                        sequences.  Setting this value to 0 disables the restriction
 #                                        and assembled sequences may be arbitrary long. (default: 0)
 
-ASSMIN=$(( $LENGTH_FRAG - 50 ))
+# 20150526 moved to main script ASSMIN=$(( $LENGTH_FRAG - 50 ))
 #  -n, --min-assembly-length   <int>     Specify   the  minimum  possible  length  of  the  assembled
 #                                        sequences.  Setting this value to 0 disables the restriction
 #                                        and  assembled  sequences  may be arbitrary short. (default:
 #                                        50)
 
-QT=15
+Quality_Threshold=15
 #  -q, --quality-threshold     <int>     Specify  the  quality  score  threshold for trimming the low
 #                                        quality  part  of  a  read.  If  the  quality  scores of two
 #                                        consecutive  bases  are  strictly  less  than  the specified

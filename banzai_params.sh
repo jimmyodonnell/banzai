@@ -5,7 +5,7 @@
 # INPUT
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="/Users/threeprime/temp_big/12sHopkins/run_20140930"
+PARENT_DIR="/Users/threeprime/temp_big/12sHopkins/test"
 
 # What is the path to the reads?
 # READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
@@ -41,7 +41,12 @@ LENGTH_READ="150"
 ################################################################################
 # TODO Move PEAR settings here
 # For more information on these parameters, type into a terminal window: pear -help
-
+Quality_Threshold=15
+TRIMMIN=1
+UNCALLEDMAX=1
+TEST=1
+PVALUE=0.01
+SCORING=2
 
 ################################################################################
 # QUALITY FILTERING
@@ -105,7 +110,8 @@ PRIMER_FILE='/Users/threeprime/temp_big/12sHopkins/run_20140930/primers_12s.txt'
 # Recommended: "0.10"
 PRIMER_MISMATCH_PROPORTION="0.10"
 
-
+ColumnName_SampleName="sample_name"
+ColumnName_SampleType="sample_type"
 
 ################################################################################
 # CLUSTER OTUs

@@ -7,19 +7,23 @@
 # 3. (CSV) File path to a sequencing pool metadata spreadsheet
 # 4. (string) Name of the column of the metadata file containing library names
 # 5. (string) Name of the column of the metadata file containing tag sequences
-# SHOULD ADD ARGUMENTS FOR COLUMN NAMES FROM SEQUENCING METADATA
+# 6. (string) Name of the column of the metadata file containing sample names
+# 7. (string) Name of the column of the metadata file containing sample types
 
 arguments<-commandArgs(TRUE)
-# arguments <- c("/Users/threeprime/Desktop/debug.pdf", "/Users/threeprime/Desktop/Analysis_20150526_1223/all_lib/OTU_table.csv", "/Users/threeprime/temp_big/12sHopkins/sample_data/12S_tagged_run_metadata_20150525.csv", "library", "tag_sequence")
+# arguments <- c(
+#   "/Users/threeprime/Desktop/debug.pdf", 
+#   "/Users/threeprime/Desktop/Analysis_20150526_1525/all_lib/OTU_table.csv", 
+#   "/Users/threeprime/temp_big/12sHopkins/sample_data/12S_tagged_run_metadata_20150525.csv", 
+#   "library", 
+#   "tag_sequence", 
+#   "sample_name", 
+#   "sample_type")
 
 # initialize PDF
 pdf(file = arguments[1])
 
 # READ IN THE DATA
-# unclustered:
-# DATA <- read.csv("~/Documents/Data/IlluminaData/16S/run_20141113_time_series/all_libraries/dups.csv")
-# clustered:
-# DATA <- read.csv("/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20141113_time_series/all_libraries/all_clusters.csv", row.names = 1)
 DATA <- read.csv(arguments[2], row.names = 1)
 
 # for clustered data, replace "DUP" with "OTU"
@@ -41,25 +45,19 @@ DATA <- DATA[,order(colSums(DATA), decreasing = TRUE)]
 
 
 # make a vector that will link the OTU file and the sequencing pool
-row_check <- paste(SAMPLES$library, "tag", SAMPLES$tag_sequence, sep = "_")
+row_check <- paste(SAMPLES[,arguments[4]], "tag", SAMPLES[,arguments[5]], sep = "_")
 SAMPLES <- cbind(SAMPLES, row_check)
 
 # link the SAMPLES file to the OTU file
 tag_to_sequencing_data <- match(rownames(DATA), SAMPLES$row_check)
-tag_to_samplename <- SAMPLES[tag_to_sequencing_data, "sample_name"]
+tag_to_samplename <- SAMPLES[tag_to_sequencing_data, arguments[6]]
 
 # plot the number of reads per sample binned by sample origin (environmental samples and controls)
-stripchart(split(rowSums(DATA), tag_to_samplename), las = 2, cex.axis = 0.8, pch = 1, vertical = TRUE, main = "Reads per sample")
+data_by_sample <- split(rowSums(DATA), tag_to_samplename)
+stripchart(data_by_sample, las = 2, cex.axis = 0.8, pch = 1, vertical = TRUE, main = "Reads per sample")
 SD_reads <- c(median(rowSums(DATA)) - sd(rowSums(DATA)), median(rowSums(DATA)) + sd(rowSums(DATA)))
-polygon(x = c(0, 14, 14, 0), y = rep(SD_reads, each = 2), col = "#BEBEBE50", border = NA)
+polygon(x = c(0, length(data_by_sample)+1, length(data_by_sample)+1, 0), y = rep(SD_reads, each = 2), col = "#BEBEBE50", border = NA)
 abline(h = median(rowSums(DATA)), lty = 2)
-
-
-
-# plot number of reads per sample:
-reads_per_sample <- rowSums(DATA)
-plot(sort(reads_per_sample), main = "reads per sample")
-# legend("topright", legend = , col = )
 
 # plot total sum of reads per dup/OTU across samples
 plot(colSums(DATA), pch = 20, cex = 0.5, main = "total reads per OTU")
@@ -74,7 +72,6 @@ DATA.df <- cbind(TAG_LIB, as.data.frame(DATA))
 
 
 # Order the OTU data the same as the sequencing pool sample data
-
 DATA.df <- DATA.df[match(interaction(SAMPLES[c("tag_sequence", "library")]), interaction(DATA.df[c("Tag", "Lib")])),]
 
 
@@ -101,17 +98,21 @@ DATA.df <- DATA.df[match(interaction(SAMPLES[c("tag_sequence", "library")]), int
 # sample_type[which(sample_name == "DIH20-20140709")] <- "filter_blank"
 
 # add those to the data frame and check it out
-DATA.df <- cbind(sample_name = SAMPLES$sample_name, sample_type = SAMPLES$sample_type, DATA.df)
+DATA.df <- cbind(sample_name = SAMPLES[, arguments[6]], sample_type = SAMPLES[,arguments[7]], DATA.df)
 # DATA.df[,1:5]
-
-# Order by sample name
-DATA.df <- DATA.df[order(DATA.df$sample_name),]
 
 # Incorporate sample name into rownames of DATA (otu table stored as matrix)
 # rownames(DATA) <- paste(sample_name, rownames(DATA), sep = "_")
 
 # order by sample name
 DATA.df <- DATA.df[order(DATA.df$sample_name),]
+
+# plot number of reads per sample:
+# reads_per_sample <- rowSums(DATA.df[,5:ncol(DATA.df)])
+# plot(sort(reads_per_sample), main = "reads per sample", xaxt = "n", ann=FALSE)
+# axis(side = 1, at = 1:length(reads_per_sample), labels = names(sort(reads_per_sample)), las = 2, cex.axis = 0.5)
+# legend("topleft", legend = , col = )
+
 
 # load vegan to do some community analyses
 library(vegan)
@@ -120,7 +121,7 @@ sample_rich <- as.numeric(rowSums(DATA.df[,5:ncol(DATA.df)] > 0)); plot(sample_r
 sample_reads <- as.numeric(rowSums(DATA.df[,5:ncol(DATA.df)])); plot(sample_reads)
 
 # PLOT RICHNESS AGAINST READS
-plot(sample_reads, sample_rich, xlab="Reads per Sample", ylab = "Total Number of Clusters")
+plot(sample_reads, sample_rich, xlab = "Reads per Sample", ylab = "Total Number of Clusters")
 lm_rich_reads <- lm(sample_rich~sample_reads)
 # summary(lm_rich_reads) # MAKE THIS PRINT
 
@@ -131,7 +132,7 @@ split_reads <- split(sample_reads, paste(DATA.df[, "sample_name"], DATA.df[, "Ta
 # BOXPLOT SHANNON INDEX
 par(mar=c(4,6,1,1), cex.axis=0.5)
 boxplot(
-	rev(split_shan),
+	split_shan,
 	horizontal=TRUE,
 	las=1,
 	cex.names=0.2,
@@ -246,8 +247,8 @@ tag_levels <- unname(do.call(c, lapply(split(DATA.env[,"Tag"], DATA.env[,"sample
 
 rich_df <- data.frame(DATA.env[,1:4], tag_levels, rarefied_richness=as.numeric(RARE))
 
-aov_rich <- aov(rarefied_richness ~ sample_name + tag_levels*Lib, data = rich_df)
-aov_rich <- aov(rarefied_richness ~ sample_name + Lib*tag_levels, data = rich_df)
+# aov_rich <- aov(rarefied_richness ~ sample_name + tag_levels*Lib, data = rich_df)
+# aov_rich <- aov(rarefied_richness ~ sample_name + Lib*tag_levels, data = rich_df)
 # summary(aov_rich)
 # as.matrix(aov_rich)
 # capture.output(summary(aov_rich),file="/Users/threeprime/test.txt")

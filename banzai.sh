@@ -29,7 +29,7 @@ exec > >(tee "${ANALYSIS_DIR}"/logfile.txt) 2>&1
 echo "Analysis started at ""${START_TIME}"
 
 # Read in the PEAR parameter files
-source "$SCRIPT_DIR/pear_params.sh"
+# source "$SCRIPT_DIR/pear_params.sh"
 
 # Detect number of cores on machine; set variable
 n_cores=$(getconf _NPROCESSORS_ONLN)
@@ -39,7 +39,20 @@ else
 	n_cores=1
 	echo "Multiple cores not detected."
 fi
+n_threads=$(( $n_cores * 2 ))
 
+
+################################################################################
+# CALCULATE EXPECTED AND MINIMUM OVERLAP OF PAIRED END SEQUENCES
+################################################################################
+OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
+MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
+
+################################################################################
+# CALCULATE MAXIMUM AND MINIMUM LENGTH OF MERGED READS
+################################################################################
+ASSMAX=$(( $LENGTH_FRAG + 50 ))
+ASSMIN=$(( $LENGTH_FRAG - 50 ))
 
 # Copy these files into that directory as a verifiable log you can refer back to.
 cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
@@ -117,7 +130,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	else
 		MERGED_READS_PREFIX="${LIB_OUTPUT_DIR}"/1_merged
 		MERGED_READS="${LIB_OUTPUT_DIR}"/1_merged.assembled.fastq
-		pear -f "${READ1}" -r "${READ2}" -o "${MERGED_READS_PREFIX}" -v $MINOVERLAP -m $ASSMAX -n $ASSMIN -t $TRIMMIN -q $QT -u $UNCALLEDMAX -g $TEST -p $PVALUE -s $SCORING -j $THREADS
+		pear -f "${READ1}" -r "${READ2}" -o "${MERGED_READS_PREFIX}" -v $MINOVERLAP -m $ASSMAX -n $ASSMIN -t $TRIMMIN -q $Quality_Threshold -u $UNCALLEDMAX -g $TEST -p $PVALUE -s $SCORING -j $n_threads
 	fi
 
 	################################################################################
@@ -309,7 +322,8 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	wait
 
 	# Write a csv file of the number of occurrences of each duplicate sequence per tag.
-	find "${DEREP_INPUT%/*}" -type f -name '*.dup' -exec paste -d, {} \+ | awk '{ print "DUP_" NR-1 "," $0 }' > "${DEREP_INPUT%/*}"/dups.csv
+	duplicate_table="${DEREP_INPUT%/*}"/dups.csv
+	find "${DEREP_INPUT%/*}" -type f -name '*.dup' -exec paste -d, {} \+ | awk '{ print "DUP_" NR-1 "," $0 }' > "${duplicate_table}"
 	# delete all of the '.dup' files
 	rm ${DEREP_INPUT%/*}/*.dup
 
@@ -345,8 +359,11 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		DUPS_TO_OTUS="${DEREP_INPUT%/*}"/dups_to_otus.csv
 		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") { print $1 "," $7 } else if ($4 == "chimera") { print $1 "," "chimera"} }' "${UPARSE_OUT}" > "${DUPS_TO_OTUS}"
 
-		# Convert duplicate table to OTU table using R script
-		Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${CONCAT_DIR}"
+		# Assign the path for the OTU table
+		OTU_table="${DEREP_INPUT%/*}"/OTU_table.csv
+
+		# Convert duplicate table to OTU table using R script (arguments: duplicate table, dup to otu table, otu table path, concatenated directory (obsolete?))
+		Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${DUPS_TO_OTUS}" "${OTU_table}" "${CONCAT_DIR}"
 
 		BLAST_INPUT="${DEREP_INPUT%/*}"/9_OTUs.fasta
 	fi
@@ -501,7 +518,7 @@ lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
 echo $(date +%H:%M) "passing args to R..."
-Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${DEREP_INPUT%/*}"/OTU_table.csv "${SEQUENCING_POOL_DATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}"
+Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_POOL_DATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}"
 
 
 REMOTE_PDF="${OUTPUT_PDF_DIR}"/analysis_results_"${START_TIME}".pdf
