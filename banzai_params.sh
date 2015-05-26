@@ -5,7 +5,7 @@
 # RAW DATA
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="/Users/threeprime/temp_big/test/raw_data/"
+PARENT_DIR="/Users/threeprime/temp_big/12sHopkins/run_20140930/raw_data"
 
 # What is the path to the reads?
 # READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
@@ -16,17 +16,17 @@ PARENT_DIR="/Users/threeprime/temp_big/test/raw_data/"
 ANALYSIS_DIRECTORY="/Users/threeprime/Desktop"
 
 # Where is the sequencing pool file? (SEE FORMATTING GUIDELINES IN README!)
-SEQUENCING_POOL_DATA="/Users/threeprime/temp_big/run_20150401/20150317_sequencing_pool.csv"
+SEQUENCING_POOL_DATA="/Users/threeprime/temp_big/12sHopkins/run_20140930/sample_data/12S_tagged_run_metadata_20150525.csv"
 
 # You can optionally specify a folder into which the script copies a PDF containing some results.
 # The pdf is created by default in the analysis folder specified above, but
 # if you set this to your DropBox or Google Drive Folder, you can check it out from anywhere.
-OUTPUT_PDF_DIR="/Users/threeprime/Desktop"
+OUTPUT_PDF_DIR="/Users/threeprime/Desktop/stuff"
 
 
 # TODO grab this from a fragment_size column in the sequencing pool file
 # What is the maximum expected length of the fragment of interest, including primers? # AND TAGS?
-LENGTH_FRAG="180"
+LENGTH_FRAG="162"
 
 # What is the length of the reads of the Illumina run? (i.e. how long are the sequences in each of the run fastq files (R1 and R2)?)
 LENGTH_READ="150"
@@ -66,11 +66,12 @@ HOMOPOLYMER_MAX="7"
 # Or you can specify a text file containing only these tags (choose "NO", and then specify path to the tag file).
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
-READ_TAGS_FROM_SEQUENCING_POOL_DATA="YES" # ["YES"|"NO"] if NO, you must specify the TAG_FILE below
-TAG_COLUMN_NAME="tag_sequence"
-TAG_FILE='/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Raw/16S/run_20150401/tags_16S.txt'
+READ_TAGS_FROM_SEQUENCING_POOL_DATA="NO" # ["YES"|"NO"] if NO, you must specify the TAG_FILE below
+TAG_COLUMN_NAME="Tag_Sequence"
+TAG_FILE='/Users/threeprime/temp_big/12sHopkins/run_20140930/test/oligotags_6bp_d3.txt'
 
 # How many nucleotides pad the 5' end of the tag sequence?
+# TODO build in flexibility (this number is unused right now)
 TAG_Ns="3"
 # What is the maximum number of Ns to allow at the end of a sequence before a tag is reached?
 # TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
@@ -85,11 +86,11 @@ CONCATENATE_SAMPLES="YES"
 # Specify the primers used to generate these amplicons.
 # As with the multiplex tags, you can grab these from the file SEQUENCING_POOL_DATA.
 # In that case, you must indicate the column names of the forward and reverse primers
-READ_PRIMERS_FROM_SEQUENCING_POOL_DATA="YES" # ["YES"|"NO"] if NO, you must specify the PRIMER_FILE below
+READ_PRIMERS_FROM_SEQUENCING_POOL_DATA="NO" # ["YES"|"NO"] if NO, you must specify the PRIMER_FILE below
 PRIMER_1_COLUMN_NAME="primer_sequence_F"
 PRIMER_2_COLUMN_NAME="primer_sequence_R"
 # Alternatively, you can specify the path to a fasta file containing the two primers used to generate the amplicons you sequenced:
-PRIMER_FILE='/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Raw/16S/run_20150401/primers_16S.fasta'
+PRIMER_FILE='/Users/threeprime/temp_big/12sHopkins/run_20140930/primers_12s.txt'
 
 # What proportion of mismatches are you willing to accept when looking for primers?
 # Recommended: "0.10"
