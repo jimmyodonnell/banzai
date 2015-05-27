@@ -5,15 +5,14 @@
 # INPUT
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="/Users/threeprime/temp_big/12sHopkins/test"
-
-# What is the path to the reads?
-# READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
-# READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
+PARENT_DIR="/Users/threeprime/temp_big/12sHopkins/run_20140930"
 
 # Where is the sequencing pool file? (SEE FORMATTING GUIDELINES IN README!)
 SEQUENCING_POOL_DATA="/Users/threeprime/temp_big/12sHopkins/sample_data/12S_tagged_run_metadata_20150525.csv"
 
+# What is the path to the reads?
+# READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
+# READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
 
 ################################################################################
 # OUTPUT

@@ -159,13 +159,14 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			fi
 			usearch -fastq_filter "${MERGED_READS%.*}"_A.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta
 			usearch -fastq_filter "${MERGED_READS%.*}"_B.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta
-			cat "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta > "${FILTERED_OUTPUT}"
+			cat "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta > "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
 		else
 			echo  $(date +%H:%M) "usearch is performing quality control on merged reads..."
 			usearch -fastq_filter "${MERGED_READS}" -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
-			echo  $(date +%H:%M) "removing fasta linebreaks..."
-			awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${FILTERED_OUTPUT%.*}"_linebreaks.fasta > "${FILTERED_OUTPUT}"
 		fi
+
+		echo  $(date +%H:%M) "removing fasta linebreaks..."
+		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${FILTERED_OUTPUT%.*}"_linebreaks.fasta > "${FILTERED_OUTPUT}"
 	fi
 
 	if [ "${RENAME_READS}" = "YES" ]; then
@@ -507,7 +508,7 @@ lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 		# Run the R script, passing the current tag directory as the directory to which R will "setwd()"
 		Rscript "$SCRIPT_DIR/megan_plotter.R" "${DIR}"
 
-	done
+done
 
 
 ################################################################################
@@ -518,7 +519,7 @@ lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
 echo $(date +%H:%M) "passing args to R..."
-Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_POOL_DATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}"
+Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_POOL_DATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}" "${ColumnName_SampleName}" "${ColumnName_SampleType}"
 
 
 REMOTE_PDF="${OUTPUT_PDF_DIR}"/analysis_results_"${START_TIME}".pdf
