@@ -26,7 +26,7 @@ mkdir "${ANALYSIS_DIR}"
 exec > >(tee "${ANALYSIS_DIR}"/logfile.txt) 2>&1
 # exec 2>&1
 
-echo "Analysis started at ""${START_TIME}"
+echo "Analysis started at ""${START_TIME}" " and is located in ""${ANALYSIS_DIR}"
 
 # Read in the PEAR parameter files
 # source "$SCRIPT_DIR/pear_params.sh"
@@ -279,6 +279,12 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 
 	done
+
+
+	# Count the occurrences of '_tag_' + the 6 characters following it in the concatenated file
+	echo $(date +%H:%M) "Counting reads associated with each sample index (primer tag)..."
+	grep -E -o '_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_tag_//' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
+	echo $(date +%H:%M) "Summary of sequences belonging to each sample index found in ""${CONCAT_DIR}""/1_demult_concat.fasta.tags"
 
 	################################################################################
 	# PRIMER REMOVAL
