@@ -10,14 +10,15 @@
 # 6. (string) Name of the column of the metadata file containing sample names
 # 7. (string) Name of the column of the metadata file containing sample types
 
+# If you want to run this interactively, just comment out the following line, un-comment the 8 lines after that, and make all of those the appropriate file paths/arguments (see numbers above).
 arguments<-commandArgs(TRUE)
 # arguments <- c(
-#   "/Users/threeprime/Desktop/debug.pdf", 
-#   "/Users/threeprime/Desktop/Analysis_20150526_1525/all_lib/OTU_table.csv", 
-#   "/Users/threeprime/temp_big/12sHopkins/sample_data/12S_tagged_run_metadata_20150525.csv", 
-#   "library", 
-#   "tag_sequence", 
-#   "sample_name", 
+#   "/Users/threeprime/Desktop/debug.pdf",
+#   "/Users/threeprime/Desktop/Analysis_20150526_1525/all_lib/OTU_table.csv",
+#   "/Users/threeprime/temp_big/12sHopkins/sample_data/12S_tagged_run_metadata_20150525.csv",
+#   "library",
+#   "tag_sequence",
+#   "sample_name",
 #   "sample_type")
 
 # initialize PDF
@@ -274,7 +275,7 @@ for(i in 1:4){
 # COMMUNITY LEVEL INDICES
 ########################################################################################################
 # Compute distance metric between each replicate (library) for each tag (25 in the case of the time series data)
-## takes a while... 
+## takes a while...
 ## note 20150326; changed "DATA.df" to "DATA.env" to run this on ONLY the environmental samples.
 BC_within_tag <- sapply(split(DATA.env[,5:ncol(DATA.env)], DATA.env$Tag), vegdist)
 
@@ -308,11 +309,11 @@ BC_between_tag_mean <- sapply(BC_between_tag, lower_quadrant_mean)
 # )
 # axis(
 	# side = 1,
-	# at = c(1,2), 
-	# tick = FALSE, 
-	# line = 1, 
+	# at = c(1,2),
+	# tick = FALSE,
+	# line = 1,
 	# labels = c(
-		# paste("within tags,\namong libraries\nN = ", length(BC_within_tag), sep = ""), 
+		# paste("within tags,\namong libraries\nN = ", length(BC_within_tag), sep = ""),
 		# paste("among tags,\namong libraries\nN = ", length(BC_between_tag_mean), sep = "")
 	# )
 # )
@@ -341,11 +342,11 @@ stripchart(
 )
 axis(
 	side = 1,
-	at = c(1,2), 
-	tick = FALSE, 
-	line = 1, 
+	at = c(1,2),
+	tick = FALSE,
+	line = 1,
 	labels = c(
-		paste("within tags,\namong libraries\nN = ", length(BC_within_tag), sep = ""), 
+		paste("within tags,\namong libraries\nN = ", length(BC_within_tag), sep = ""),
 		paste("among tags,\namong libraries\nN = ", length(BC_between_tag_mean), sep = "")
 	)
 )
