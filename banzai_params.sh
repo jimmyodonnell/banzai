@@ -122,6 +122,11 @@ CLUSTER_OTUS="YES"
 # Note that this must be an integer. Contact me if this is a problem
 CLUSTERING_PERCENT="99"
 
+# Exclude from the analysis OTUs which are less abundant than what percent?
+# Recommendation from Bokulich et al. (2013, Nature Methods): 0.005%
+min_OTU_abun="0.005"
+# TODO: incorporate into OTU filtering script
+
 
 ################################################################################
 # TAXONOMIC ANNOTATION

@@ -205,8 +205,7 @@ abline(h = which(!duplicated(rev(DATA.df[,"sample_name"]))) -0.5, lty = 2, col =
 # rarecurve(BCI, step = 20, sample = raremax, col = "blue", cex = 0.6)
 
 # Note the removal of the controls!
-DATA.env <- DATA.df[DATA.df$sample_type=="environmental",]
-DATA.env <- droplevels(DATA.env)
+DATA.env <- droplevels(DATA.df[DATA.df$sample_type=="environmental",])
 rownames(DATA.env) <- paste(DATA.env$sample_name, DATA.env$Tag, DATA.env$Lib)
 DATA.mat <- as.matrix(DATA.env[,5:ncol(DATA.env)])
 # DATA.env[,1:6]

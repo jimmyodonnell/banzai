@@ -68,9 +68,16 @@ The output file is as follows:
 Note that the original script also ouput a file of the sequences only (no names), but I removed this functionality on 20150417
 
 ##Wishlist/TODO/notes to self##
+* Add decontamination script
+* Add normalization
 * streamline config file
+* Incorporate warnings for missing columns in metadata
+* Add library names variable (require alpha?)
+* write table:
+ - rows: libraries, tags (including rows for whole libraries)
+ - column: numbers for number of sequences: successfully merged, filtered, forward index, both indexes (parallelizable using grep during awk demultiplexing?), primer 1, primer 2, singletons, (dups? otus?)
 
-* Add library names variable
+* Find primer index as a function of 6bp preceeding or following primer seq  `grep -E -o '^.{6}'"${primer_F}"''`
 
 * Potential files to be removed as part of cleanup at the end of script:
  - homopolymer_line_numbers.txt
@@ -79,6 +86,8 @@ Note that the original script also ouput a file of the sequences only (no names)
  - 1_merged.assembled_A.fastq
  - 1_merged.assembled_B.fastq
 
+## Known Issues/Bugs ##
+* As of 20150614, libraries must be in folders called lib1, lib2, etc. Need to fix the sed renaming scheme to accommodate variable library names
 
 ###Notes###
 
