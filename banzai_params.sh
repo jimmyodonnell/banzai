@@ -40,7 +40,10 @@ LENGTH_READ="150"
 ################################################################################
 # TODO Move PEAR settings here
 # For more information on these parameters, type into a terminal window: pear -help
+
+# --quality-threshold
 Quality_Threshold=15
+
 TRIMMIN=1
 UNCALLEDMAX=1
 TEST=1
