@@ -7,8 +7,8 @@
 # What is the file path to the directory containing all of the libraries/reads?
 PARENT_DIR=""
 
-# Where is the sequencing pool file? (SEE FORMATTING GUIDELINES IN README!)
-SEQUENCING_POOL_DATA="/Users/threeprime/temp_big_upload/cookie_cutter/CC_shark_Metadata_Sheet_MiSeq_MAR2015.csv"
+# Where is the sequencing metadata file? (SEE FORMATTING GUIDELINES IN README!)
+SEQUENCING_METADATA="/Users/threeprime/temp_big_upload/cookie_cutter/CC_shark_Metadata_Sheet_MiSeq_MAR2015.csv"
 
 # What is the path to the reads?
 # READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
@@ -27,7 +27,7 @@ ANALYSIS_DIRECTORY="/Users/threeprime/Desktop"
 OUTPUT_PDF_DIR="/Users/threeprime/Desktop"
 
 
-# TODO grab this from a fragment_size column in the sequencing pool file
+# TODO grab this from a fragment_size column in the sequencing metadata file
 # What is the maximum expected length of the fragment of interest, including primers? # AND TAGS?
 LENGTH_FRAG="162"
 
@@ -73,11 +73,11 @@ HOMOPOLYMER_MAX="7"
 # DEMULTIPLEXING
 ################################################################################
 # Specify the nucleotide sequences that differentiate multiplexed samples ("tags", and in the case of the Kelly Lab, primer tags)
-# You can grab these from the file specified above (SEQUENCING_POOL_DATA) by specifying the column name holding tags.
+# You can grab these from the file specified above (SEQUENCING_METADATA) by specifying the column name holding tags.
 # Or you can specify a text file containing only these tags (choose "NO", and then specify path to the tag file).
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
-READ_TAGS_FROM_SEQUENCING_POOL_DATA="YES" # ["YES"|"NO"] if NO, you must specify the TAG_FILE below
+READ_TAGS_FROM_SEQUENCING_METADATA="YES" # ["YES"|"NO"] if NO, you must specify the TAG_FILE below
 TAG_COLUMN_NAME="tag_sequence"
 TAG_FILE='/Users/threeprime/temp_big/12sHopkins/run_20140930/test/oligotags_6bp_d3.txt'
 
@@ -100,9 +100,9 @@ CONCATENATE_SAMPLES="YES"
 # PRIMER REMOVAL
 ################################################################################
 # Specify the primers used to generate these amplicons.
-# As with the multiplex tags, you can grab these from the file SEQUENCING_POOL_DATA.
+# As with the multiplex tags, you can grab these from the file SEQUENCING_METADATA.
 # In that case, you must indicate the column names of the forward and reverse primers
-READ_PRIMERS_FROM_SEQUENCING_POOL_DATA="YES" # ["YES"|"NO"] if NO, you must specify the PRIMER_FILE below
+READ_PRIMERS_FROM_SEQUENCING_METADATA="YES" # ["YES"|"NO"] if NO, you must specify the PRIMER_FILE below
 PRIMER_1_COLUMN_NAME="primer_sequence_F"
 PRIMER_2_COLUMN_NAME="primer_sequence_R"
 # Alternatively, you can specify the path to a fasta file containing the two primers used to generate the amplicons you sequenced:
