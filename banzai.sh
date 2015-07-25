@@ -48,6 +48,8 @@ n_threads=$(( $n_cores * 2 ))
 OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
 MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
 
+
+
 ################################################################################
 # CALCULATE MAXIMUM AND MINIMUM LENGTH OF MERGED READS
 ################################################################################
@@ -58,6 +60,8 @@ ASSMIN=$(( $LENGTH_FRAG - 50 ))
 cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
 cp "${SCRIPT_DIR}"/banzai_params.sh "${ANALYSIS_DIR}"/analysis_parameters.txt
 cp "${SCRIPT_DIR}"/pear_params.sh "${ANALYSIS_DIR}"/pear_parameters.txt
+
+
 
 ################################################################################
 # LOAD MULTIPLEX TAGS
@@ -93,6 +97,16 @@ fi
 
 PRIMER1RC=$( echo ${PRIMER1} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
 PRIMER2RC=$( echo ${PRIMER2} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
+
+################################################################################
+# Specify compression utility
+################################################################################
+if [ "$PIGZ_INSTALLED" = "YES" ]; then
+	ZIPPER="pigz"
+else
+	ZIPPER="gzip"
+fi
+
 
 # Calculate the expected size of the region of interest, given the total size of fragments, and the length of primers and tags
 EXTRA_SEQ=${TAGS_ARRAY[0]}${TAGS_ARRAY[0]}$PRIMER1$PRIMER2
@@ -131,6 +145,11 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		MERGED_READS_PREFIX="${LIB_OUTPUT_DIR}"/1_merged
 		MERGED_READS="${LIB_OUTPUT_DIR}"/1_merged.assembled.fastq
 		pear -f "${READ1}" -r "${READ2}" -o "${MERGED_READS_PREFIX}" -v $MINOVERLAP -m $ASSMAX -n $ASSMIN -t $TRIMMIN -q $Quality_Threshold -u $UNCALLEDMAX -g $TEST -p $PVALUE -s $SCORING -j $n_threads
+		echo $(date +%H:%M) "Compressing fasta and fastq files..."
+		find "${ANALYSIS_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
+		find "${ANALYSIS_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
+		echo $(date +%H:%M) "Cleanup performed."
+
 	fi
 
 	################################################################################
@@ -533,11 +552,6 @@ cp "${OUTPUT_PDF}" "${REMOTE_PDF}"
 
 
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
-	if [ "$PIGZ_INSTALLED" = "YES" ]; then
-		ZIPPER="pigz"
-	else
-		ZIPPER="gzip"
-	fi
 	echo $(date +%H:%M) "Compressing fasta and fastq files..."
 	find "${ANALYSIS_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
 	find "${ANALYSIS_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
