@@ -28,9 +28,6 @@ exec > >(tee "${ANALYSIS_DIR}"/logfile.txt) 2>&1
 
 echo "Analysis started at ""${START_TIME}" " and is located in ""${ANALYSIS_DIR}"
 
-# Read in the PEAR parameter files
-# source "$SCRIPT_DIR/pear_params.sh"
-
 # Detect number of cores on machine; set variable
 n_cores=$(getconf _NPROCESSORS_ONLN)
 if [ $n_cores -gt 1 ]; then
@@ -49,17 +46,19 @@ OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
 MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
 
 
-
 ################################################################################
 # CALCULATE MAXIMUM AND MINIMUM LENGTH OF MERGED READS
 ################################################################################
 ASSMAX=$(( $LENGTH_FRAG + 50 ))
 ASSMIN=$(( $LENGTH_FRAG - 50 ))
 
+################################################################################
+# USE READS FOR MERGING ONLY IF AFTER TRIMMING THEY ARE GREATER THAN 75% READ LENGTH
+TRIMMIN=$(( $LENGTH_READ * 3 / 4 ))
+
 # Copy these files into that directory as a verifiable log you can refer back to.
 cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
 cp "${SCRIPT_DIR}"/banzai_params.sh "${ANALYSIS_DIR}"/analysis_parameters.txt
-cp "${SCRIPT_DIR}"/pear_params.sh "${ANALYSIS_DIR}"/pear_parameters.txt
 
 
 
@@ -126,8 +125,8 @@ LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq' -print0 | xargs -0 -n1
 for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	# Identify the forward and reverse fastq files.
-	READ1=$(find "${CURRENT_LIB}" -name '*R1*fastq')
-	READ2=$(find "${CURRENT_LIB}" -name '*R2*fastq')
+	READ1=$(find "${CURRENT_LIB}" -name '*R1*fastq*')
+	READ2=$(find "${CURRENT_LIB}" -name '*R2*fastq*')
 
 	LIB_OUTPUT_DIR="${ANALYSIS_DIR}"/${CURRENT_LIB##*/}
 	mkdir "${LIB_OUTPUT_DIR}"
@@ -164,6 +163,9 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		echo $(date +%H:%M) "PEAR output compressed."
 
 	fi
+done
+
+exit
 
 	################################################################################
 	# QUALITY FILTERING (usearch)

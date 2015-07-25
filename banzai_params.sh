@@ -5,14 +5,11 @@
 # INPUT
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR=""
+PARENT_DIR="/Users/threeprime/Desktop/20150717/libraries/kelly_lab"
 
 # Where is the sequencing metadata file? (SEE FORMATTING GUIDELINES IN README!)
 SEQUENCING_METADATA="/Users/threeprime/temp_big_upload/cookie_cutter/CC_shark_Metadata_Sheet_MiSeq_MAR2015.csv"
 
-# What is the path to the reads?
-# READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
-# READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
 
 ################################################################################
 # OUTPUT
@@ -27,34 +24,61 @@ ANALYSIS_DIRECTORY="/Users/threeprime/Desktop"
 OUTPUT_PDF_DIR="/Users/threeprime/Desktop"
 
 
+################################################################################
+# METADATA DETAILS
+################################################################################
 # TODO grab this from a fragment_size column in the sequencing metadata file
-# What is the maximum expected length of the fragment of interest, including primers? # AND TAGS?
-LENGTH_FRAG="162"
+### ***** REMEMBER TO WATCH FOR ZEROS WHEN IMPLEMENTING THIS!
+# Is there a column in the metadata file for fragment size?
+frag_size_in_metadata="NO"
+# If YES, what is the name?
+frag_size_column="fragment_size_BA"
+
+# If fragment size is not specified in metadata, specify it here.
+# What is the maximum expected length of the fragment of interest?
+# This is the length of the fragments input into library prep --
+# i.e. with (indexed) primers, but without library index or sequencing adapters
+LENGTH_FRAG="182"
+
+# Your metadata must have a column indicating which library each sample belongs to.
+# These names must correspond to the names of the subfolders containing the raw reads!!!
+# In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
+LIBRARY_COLUMN_NAME="library"
 
 # What is the length of the reads of the Illumina run? (i.e. how long are the sequences in each of the run fastq files (R1 and R2)?)
+# TODO ?(If this isn't specified) just read the number of characters per line 2,6,10 -- compute max/average?
 LENGTH_READ="150"
 
 
 ################################################################################
 # MERGE PAIRED READS
 ################################################################################
-# TODO Move PEAR settings here
 # For more information on these parameters, type into a terminal window: pear -help
+# Bokulich recommends:
+# Quality_Threshold=3, r=3 (PEAR only considers r=2), UNCALLEDMAX=0
+# TRIMMIN= 0.75 * LENGTH_READ # this is hard-coded in the script banzai.sh
 
 # --quality-threshold
 Quality_Threshold=15
 
-TRIMMIN=1
-UNCALLEDMAX=1
+# number of allowed uncalled bases (--max-uncalled-base)
+UNCALLEDMAX=0
+
+# which statistical test (--test-method)
 TEST=1
+
+# cutoff p-value (--p-value)
 PVALUE=0.01
+
+# scoring method type (--score-method)
 SCORING=2
+
 
 ################################################################################
 # QUALITY FILTERING
 ################################################################################
 # TODO add quality filtering parameters (mix with PEAR)
-# For more information on these parameters, look up the usearch help on Google
+# For more information on these parameters, Google the usearch help
 # MAXIMUM_EXPECTED_ERRORS
 # MINIMUM_SEQUENCE_LENGTH
 
@@ -81,10 +105,6 @@ READ_TAGS_FROM_SEQUENCING_METADATA="YES" # ["YES"|"NO"] if NO, you must specify 
 TAG_COLUMN_NAME="tag_sequence"
 TAG_FILE='/Users/threeprime/temp_big/12sHopkins/run_20140930/test/oligotags_6bp_d3.txt'
 
-# Your metadata must also have a column indicating which library each sample belongs to.
-# These names must correspond to the names of the subfolders containing the raw reads!!!
-# In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
-LIBRARY_COLUMN_NAME="library"
 
 # How many nucleotides pad the 5' end of the tag sequence?
 # TODO build in flexibility (this number is unused right now)
@@ -201,3 +221,13 @@ PIGZ_INSTALLED="YES"
 
 # If you want to receive a text message when the pipeline finishes, input your number here:
 PHONE_NUMBER="4077443377"
+
+
+
+
+################################################################################
+# GRAVEYARD
+################################################################################
+# What is the path to the reads?
+# READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
+# READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
