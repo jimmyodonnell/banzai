@@ -10,7 +10,7 @@ output_dir="${my_dir}"/quality_reports
 
 # for output directory at same level as libraries: ${my_dir%/*}/quality_reports
 
-
+mkdir "${output_dir}"
 
 # use this if the fancy bells and whistles fail (thread counts and output directory)
 # find "${my_dir}" -type f -name "*.fastq*" | xargs fastqc
