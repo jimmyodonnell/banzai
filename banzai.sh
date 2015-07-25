@@ -112,11 +112,18 @@ EXTRA_SEQ=${TAGS_ARRAY[0]}${TAGS_ARRAY[0]}$PRIMER1$PRIMER2
 LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
 LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
+# Look for any file with '.fastq' in the name in the parent directory
+# note that this will include ANY file with fastq -- including QC reports!
 LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique )
 
+# Count library directories and print the number found
+N_library_dir=$(echo $LIBRARY_DIRECTORIES | awk '{print NF}')
+echo "${N_library_dir}"" library directories found:"
+# Show the libraries that were found:
+for i in $LIBRARY_DIRECTORIES; do echo "${i##*/}" ; done
+
 # TODO WOULD LIKE TO ADD A LIBRARY NAMES VARIABLE
-# LIBRARY_NAMES=$( ls "$PARENT_DIR" )
-# declare -a LIBRARY_NAMES_A=($LIBRARY_NAMES)
+# declare -a LIBRARY_NAMES_A=($LIBRARY_DIRECTORIES)
 
 ################################################################################
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
