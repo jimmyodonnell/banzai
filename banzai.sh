@@ -148,6 +148,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		MERGED_READS="$PEAR_OUTPUT"
 		echo "Paired reads have already been merged..."
 	else
+		echo $(date +%H:%M) "Merging reads in library directory " "${CURRENT_LIB##*/}"
 		MERGED_READS_PREFIX="${LIB_OUTPUT_DIR}"/1_merged
 		MERGED_READS="${LIB_OUTPUT_DIR}"/1_merged.assembled.fastq
 		pear \
