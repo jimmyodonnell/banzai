@@ -144,11 +144,24 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	else
 		MERGED_READS_PREFIX="${LIB_OUTPUT_DIR}"/1_merged
 		MERGED_READS="${LIB_OUTPUT_DIR}"/1_merged.assembled.fastq
-		pear -f "${READ1}" -r "${READ2}" -o "${MERGED_READS_PREFIX}" -v $MINOVERLAP -m $ASSMAX -n $ASSMIN -t $TRIMMIN -q $Quality_Threshold -u $UNCALLEDMAX -g $TEST -p $PVALUE -s $SCORING -j $n_threads
-		echo $(date +%H:%M) "Compressing fasta and fastq files..."
-		find "${ANALYSIS_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
-		find "${ANALYSIS_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
-		echo $(date +%H:%M) "Cleanup performed."
+		pear \
+			--forward-fastq "${READ1}" \
+			--reverse-fastq "${READ2}" \
+			--output "${MERGED_READS_PREFIX}" \
+			--min-overlap $MINOVERLAP \
+			--max-assembly-length $ASSMAX \
+			--min-assembly-length $ASSMIN \
+			--min-trim-length $TRIMMIN \
+			--quality-threshold $Quality_Threshold \
+			--max-uncalled-base $UNCALLEDMAX \
+			--test-method $TEST \
+			--p-value $PVALUE \
+			--score-method $SCORING \
+			--threads $n_threads
+
+		echo $(date +%H:%M) "Compressing PEAR output..."
+		find "${LIB_OUTPUT_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
+		echo $(date +%H:%M) "PEAR output compressed."
 
 	fi
 
