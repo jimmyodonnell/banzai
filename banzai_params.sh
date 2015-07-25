@@ -8,7 +8,7 @@
 PARENT_DIR="/Users/threeprime/Desktop/20150717/libraries/kelly_lab"
 
 # Where is the sequencing metadata file? (SEE FORMATTING GUIDELINES IN README!)
-SEQUENCING_METADATA="/Users/threeprime/temp_big_upload/cookie_cutter/CC_shark_Metadata_Sheet_MiSeq_MAR2015.csv"
+SEQUENCING_METADATA="/Users/threeprime/Desktop/20150717/libraries/kelly_lab/SEQUENCING_POOL_20150618.csv"
 
 
 ################################################################################

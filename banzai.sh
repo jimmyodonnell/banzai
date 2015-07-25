@@ -112,7 +112,7 @@ EXTRA_SEQ=${TAGS_ARRAY[0]}${TAGS_ARRAY[0]}$PRIMER1$PRIMER2
 LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
 LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
-LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq' -print0 | xargs -0 -n1 dirname | sort --unique )
+LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique )
 
 # TODO WOULD LIKE TO ADD A LIBRARY NAMES VARIABLE
 # LIBRARY_NAMES=$( ls "$PARENT_DIR" )
