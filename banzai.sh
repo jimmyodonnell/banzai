@@ -171,9 +171,6 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		echo $(date +%H:%M) "PEAR output compressed."
 
 	fi
-done
-
-exit
 
 	################################################################################
 	# QUALITY FILTERING (usearch)
@@ -199,6 +196,7 @@ exit
 				head -n $(( HALF_LINES + 2 )) "${MERGED_READS}" > "${MERGED_READS%.*}"_A.fastq
 				tail -n $(( HALF_LINES - 2 )) "${MERGED_READS}" > "${MERGED_READS%.*}"_B.fastq
 			fi
+			echo  $(date +%H:%M) "usearch is performing quality control on merged reads..."
 			usearch -fastq_filter "${MERGED_READS%.*}"_A.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta
 			usearch -fastq_filter "${MERGED_READS%.*}"_B.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta
 			cat "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta > "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
