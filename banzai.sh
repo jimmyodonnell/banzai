@@ -456,7 +456,16 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# BLAST CLUSTERS
 	################################################################################
 	echo $(date +%H:%M) "BLASTing..."
-	blastn -query "${BLAST_INPUT}" -db "$BLAST_DB" -num_threads "$n_cores" -perc_identity "${PERCENT_IDENTITY}" -word_size "${WORD_SIZE}" -evalue "${EVALUE}" -max_target_seqs "${MAXIMUM_MATCHES}" -outfmt 5 -out "${DEREP_INPUT%/*}"/10_BLASTed.xml
+	blastn \
+		-query "${BLAST_INblast PUT}" \
+		-db "$BLAST_DB" \
+		-num_threads "$n_cores" \
+		-perc_identity "${PERCENT_IDENTITY}" \
+		-word_size "${WORD_SIZE}" \
+		-evalue "${EVALUE}" \
+		-max_target_seqs "${MAXIMUM_MATCHES}" \
+		-outfmt 5 \
+		-out "${DEREP_INPUT%/*}"/10_BLASTed.xml
 
 
 
@@ -609,9 +618,10 @@ cp "${OUTPUT_PDF}" "${REMOTE_PDF}"
 
 
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
-	echo $(date +%H:%M) "Compressing fasta and fastq files..."
+	echo $(date +%H:%M) "Compressing fasta, fastq, and xml files..."
 	find "${ANALYSIS_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
 	find "${ANALYSIS_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
+	find "${ANALYSIS_DIR}" -type f -name '*.xml' -exec ${ZIPPER} "{}" \;
 	echo $(date +%H:%M) "Cleanup performed."
 else
 	echo $(date +%H:%M) "Cleanup not performed."
