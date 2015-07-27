@@ -157,9 +157,9 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	################################################################################
 	if [ "$ALREADY_PEARED" = "YES" ]; then
 		MERGED_READS="$PEAR_OUTPUT"
-		echo "Paired reads have already been merged..."
+		echo "Paired reads have already been merged."
 	else
-		echo $(date +%H:%M) "Merging reads in library directory " "${CURRENT_LIB##*/}"
+		echo $(date +%H:%M) "Merging reads in library" "${CURRENT_LIB##*/}""..."
 		MERGED_READS_PREFIX="${LIB_OUTPUT_DIR}"/1_merged
 		MERGED_READS="${LIB_OUTPUT_DIR}"/1_merged.assembled.fastq
 		pear \
@@ -239,7 +239,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 
 	if [ "${RENAME_READS}" = "YES" ]; then
-		echo $(date +%H:%M) "Renaming reads in library " "${CURRENT_LIB##*/}" "..."
+		echo $(date +%H:%M) "Renaming reads in library" "${CURRENT_LIB##*/}""..."
 		# TODO remove whitespace from sequence labels?
 		# sed 's/ /_/'
 
@@ -288,7 +288,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	# Copy sequences to fasta files into separate directories based on tag sequence on left side of read
 	# TODO test for speed against removing the tag while finding it: wrap first tag regex in gsub(/pattern/,""):  awk 'gsub(/^.{0,9}'"$TAG_SEQ"'/,""){if . . .
-	echo "Demultiplexing: removing left tag (started at $(date +%H:%M))"
+	echo $(date +%H:%M) "Demultiplexing: removing left tag in library" "${CURRENT_LIB##*/}""..."
 	for TAG_SEQ in $TAGS; do
 	(	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 		mkdir "${TAG_DIR}"
@@ -299,7 +299,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	wait
 
-	echo "Demultiplexing: removing right tag and adding tag sequence to sequence ID (started at $(date +%H:%M))"
+	echo $(date +%H:%M) "Demultiplexing: removing right tag and adding tag sequence to sequence ID in library" "${CURRENT_LIB##*/}""..."
 	for TAG_SEQ in $TAGS; do
 	(	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 		TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
@@ -359,28 +359,36 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# Count the occurrences of '_tag_' + the 6 characters following it in the concatenated file
 	echo $(date +%H:%M) "Counting reads associated with each sample index (primer tag)..."
-	grep -E -o '_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_tag_//' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
+	grep -E -o '_lib_._tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
 	echo $(date +%H:%M) "Summary of sequences belonging to each sample index found in ""${CONCAT_DIR}""/1_demult_concat.fasta.tags"
 
 	################################################################################
 	# PRIMER REMOVAL
 	################################################################################
-	echo $(date +%H:%M) "Removing primers..."
-	# for TAG_SEQ in $TAGS; do
-		# TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
-		# Remove PRIMER1 and PRIMER2 from the BEGINNING of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
-		cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/1_demult_concat.fasta > "${CONCAT_DIR}"/5_primerL1_removed.fasta
-		cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/1_demult_concat.fasta > "${CONCAT_DIR}"/5_primerL2_removed.fasta
-		# Remove the primer on the other end of the reads by reverse-complementing the files and then trimming PRIMER1 and PRIMER2 from the left side.
-		# NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
-		# seqtk seq -r "${CONCAT_DIR}"/5_primerL1_removed.fasta | cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${CONCAT_DIR}"/6_primerR1_removed.fasta
-		cutadapt -a "${PRIMER2RC}"$ -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/5_primerL1_removed.fasta > "${CONCAT_DIR}"/6_primerR1_removed.fasta
-		# seqtk seq -r "${CONCAT_DIR}"/5_primerL2_removed.fasta | cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${CONCAT_DIR}"/6_primerR2_removed.fasta
-		cutadapt -a "${PRIMER1RC}"$ -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/5_primerL2_removed.fasta > "${CONCAT_DIR}"/6_primerR2_removed.fasta
-		seqtk seq -r "${CONCAT_DIR}"/6_primerR1_removed.fasta > "${CONCAT_DIR}"/6_primerR1_removedRC.fasta
-		cat "${CONCAT_DIR}"/6_primerR1_removedRC.fasta "${CONCAT_DIR}"/6_primerR2_removed.fasta > "${CONCAT_DIR}"/7_no_primers.fasta
-		DEREP_INPUT="${CONCAT_DIR}"/7_no_primers.fasta
-	# done
+	echo $(date +%H:%M) "Removing primers in library" "${CURRENT_LIB##*/}""..."
+	# Remove PRIMER1 and PRIMER2 from the BEGINNING of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
+	cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/1_demult_concat.fasta > "${CONCAT_DIR}"/5_primerL1_removed.fasta
+	cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/1_demult_concat.fasta > "${CONCAT_DIR}"/5_primerL2_removed.fasta
+
+	# count lines in primer removal input
+	echo $(date +%H:%M) "Counting sequences in primer removal input..."
+	seq_N_demult_concat=$( grep -e '^>' --count "${CONCAT_DIR}"/1_demult_concat.fasta )
+	echo $(date +%H:%M) "${seq_N_demult_concat}" "sequences found in file" "${CONCAT_DIR}"/1_demult_concat.fasta
+
+	# compress left primer removal input
+	echo $(date +%H:%M) "Compressing left primer removal input..."
+	"${ZIPPER}" "${CONCAT_DIR}"/1_demult_concat.fasta
+	echo $(date +%H:%M) "Left primer removal input compressed."
+
+	# Remove the primer on the other end of the reads by reverse-complementing the files and then trimming PRIMER1 and PRIMER2 from the left side.
+	# NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
+	# seqtk seq -r "${CONCAT_DIR}"/5_primerL1_removed.fasta | cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${CONCAT_DIR}"/6_primerR1_removed.fasta
+	cutadapt -a "${PRIMER2RC}"$ -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/5_primerL1_removed.fasta > "${CONCAT_DIR}"/6_primerR1_removed.fasta
+	# seqtk seq -r "${CONCAT_DIR}"/5_primerL2_removed.fasta | cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${CONCAT_DIR}"/6_primerR2_removed.fasta
+	cutadapt -a "${PRIMER1RC}"$ -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/5_primerL2_removed.fasta > "${CONCAT_DIR}"/6_primerR2_removed.fasta
+	seqtk seq -r "${CONCAT_DIR}"/6_primerR1_removed.fasta > "${CONCAT_DIR}"/6_primerR1_removedRC.fasta
+	cat "${CONCAT_DIR}"/6_primerR1_removedRC.fasta "${CONCAT_DIR}"/6_primerR2_removed.fasta > "${CONCAT_DIR}"/7_no_primers.fasta
+	DEREP_INPUT="${CONCAT_DIR}"/7_no_primers.fasta
 
 	################################################################################
 	# CONSOLIDATE IDENTICAL SEQUENCES
@@ -397,7 +405,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	echo $(date +%H:%M) "Consolidating identical sequences per sample... (awk)"
 	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		for TAG_SEQ in $TAGS; do
-			LIB_TAG="${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
+			LIB_TAG="lib_${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
 			( awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
 		done
 	done

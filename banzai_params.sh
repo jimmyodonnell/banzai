@@ -42,6 +42,7 @@ LENGTH_FRAG="182"
 
 # Your metadata must have a column indicating which library each sample belongs to.
 # These names must correspond to the names of the subfolders containing the raw reads!!!
+# As of now, counting the number of sequences per library/primer index will only work if library names are a single character. Thus, use letters.
 # In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
 READ_LIB_FROM_SEQUENCING_METADATA="YES"
 LIBRARY_COLUMN_NAME="library"
