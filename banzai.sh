@@ -193,7 +193,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		else
 			FILTERED_OUTPUT="${LIB_OUTPUT_DIR}"/2_filtered.fasta
 		# The 32bit version of usearch will not accept an input file greater than 4GB. The 64bit usearch is $900. Thus, for now:
-			echo "Decompressing merged reads..."
+			echo $(date +%H:%M) "Decompressing merged reads..."
 			"${ZIPPER}" -d "${MERGED_READS}".gz
 
 			echo "Calculating merged file size..."
@@ -221,7 +221,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			fi
 
 			# Compress merged reads
-			echo "Compressing merged reads..."
+			echo $(date +%H:%M) "Compressing merged reads..."
 			"${ZIPPER}" "${MERGED_READS}"
 
 			# Remove annoying usearch linebreaks at 80 characters
@@ -350,6 +350,9 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 			cat "${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/2_notags.fasta >> "${CONCAT_DIR}"/1_demult_concat.fasta
 		done
 
+		echo $(date +%H:%M) "Compressing fasta files..."
+		find "${LIB_OUTPUT_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
+		echo $(date +%H:%M) "fasta files compressed."
 
 	done
 
