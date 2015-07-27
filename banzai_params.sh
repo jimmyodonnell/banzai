@@ -43,6 +43,7 @@ LENGTH_FRAG="182"
 # Your metadata must have a column indicating which library each sample belongs to.
 # These names must correspond to the names of the subfolders containing the raw reads!!!
 # In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
+READ_LIB_FROM_SEQUENCING_METADATA="YES"
 LIBRARY_COLUMN_NAME="library"
 
 # What is the length of the reads of the Illumina run? (i.e. how long are the sequences in each of the run fastq files (R1 and R2)?)
@@ -73,15 +74,23 @@ PVALUE=0.01
 # scoring method type (--score-method)
 SCORING=2
 
+# Math in BASH is janky, but I don't want a separate python/R script to do this...
+# BASH can only handle whole integers, so instead of multiplying by 0.75, multiply by 3 and divide by 4.
+# This will still result in a whole (rounded down) number no matter what.
+TRIMMIN_NUMER=3
+TRIMMIN_DENOM=4
 
 ################################################################################
 # QUALITY FILTERING
 ################################################################################
-# TODO add quality filtering parameters (mix with PEAR)
-# For more information on these parameters, Google the usearch help
-# MAXIMUM_EXPECTED_ERRORS
-# MINIMUM_SEQUENCE_LENGTH
-
+# Substantial quality filtering (e.g. trimming, minimum length, etc) is performed by PEAR during read merging.
+# You may also want to exclude sequences containing more than a specified threshold of 'expected errors'
+# This number is equal to the sum of the error probabilities.
+# The only software that currently implements this is usearch, but it requires breaking up files larger than ~4GB
+# I think this can be written in python relatively easily, but I haven't gotten to it yet.
+# For more information on this parameter, Google the usearch help
+Perform_Expected_Error_Filter="NO" # [YES|NO]
+Max_Expected_Errors="0.5"
 
 ################################################################################
 # HOMOPOLYMERS
@@ -201,7 +210,7 @@ ALREADY_PEARED="NO" # YES/NO
 PEAR_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141030_2020/1_merged.assembled.fastq.gz'
 
 # Have the merged reads been quality filtered?
-ALREADY_FILTERED="NO" # YES/NO
+ALREADY_FILTERED="NO" # [YES|NO]
 FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Analysis_20141030_2020/2_filtered_renamed.fasta'
 
 

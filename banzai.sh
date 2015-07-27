@@ -36,7 +36,8 @@ else
 	n_cores=1
 	echo "Multiple cores not detected."
 fi
-n_threads=$(( $n_cores * 2 ))
+# I don't think this is necessary, as getconf _NPROCESSORS_ONLN appears to detect hyperthreading capability
+# n_threads=$(( $n_cores * 2 ))
 
 
 ################################################################################
@@ -54,7 +55,7 @@ ASSMIN=$(( $LENGTH_FRAG - 50 ))
 
 ################################################################################
 # USE READS FOR MERGING ONLY IF AFTER TRIMMING THEY ARE GREATER THAN 75% READ LENGTH
-TRIMMIN=$(( $LENGTH_READ * 3 / 4 ))
+TRIMMIN=$(( $LENGTH_READ * $TRIMMIN_NUMER / $TRIMMIN_DENOM ))
 
 # Copy these files into that directory as a verifiable log you can refer back to.
 cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
@@ -94,8 +95,14 @@ else
 	echo "Primers read from primer file."
 fi
 
+# Reverse complement primers
 PRIMER1RC=$( echo ${PRIMER1} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
 PRIMER2RC=$( echo ${PRIMER2} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
+
+# Calculate the expected size of the region of interest, given the total size of fragments, and the length of primers and tags
+EXTRA_SEQ=${TAGS_ARRAY[0]}${TAGS_ARRAY[0]}$PRIMER1$PRIMER2
+LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
+LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
 ################################################################################
 # Specify compression utility
@@ -105,12 +112,6 @@ if [ "$PIGZ_INSTALLED" = "YES" ]; then
 else
 	ZIPPER="gzip"
 fi
-
-
-# Calculate the expected size of the region of interest, given the total size of fragments, and the length of primers and tags
-EXTRA_SEQ=${TAGS_ARRAY[0]}${TAGS_ARRAY[0]}$PRIMER1$PRIMER2
-LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
-LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
 # Look for any file with '.fastq' in the name in the parent directory
 # note that this will include ANY file with fastq -- including QC reports!
@@ -122,8 +123,21 @@ echo "${N_library_dir}"" library directories found:"
 # Show the libraries that were found:
 for i in $LIBRARY_DIRECTORIES; do echo "${i##*/}" ; done
 
-# TODO WOULD LIKE TO ADD A LIBRARY NAMES VARIABLE
-# declare -a LIBRARY_NAMES_A=($LIBRARY_DIRECTORIES)
+# Read library names from file or sequencing metadata
+if [ "${READ_LIB_FROM_SEQUENCING_METADATA}" = "YES" ]; then
+	LIB_COL=$(awk -F',' -v LIB_COL_NAME=$LIBRARY_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == LIB_COL_NAME) print i; exit}' $SEQUENCING_METADATA)
+	LIBS=$(awk -F',' -v LIBCOL=$LIB_COL 'NR>1 {print $LIBCOL}' $SEQUENCING_METADATA | sort | uniq)
+	N_libs=$(echo $LIBS | awk '{print NF}')
+	echo "Library names read from sequencing metadata (""${N_libs}"") total"
+	echo "${LIBS}"
+else
+	LIBS=$(tr '\n' ' ' < "${LIB_FILE}" )
+	N_libs=$(echo $LIBS | awk '{print NF}')
+	echo "Library names read from lib file (""${LIBS}"") total"
+fi
+# make tag sequences into an array
+declare -a LIBS_ARRAY=($LIBS)
+
 
 ################################################################################
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
@@ -138,11 +152,8 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	LIB_OUTPUT_DIR="${ANALYSIS_DIR}"/${CURRENT_LIB##*/}
 	mkdir "${LIB_OUTPUT_DIR}"
 
-	# TODO remove whitespace from sequence labels
-	# sed 's/ /_/'
-
 	################################################################################
-	# MERGE PAIRED-END READS (PEAR)
+	# MERGE PAIRED-END READS AND QUALITY FILTER (PEAR)
 	################################################################################
 	if [ "$ALREADY_PEARED" = "YES" ]; then
 		MERGED_READS="$PEAR_OUTPUT"
@@ -164,7 +175,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			--test-method $TEST \
 			--p-value $PVALUE \
 			--score-method $SCORING \
-			--threads $n_threads
+			--threads $n_cores
 
 		echo $(date +%H:%M) "Compressing PEAR output..."
 		find "${LIB_OUTPUT_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
@@ -173,44 +184,65 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	fi
 
 	################################################################################
-	# QUALITY FILTERING (usearch)
+	# EXPECTED ERROR FILTERING (usearch)
 	################################################################################
 	# FILTER READS (This is the last step that uses quality scores, so convert to fasta)
-	if [ "${ALREADY_FILTERED}" = "YES" ]; then
-		echo "Using existing filtered reads in file $FILTERED_OUTPUT"
-	else
-		FILTERED_OUTPUT="${LIB_OUTPUT_DIR}"/2_filtered.fasta
-	# The 32bit version of usearch will not accept an input file greater than 4GB. The 64bit usearch is $900. Thus, for now:
-		echo "Calculating merged file size..."
-		INFILE_SIZE=$(stat "${MERGED_READS}" | awk '{ print $8 }')
-		if [ ${INFILE_SIZE} -gt 4000000000 ]; then
-		# Must first check the number of reads. If odd, file must be split so as not to split the middle read's sequence from its quality score.
-			echo $(date +%H:%M) "Splitting large input file for quality filtering..."
-			LINES_MERGED=$(wc -l < "${MERGED_READS}")
-			READS_MERGED=$(( LINES_MERGED / 4 ))
-			HALF_LINES=$((LINES_MERGED / 2))
-			if [ $((READS_MERGED%2)) -eq 0 ]; then
-				head -n ${HALF_LINES} "${MERGED_READS}" > "${MERGED_READS%.*}"_A.fastq
-				tail -n ${HALF_LINES} "${MERGED_READS}" > "${MERGED_READS%.*}"_B.fastq
-			else
-				head -n $(( HALF_LINES + 2 )) "${MERGED_READS}" > "${MERGED_READS%.*}"_A.fastq
-				tail -n $(( HALF_LINES - 2 )) "${MERGED_READS}" > "${MERGED_READS%.*}"_B.fastq
-			fi
-			echo  $(date +%H:%M) "usearch is performing quality control on merged reads..."
-			usearch -fastq_filter "${MERGED_READS%.*}"_A.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta
-			usearch -fastq_filter "${MERGED_READS%.*}"_B.fastq -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta
-			cat "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta > "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
+	if [ "${Perform_Expected_Error_Filter}" = "YES" ]; then
+		if [ "${ALREADY_FILTERED}" = "YES" ]; then
+			echo "Using existing filtered reads in file $FILTERED_OUTPUT"
 		else
-			echo  $(date +%H:%M) "usearch is performing quality control on merged reads..."
-			usearch -fastq_filter "${MERGED_READS}" -fastq_maxee 0.5 -fastq_minlen "${ASSMIN}" -fastaout "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
-		fi
+			FILTERED_OUTPUT="${LIB_OUTPUT_DIR}"/2_filtered.fasta
+		# The 32bit version of usearch will not accept an input file greater than 4GB. The 64bit usearch is $900. Thus, for now:
+			echo "Decompressing merged reads..."
+			"${ZIPPER}" -d "${MERGED_READS}".gz
 
-		echo  $(date +%H:%M) "removing fasta linebreaks..."
-		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${FILTERED_OUTPUT%.*}"_linebreaks.fasta > "${FILTERED_OUTPUT}"
+			echo "Calculating merged file size..."
+			INFILE_SIZE=$(stat "${MERGED_READS}" | awk '{ print $8 }')
+			if [ ${INFILE_SIZE} -gt 4000000000 ]; then
+			# Must first check the number of reads. If odd, file must be split so as not to split the middle read's sequence from its quality score.
+				echo $(date +%H:%M) "Splitting large input file for quality filtering..."
+				LINES_MERGED=$(wc -l < "${MERGED_READS}")
+				READS_MERGED=$(( LINES_MERGED / 4 ))
+				HALF_LINES=$((LINES_MERGED / 2))
+				if [ $((READS_MERGED%2)) -eq 0 ]; then
+					head -n ${HALF_LINES} "${MERGED_READS}" > "${MERGED_READS%.*}"_A.fastq
+					tail -n ${HALF_LINES} "${MERGED_READS}" > "${MERGED_READS%.*}"_B.fastq
+				else
+					head -n $(( HALF_LINES + 2 )) "${MERGED_READS}" > "${MERGED_READS%.*}"_A.fastq
+					tail -n $(( HALF_LINES - 2 )) "${MERGED_READS}" > "${MERGED_READS%.*}"_B.fastq
+				fi
+				echo  $(date +%H:%M) "usearch is performing quality control on merged reads..."
+				usearch -fastq_filter "${MERGED_READS%.*}"_A.fastq -fastq_maxee "${Max_Expected_Errors}" -fastaout "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta
+				usearch -fastq_filter "${MERGED_READS%.*}"_B.fastq -fastq_maxee "${Max_Expected_Errors}" -fastaout "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta
+				cat "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta > "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
+			else
+				echo  $(date +%H:%M) "usearch is performing quality control on merged reads..."
+				usearch -fastq_filter "${MERGED_READS}" -fastq_maxee "${Max_Expected_Errors}" -fastaout "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
+			fi
+
+			# Compress merged reads
+			echo "Compressing merged reads..."
+			"${ZIPPER}" "${MERGED_READS}"
+
+			# Remove annoying usearch linebreaks at 80 characters
+			echo  $(date +%H:%M) "removing fasta linebreaks..."
+			awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${FILTERED_OUTPUT%.*}"_linebreaks.fasta > "${FILTERED_OUTPUT}"
+			# remove file with linebreaks
+			rm "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
+		fi
+	else
+		# Convert merged reads fastq to fasta
+		echo  $(date +%H:%M) "converting fastq to fasta..."
+		seqtk seq -A "${MERGED_READS}".gz > "${MERGED_READS%%.*}".fasta
+		FILTERED_OUTPUT="${MERGED_READS%%.*}".fasta
 	fi
 
+
 	if [ "${RENAME_READS}" = "YES" ]; then
-		echo $(date +%H:%M) "Renaming reads..."
+		echo $(date +%H:%M) "Renaming reads in library " "${CURRENT_LIB##*/}" "..."
+		# TODO remove whitespace from sequence labels?
+		# sed 's/ /_/'
+
 		# original (usearch7):	sed -E "s/ (1|2):N:0:[0-9]/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
 		# update for usearch8, which without warning removes any part of the sequence ID following a space.
 		# holy shit this ads the _"${CURRENT_LIB##*/}"_ to EVERY line
@@ -219,7 +251,8 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		# rm "${CURRENT_LIB}"/tmp.fasta
 
 		# updated 20150521; one step solution using awk
-		awk 'BEGIN { FS=":" } { if ( />/ ) print ">"$4":"$5":"$6":"$7"_'${CURRENT_LIB##*/}'_"; else print $0}''' "${FILTERED_OUTPUT}" > "${FILTERED_OUTPUT%.*}"_renamed.fasta
+		awk 'BEGIN { FS=":" } { if ( />/ ) print ">"$4":"$5":"$6":"$7"_lib_'${CURRENT_LIB##*/}'_"; else print $0}''' "${FILTERED_OUTPUT}" > "${FILTERED_OUTPUT%.*}"_renamed.fasta
+		rm "${FILTERED_OUTPUT}"
 
 		FILTERED_OUTPUT="${FILTERED_OUTPUT%.*}"_renamed.fasta
 	else
