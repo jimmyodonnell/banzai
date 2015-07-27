@@ -250,8 +250,8 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		# sed -E "s/>([a-zA-Z0-9-]*:){4}/>/" "${CURRENT_LIB}"/tmp.fasta > "${FILTERED_OUTPUT%.*}"_renamed.fasta
 		# rm "${CURRENT_LIB}"/tmp.fasta
 
-		# updated 20150521; one step solution using awk
-		awk 'BEGIN { FS=":" } { if ( />/ ) print ">"$4":"$5":"$6":"$7"_lib_'${CURRENT_LIB##*/}'_"; else print $0}''' "${FILTERED_OUTPUT}" > "${FILTERED_OUTPUT%.*}"_renamed.fasta
+		# updated 20150521; one step solution using awk; also removes spaces
+		awk -F'[: ]' '{ if ( />/ ) print ">"$4":"$5":"$6":"$7"_lib_'${CURRENT_LIB##*/}'_"; else print $0}''' "${FILTERED_OUTPUT}" > "${FILTERED_OUTPUT%.*}"_renamed.fasta
 		rm "${FILTERED_OUTPUT}"
 
 		FILTERED_OUTPUT="${FILTERED_OUTPUT%.*}"_renamed.fasta
