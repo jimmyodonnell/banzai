@@ -399,18 +399,22 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
 	echo $(date +%H:%M) "Counting duplicates per identical sequence... (awk)"
-	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle.txt
+	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".derep | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle.txt
 
 	# COUNT OCCURRENCES PER SAMPLE (LIBRARY + TAG) PER DUPLICATE
 	echo $(date +%H:%M) "Consolidating identical sequences per sample... (awk)"
 	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		for TAG_SEQ in $TAGS; do
 			LIB_TAG="lib_${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
+			# the output of the awk function gsub is the number of replacements, so you could use this instead... however, it appears slower?
+			( awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
 			( awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
 		done
+
+		wait
+
 	done
 
-	wait
 
 	# Write a csv file of the number of occurrences of each duplicate sequence per tag.
 	duplicate_table="${DEREP_INPUT%/*}"/dups.csv
@@ -526,7 +530,7 @@ else
 		# REMOVE SINGLETONS
 		# usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
 		# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
-		awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".all | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle.txt
+		awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".derep | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle.txt
 
 		# count the duplicates
 		awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT%/*}"/nosingle.txt > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup

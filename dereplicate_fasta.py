@@ -20,7 +20,7 @@ kwargs = {
 		'sep'		: ';',
 
 		#_name of output file for col1 == dna str, col2-coln == uniq id lists
-		'outall'	: '{0:s}.all'.format(infile),
+		'outall'	: '{0:s}.derep'.format(infile),
 
 		#_name of output of dna strings (turned off on 20150417)
 		# 'outdna'	: '{0:s}.seq'.format(infile),

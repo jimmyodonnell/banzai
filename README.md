@@ -49,7 +49,7 @@ It is VERY important that this file be encoded with UNIX line breaks. You can do
 
 * Input: a fasta file (e.g. 'infile.fasta')
 
-* Output: a file with the same name as the input but with the added extension '.all' (e.g. 'infile.fasta.all')
+* Output: a file with the same name as the input but with the added extension '.derep' (e.g. 'infile.fasta.derep')
 
 This output file contains each unique DNA sequence from the fasta file, followed by the labels of the reads matching this sequence
 Thus, if an input fasta file consisted of three reads with identical DNA sequences:
