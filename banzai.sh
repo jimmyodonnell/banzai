@@ -407,7 +407,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		for TAG_SEQ in $TAGS; do
 			LIB_TAG="lib_${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
 			# the output of the awk function gsub is the number of replacements, so you could use this instead... however, it appears slower?
-			( awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
+			# ( awk 'BEGIN {print "'$LIB_TAG'" } { print gsub(/"'$LIB_TAG'"/,"") }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
 			( awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
 		done
 
