@@ -113,6 +113,9 @@ else
 	ZIPPER="gzip"
 fi
 
+################################################################################
+# Find raw sequence files
+################################################################################
 # Look for any file with '.fastq' in the name in the parent directory
 # note that this will include ANY file with fastq -- including QC reports!
 LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique )
@@ -367,6 +370,8 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	################################################################################
 	echo $(date +%H:%M) "Removing primers in library" "${CURRENT_LIB##*/}""..."
 	# Remove PRIMER1 and PRIMER2 from the BEGINNING of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
+
+	# TODO wrap in '( ) &' to force into background and allow parallel processing
 	cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/1_demult_concat.fasta > "${CONCAT_DIR}"/5_primerL1_removed.fasta
 	cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/1_demult_concat.fasta > "${CONCAT_DIR}"/5_primerL2_removed.fasta
 
@@ -416,7 +421,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	done
 
 
-	# Write a csv file of the number of occurrences of each duplicate sequence per tag.
+	# Write a csv file of the number of occurrences of each duplicate sequence per tag. (rows = sequences, cols = samples)
 	duplicate_table="${DEREP_INPUT%/*}"/dups.csv
 	find "${DEREP_INPUT%/*}" -type f -name '*.dup' -exec paste -d, {} \+ | awk '{ print "DUP_" NR-1 "," $0 }' > "${duplicate_table}"
 	# delete all of the '.dup' files
