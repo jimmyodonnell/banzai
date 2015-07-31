@@ -1,6 +1,6 @@
 #banzai!#
 
-**banzai** is a BASH shell script that links together the disparate analyses needed to process the raw sequencing results from an Illumina run, the eventual goal being a table of the number of sequences per taxon found in a set of samples. Preliminary ecological analyses are included as well.
+**banzai** is a BASH shell script that links together the disparate programs needed to process the raw sequencing results from an Illumina run into a table of the number of sequences per taxon found in a set of samples. Some preliminary ecological analyses are included as well.
 
 The script should run on Unix and Linux machines. The script makes heavy usage of Unix command line utilities (such as find, grep, sed, awk, and more) and is written for the BSD versions of those programs as found on standard installations of Mac OSX. I tried to use POSIX-compliant commands wherever possible.
 
@@ -21,20 +21,20 @@ caffeinate -i -s bash /Users/user_name/path/to/the/file/banzai.sh
 ```
 
 ## Dependencies ##
-Aside from the standard command line utilities that are already included on Unix machines (awk, sed, grep, etc), this script relies on the following tools:
+Aside from the standard command line utilities (awk, sed, grep, etc) that are already included on Unix machines, this script relies on the following tools:
 
-* **PEAR**: merging paired-end reads
-* **usearch**: quality filtering of merged paired-end fastq files, OTU clustering (could be replaced with vsearch and/or swarm)
-* **cutadapt**: primer removal (I might replace with awk)
-* **seqtk**: reverse complementing entire fastq/a files
-* **python**: fast consolidation of duplicate sequences (installed by default on Macs)
-* **blast+**: taxonomic assignment
-* **MEGAN**: taxonomic assignment
-* **R**: ecological analyses. Requires the packages **vegan** and **gtools**
+* **[PEAR](http://sco.h-its.org/exelixis/web/software/pear/)**: merging paired-end reads
+* **[usearch](http://www.drive5.com/usearch/)**: filtering paired reads on the basis of the sum of the error probabilities (maximum expected errors). This can be turned off, probably without much change in final data quality. We used to do OTU clustering with usearch, but the 32bit version can't handle larger data sets.
+* **[swarm](https://github.com/torognes/swarm)**: OTU clustering
+* **[vsearch](https://github.com/torognes/vsearch)**: OTU clustering
+* **[cutadapt](https://github.com/marcelm/cutadapt)**: primer removal (I might replace with awk)
+* **[seqtk](https://github.com/lh3/seqtk)**: reverse complementing entire fastq/a files
+* **[python](https://www.python.org/)**: fast consolidation of duplicate sequences (installed by default on Macs)
+* **[blast+](http://www.ncbi.nlm.nih.gov/books/NBK279690/)**: taxonomic assignment
+* **[MEGAN](http://ab.inf.uni-tuebingen.de/software/megan5/)**: taxonomic assignment
+* **[R](https://www.r-project.org/)**: ecological analyses. Requires the packages **vegan** and **gtools**
 
-I might also consider adding:
-
-* **fastqc**: quality control of raw sequencing fastq files
+I recommend that before analyzing data, you check and report basic properties of the sequencing runs using **[fastqc](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)**. I have included a script to do this for all the fastq or fastq.gz files in any subdirectory of a directory (run_fastqc.sh).
 
 
 ## Sequencing Pool Metadata ##
