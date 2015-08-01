@@ -402,19 +402,20 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
-	# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
+	# Exclude singleton sequences (if NF > 2), count the number of sequences per duplicate (print NF-1), sort them by the number of sequences per duplicate (sort -nr), and precede with a name ("DUP_X", where X is the line number)
 	echo $(date +%H:%M) "Counting duplicates per identical sequence... (awk)"
-	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".derep | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle.txt
+	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".derep | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > "${DEREP_INPUT%/*}"/nosingle.txt
 
 	# COUNT OCCURRENCES PER SAMPLE (LIBRARY + TAG) PER DUPLICATE
 	echo $(date +%H:%M) "Consolidating identical sequences per sample... (awk)"
 	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
-		for TAG_SEQ in $TAGS; do
+		( for TAG_SEQ in $TAGS; do
 			LIB_TAG="lib_${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
+			echo $(date +%H:%M) "Processing" "${LIB_TAG}""..."
 			# the output of the awk function gsub is the number of replacements, so you could use this instead... however, it appears slower?
 			# ( awk 'BEGIN {print "'$LIB_TAG'" } { print gsub(/"'$LIB_TAG'"/,"") }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
-			( awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
-		done
+			awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup
+		done ) &
 
 		wait
 
@@ -428,7 +429,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	rm ${DEREP_INPUT%/*}/*.dup
 
 	# Write fasta file in order to blast sequences
-	echo $(date +%H:%M) "Writing fasta file for duplicate (unBLASTed sequences)"
+	echo $(date +%H:%M) "Writing fasta file of duplicate sequences"
 	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 	################################################################################
