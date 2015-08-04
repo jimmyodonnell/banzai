@@ -151,16 +151,11 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
 	MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
 
-
 	################################################################################
 	# CALCULATE MAXIMUM AND MINIMUM LENGTH OF MERGED READS
 	################################################################################
 	ASSMAX=$(( $LENGTH_FRAG + 50 ))
 	ASSMIN=$(( $LENGTH_FRAG - 50 ))
-
-	################################################################################
-	# USE READS FOR MERGING ONLY IF AFTER TRIMMING THEY ARE GREATER THAN 75% READ LENGTH
-	TRIMMIN=$(( $LENGTH_READ * $TRIMMIN_NUMER / $TRIMMIN_DENOM ))
 
 
 	if [ "$ALREADY_PEARED" = "YES" ]; then
@@ -177,7 +172,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			--min-overlap $MINOVERLAP \
 			--max-assembly-length $ASSMAX \
 			--min-assembly-length $ASSMIN \
-			--min-trim-length $TRIMMIN \
+			--min-trim-length $min_seq_length \
 			--quality-threshold $Quality_Threshold \
 			--max-uncalled-base $UNCALLEDMAX \
 			--test-method $TEST \

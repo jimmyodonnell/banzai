@@ -74,11 +74,11 @@ PVALUE=0.01
 # scoring method type (--score-method)
 SCORING=2
 
-# Math in BASH is janky, but I don't want a separate python/R script to do this...
-# BASH can only handle whole integers, so instead of multiplying by 0.75, multiply by 3 and divide by 4.
-# This will still result in a whole (rounded down) number no matter what.
-TRIMMIN_NUMER=3
-TRIMMIN_DENOM=4
+# What is the minimum final sequence length you'd like to include in analyses?
+# Bokulich et al. recommend 75% of the expected fragment size.
+# this includes PCR primers, but not anything ligated on during library prep.
+min_seq_length=75
+# equivalent variable was TRIMMIN
 
 ################################################################################
 # QUALITY FILTERING
