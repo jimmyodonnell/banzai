@@ -12,7 +12,7 @@
 # Define a variable called START_TIME
 START_TIME=$(date +%Y%m%d_%H%M)
 
-# This command specifies the path to the directory containing this script
+# Find the directory this script lives in, so it can find its friends.
 SCRIPT_DIR="$(dirname "$0")"
 
 # Read in the parameter file
@@ -40,22 +40,6 @@ fi
 # n_threads=$(( $n_cores * 2 ))
 
 
-################################################################################
-# CALCULATE EXPECTED AND MINIMUM OVERLAP OF PAIRED END SEQUENCES
-################################################################################
-OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
-MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
-
-
-################################################################################
-# CALCULATE MAXIMUM AND MINIMUM LENGTH OF MERGED READS
-################################################################################
-ASSMAX=$(( $LENGTH_FRAG + 50 ))
-ASSMIN=$(( $LENGTH_FRAG - 50 ))
-
-################################################################################
-# USE READS FOR MERGING ONLY IF AFTER TRIMMING THEY ARE GREATER THAN 75% READ LENGTH
-TRIMMIN=$(( $LENGTH_READ * $TRIMMIN_NUMER / $TRIMMIN_DENOM ))
 
 # Copy these files into that directory as a verifiable log you can refer back to.
 cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
@@ -158,6 +142,27 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	################################################################################
 	# MERGE PAIRED-END READS AND QUALITY FILTER (PEAR)
 	################################################################################
+
+	################################################################################
+	# CALCULATE EXPECTED AND MINIMUM OVERLAP OF PAIRED END SEQUENCES
+	################################################################################
+	# TODO ALTERNATE READ LENGTH
+	# head -n 100000 $infile | awk '{print length($0);}' | sort -nr | uniq | head -n 1
+	OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
+	MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
+
+
+	################################################################################
+	# CALCULATE MAXIMUM AND MINIMUM LENGTH OF MERGED READS
+	################################################################################
+	ASSMAX=$(( $LENGTH_FRAG + 50 ))
+	ASSMIN=$(( $LENGTH_FRAG - 50 ))
+
+	################################################################################
+	# USE READS FOR MERGING ONLY IF AFTER TRIMMING THEY ARE GREATER THAN 75% READ LENGTH
+	TRIMMIN=$(( $LENGTH_READ * $TRIMMIN_NUMER / $TRIMMIN_DENOM ))
+
+
 	if [ "$ALREADY_PEARED" = "YES" ]; then
 		MERGED_READS="$PEAR_OUTPUT"
 		echo "Paired reads have already been merged."
@@ -407,6 +412,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".derep | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > "${DEREP_INPUT%/*}"/nosingle.txt
 
 	# COUNT OCCURRENCES PER SAMPLE (LIBRARY + TAG) PER DUPLICATE
+	# This will start as many processes as you have libraries... be careful!
 	echo $(date +%H:%M) "Consolidating identical sequences per sample... (awk)"
 	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		( for TAG_SEQ in $TAGS; do
@@ -430,7 +436,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# Write fasta file in order to blast sequences
 	echo $(date +%H:%M) "Writing fasta file of duplicate sequences"
-	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/no_duplicates.fasta
+	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${DEREP_INPUT%/*}"/nosingle.txt > "${DEREP_INPUT%/*}"/no_duplicates.fasta
 
 	################################################################################
 	# CLUSTER OTUS
