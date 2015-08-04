@@ -83,7 +83,11 @@ fi
 PRIMER1RC=$( echo ${PRIMER1} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
 PRIMER2RC=$( echo ${PRIMER2} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
 
+
+
+################################################################################
 # Calculate the expected size of the region of interest, given the total size of fragments, and the length of primers and tags
+################################################################################
 EXTRA_SEQ=${TAGS_ARRAY[0]}${TAGS_ARRAY[0]}$PRIMER1$PRIMER2
 LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
 LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
@@ -122,7 +126,7 @@ else
 	N_libs=$(echo $LIBS | awk '{print NF}')
 	echo "Library names read from lib file (""${LIBS}"") total"
 fi
-# make tag sequences into an array
+# make library names into an array
 declare -a LIBS_ARRAY=($LIBS)
 
 
@@ -236,6 +240,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	else
 		# Convert merged reads fastq to fasta
 		echo  $(date +%H:%M) "converting fastq to fasta..."
+		# TODO the .gz below looks fucked up...
 		seqtk seq -A "${MERGED_READS}".gz > "${MERGED_READS%%.*}".fasta
 		FILTERED_OUTPUT="${MERGED_READS%%.*}".fasta
 	fi
@@ -340,6 +345,7 @@ fi
 # TODO could move this first step up above any loops (no else)
 if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
+	# TODO MOVE THE VARIABLE ASSIGNMENT TO TOP; MOVE MKDIR TO TOP OF CONCAT IF LOOP
 	echo $(date +%H:%M) "Concatenating fasta files..."
 	CONCAT_DIR="$ANALYSIS_DIR"/all_lib
 	mkdir "${CONCAT_DIR}"

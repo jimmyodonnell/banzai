@@ -76,9 +76,8 @@ Note that the original script also ouput a file of the sequences only (no names)
 * write table:
  - rows: libraries, tags (including rows for whole libraries)
  - column: numbers for number of sequences: successfully merged, filtered, forward index, both indexes (parallelizable using grep during awk demultiplexing?), primer 1, primer 2, singletons, (dups? otus?)
-
+* 
 * Find primer index as a function of 6bp preceeding or following primer seq  `grep -E -o '^.{6}'"${primer_F}"''`
-
 * Potential files to be removed as part of cleanup at the end of script:
  - homopolymer_line_numbers.txt
  - 2_filtered.fasta
