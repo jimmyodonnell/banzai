@@ -227,9 +227,11 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 				usearch -fastq_filter "${MERGED_READS}" -fastq_maxee "${Max_Expected_Errors}" -fastaout "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
 			fi
 
+
+			# TODO MOVE THIS TO END OF LIBRARY LEVEL STUFF
 			# Compress merged reads
-			echo $(date +%H:%M) "Compressing merged reads..."
-			"${ZIPPER}" "${MERGED_READS}"
+			# echo $(date +%H:%M) "Compressing merged reads..."
+			# "${ZIPPER}" "${MERGED_READS}"
 
 			# Remove annoying usearch linebreaks at 80 characters
 			echo  $(date +%H:%M) "removing fasta linebreaks..."
