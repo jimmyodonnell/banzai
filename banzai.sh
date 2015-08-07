@@ -426,9 +426,9 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 			awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup
 		done ) &
 
-		wait
-
 	done
+
+	wait
 
 
 	# Write a csv file of the number of occurrences of each duplicate sequence per tag. (rows = sequences, cols = samples)
