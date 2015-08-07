@@ -68,6 +68,7 @@ The output file is as follows:
 Note that the original script also ouput a file of the sequences only (no names), but I removed this functionality on 20150417
 
 ##Wishlist/TODO/notes to self##
+* add `trap "killall background" EXIT` or `trap 'kill $(jobs -p)' EXIT` to kill background processes on exit
 * Add decontamination script
 * Add normalization
 * streamline config file
