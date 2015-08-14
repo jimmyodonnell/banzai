@@ -3,14 +3,15 @@
 # Set working directory
 # setwd("/Users/threeprime/Documents/GoogleDrive/Kelly_Lab_Big/Illumina_Data_Analyzed/16S/run_20150401/Analysis_20150403_1906/all_lib")
 # arguments: 
-# 1: duplicate table
-# 2: dup to otu table
-# 3: otu table path
-# 4: concatenated directory (obsolete?))
+# 1: path to duplicate table (rows = sequence names, cols = sample names, cells = counts (integers))
+# 2: dup to otu table (two columns; headers "Query" and "Match"; cells = sequence names of query and corresponding match from OTU clustering process)
+# 3: otu table path (to be written)
+
+# 20150813 removed fourth argument: 4: concatenated directory (obsolete?))
 
 # automated script:
 arguments <- commandArgs(TRUE)
-setwd(arguments[4])
+# setwd(arguments[4])
 
 # load gtools to use function mixedsort
 library(gtools)
