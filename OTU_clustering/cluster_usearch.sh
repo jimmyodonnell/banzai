@@ -43,7 +43,7 @@ awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${out_fa
 rm "${out_fasta_linebreak}"
 
 DUPS_TO_OTUS="${dir_out}"/dups_to_otus.csv
-awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") { print $1 "," $7 } else if ($4 == "chimera") { print $1 "," "chimera"} }' "${UPARSE_OUT}" > "${DUPS_TO_OTUS}"
+awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") { print $1 "," $7 } else if ($4 == "chimera") { print $1 "," "chimera"} }' "${out_uc}" > "${DUPS_TO_OTUS}"
 
 exit
 
