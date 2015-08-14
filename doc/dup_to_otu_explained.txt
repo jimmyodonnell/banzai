@@ -1,0 +1,74 @@
+Suppose we have the following sequencing data...
+4 sequences from each of 3 samples, for a total of twelve sequences, 10bp each
+
+>seq1_sample1
+AAAAAAAAAA
+>seq2_sample1
+AAAAAAAAAA
+>seq3_sample1
+TTTTTTTTTT
+>seq4_sample1
+TTTTTTTTTT
+>seq1_sample2
+CCCCCCCCCC
+>seq2_sample2
+CCCCCCCCCC
+>seq3_sample2
+GGGGGGGGGG
+>seq4_sample2
+TTTTTTTTTT
+>seq1_sample3
+AAAAAAAAAA
+>seq2_sample3
+CCCCCCCCCC
+>seq3_sample3
+GGGGGGGGGG
+>seq4_sample3
+TTTTTTTTTT
+
+
+There are only four unique sequences: AAAAAAAAAA, TTTTTTTTTT, CCCCCCCCCC, GGGGGGGGGG
+
+Thus, we can speed up downstream analyses by first removing redundant sequences.
+
+But, we want to retain counts of their abundance in each sample.
+
+sample	1	2	3
+AAAAA	2	0	1
+TTTTT	2	1	1
+CCCCC	0	2	1
+GGGGG	0	1	1
+
+This is too much information to put on the sequence ID line of a fasta file. So we store it as a separate table, along with a new, dereplicated fasta file to run through the other analyses:
+ 
+>DUP_1
+AAAAAAAAAA
+>DUP_2
+TTTTTTTTTT
+>DUP_3
+CCCCCCCCCC
+>DUP_4
+GGGGGGGGGG
+
+This is what the "dereplication" process does.
+
+Now, we cluster the dereplicated fasta file - let's say A and T cluster together, as do C and G. We end up with a new fasta file of OTUs:
+
+>OTU_1;size=2;
+AAAAAAAAAA
+>OTU_2;size=2;
+CCCCCCCCCC
+
+We could store the information about which sequences were clustered into each OTU like so:
+DUP_1	OTU_1
+DUP_2	OTU_1
+DUP_3	OTU_2
+DUP_4	OTU_2
+
+Because their abundance in this case is just a single number, it can be added to the sequence ID in the fasta file. BUT, that number doesn't capture the true abundance of the OTU in the sample before dereplication, nor does it retain information about varying abundances across difference samples. Thus, if we want a final table containing the abundance of each of the OTUs across a bunch of samples, we need to link together:
+
+1. The names of the sequences that were clustered into each OTU
+2. The abundance of each of those duplicate sequences in the sample
+
+This is what the script "dup_to_OTU_table.R" does. It takes as input the duplicate table and the dup to OTU table (that last two-column table that shows which OTU each duplicate ended up in), and then writes out an OTU table.
+
