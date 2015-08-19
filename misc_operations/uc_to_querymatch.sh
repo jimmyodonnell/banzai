@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-# convert usearch/uparse-like output, e.g.:
+# convert usearch/uparse-like output to simple two-column file.
+
+# usage:
+# bash /Applications/banzai/misc_operations/uc_to_querymatch.sh /path/to/input_file.uc
 
 # to a file with only two columns, Query and Match, e.g.:
 # DUP_278557,DUP_32996
