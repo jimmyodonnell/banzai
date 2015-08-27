@@ -111,8 +111,12 @@ LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n
 # Count library directories and print the number found
 N_library_dir=$(echo $LIBRARY_DIRECTORIES | awk '{print NF}')
 echo "${N_library_dir}"" library directories found:"
+
 # Show the libraries that were found:
 for i in $LIBRARY_DIRECTORIES; do echo "${i##*/}" ; done
+
+# Assign it to a variable for comparison
+LIBS_FROM_DIRECTORIES=$(for i in $LIBRARY_DIRECTORIES; do echo "${i##*/}" ; done)
 
 # Read library names from file or sequencing metadata
 if [ "${READ_LIB_FROM_SEQUENCING_METADATA}" = "YES" ]; then
@@ -129,6 +133,12 @@ fi
 # make library names into an array
 declare -a LIBS_ARRAY=($LIBS)
 
+# Check that library names are the same in the metadata and file system
+if [ "$LIBS_FROM_DIRECTORIES" != "$LIBS" ]; then
+	echo "Warning: Library directories and library names in metadata are NOT the same. Something will probably go wrong later..."
+else
+	echo "Library directories and library names in metadata are the same - great job."
+fi
 
 ################################################################################
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
