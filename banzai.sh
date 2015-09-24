@@ -137,7 +137,7 @@ declare -a LIBS_ARRAY=($LIBS)
 if [ "$LIBS_FROM_DIRECTORIES" != "$LIBS" ]; then
 	echo "Warning: Library directories and library names in metadata are NOT the same. Something will probably go wrong later..."
 else
-	echo "Library directories and library names in metadata are the same - great job."
+	echo "Library directories and library names in metadata are the same - great jorb."
 fi
 
 ################################################################################
