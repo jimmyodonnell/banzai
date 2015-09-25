@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Pipeline for analysis of MULTIPLEXED Illumina data, a la Jimmy
-
+# TODO eliminate looking for 'R1' and 'R2' in read names (just use first and second file in order)
 # TODO An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
 # set -e is not the right solution because it will cause the script to exit immediately (without cleaning up after itself or notifying the user) if there is a problem with the megan file or the R script.
 # Instead, I should probably build in checks of the input files (sequencing metadata)
