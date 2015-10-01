@@ -6,7 +6,7 @@
 
 my_dir=("$@")
 n_cores=$(getconf _NPROCESSORS_ONLN)
-output_dir="${my_dir}"/quality_reports
+output_dir="${my_dir}"/fastqc_reports
 
 # for output directory at same level as libraries: ${my_dir%/*}/quality_reports
 
