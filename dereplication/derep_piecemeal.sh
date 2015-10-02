@@ -5,7 +5,7 @@
 # 1:
 # The path to a text file (e.g. nosingle.txt), where each line contains a name, DNA sequence, and semicolon-separated sequence headers that contain the library "lib" and primer "tag" index information.
 # Example: >DUP_1;2;AATTCGAATT;3:21403:26840:9032_lib_J_tag_GCGCTC; 3:21404:1193:9047_lib_J_tag_GCGCTC
-infile="${1}"
+infile="/Users/threeprime/Documents/Dropbox/Jesse/24Sept15/all_lib/7_no_primers.fasta.derep"
 
 # 2:
 # The file path to the sequencing metadata, to grab "lib" and "tag" info
@@ -13,12 +13,13 @@ SEQUENCING_METADATA="${2}"
 
 # 3:
 # The name of the column that contains the LIBRARY information for each sample
-LIBRARY_COLUMN_NAME="${3}"
+LIBRARY_COLUMN_NAME=""
 
 # 4:
 # The name of the column that contains the TAG information for each sample
 TAG_COLUMN_NAME="${4}"
 
+#==============================================================================#
 
 # Get the number of available cores. This allows for parallelization without overloading.
 n_cores=$(getconf _NPROCESSORS_ONLN)
