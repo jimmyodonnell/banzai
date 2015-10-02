@@ -9,7 +9,7 @@ infile="/Users/threeprime/Documents/Dropbox/Jesse/24Sept15/all_lib/7_no_primers.
 
 # 2:
 # The file path to the sequencing metadata, to grab "lib" and "tag" info
-SEQUENCING_METADATA="${2}"
+SEQUENCING_METADATA="/Users/threeprime/Documents/Dropbox/Jesse/24Sept15/MiSeq_FL_MBON_Sept15_Metadata_rev_alphalib.csv"
 
 # 3:
 # The name of the column that contains the LIBRARY information for each sample
