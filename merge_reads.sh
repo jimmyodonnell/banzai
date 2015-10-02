@@ -15,7 +15,7 @@ pear \
     --forward-fastq "${raw_reads[0]}" \
     --reverse-fastq "${raw_reads[1]}" \
     --output "${pear_out_prefix}" \
-    --threads $n_threads
+    --threads "$n_threads"
 
 exit
 
@@ -30,3 +30,12 @@ exit
     -p $PVALUE \
     -s $SCORING \
 
+	--max-assembly-length "500" \
+	--min-overlap "" \
+	--min-assembly-length "" \
+	--min-trim-length "" \
+	--quality-threshold "" \
+	--max-uncalled-base "" \
+	--test-method "" \
+	--p-value "" \
+	--score-method "" \
