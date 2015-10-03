@@ -5,15 +5,15 @@
 # 1:
 # The path to a text file (e.g. nosingle.txt), where each line contains a name, DNA sequence, and semicolon-separated sequence headers that contain the library "lib" and primer "tag" index information.
 # Example: >DUP_1;2;AATTCGAATT;3:21403:26840:9032_lib_J_tag_GCGCTC; 3:21404:1193:9047_lib_J_tag_GCGCTC
-infile="/Users/threeprime/Documents/Dropbox/Jesse/24Sept15/all_lib/7_no_primers.fasta.derep"
+infile="${1}"
 
 # 2:
 # The file path to the sequencing metadata, to grab "lib" and "tag" info
-SEQUENCING_METADATA="/Users/threeprime/Documents/Dropbox/Jesse/24Sept15/MiSeq_FL_MBON_Sept15_Metadata_rev_alphalib.csv"
+SEQUENCING_METADATA="${2}"
 
 # 3:
 # The name of the column that contains the LIBRARY information for each sample
-LIBRARY_COLUMN_NAME=""
+LIBRARY_COLUMN_NAME="${3}"
 
 # 4:
 # The name of the column that contains the TAG information for each sample
@@ -24,8 +24,9 @@ TAG_COLUMN_NAME="${4}"
 # Get the number of available cores. This allows for parallelization without overloading.
 n_cores=$(getconf _NPROCESSORS_ONLN)
 
-# assign a path for the output (a table of counts of each duplicate sequence in each unique combination of library and primer ("tag") indexes
+# assign a path for the output (a table of counts of each duplicate sequence in each unique combination of library and primer ("tag") indexes, and a fasta of all the duplicate sequences.
 duplicate_table="${infile%/*}"/duplicate_table.csv
+duplicate_fasta="${infile%/*}"/duplicates.fasta
 
 # make a directory to store the temporary duplicate files
 temp_dir="${infile%/*}"/dup_temp
@@ -35,12 +36,12 @@ mkdir "${temp_dir}"
 # read the library index column
 LIB_COL=$(awk -F',' -v LIB_COL_NAME=$LIBRARY_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == LIB_COL_NAME) print i; exit}' $SEQUENCING_METADATA)
 LIBS=$(awk -F',' -v LIBCOL=$LIB_COL 'NR>1 {print $LIBCOL}' $SEQUENCING_METADATA | sort | uniq)
-echo $LIBS
+echo "The following library names were found in the metadata:   " $LIBS
 
 # read the primer tag index column
 TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == TAG_COL_NAME) print i; exit}' $SEQUENCING_METADATA)
 TAGS=$(awk -F',' -v TAGCOL=$TAG_COL 'NR>1 {print $TAGCOL}' $SEQUENCING_METADATA | sort | uniq)
-echo $TAGS
+echo "The following primer index sequences were found in the metadata:   " $TAGS
 
 LIB_TAG_MOD=$(awk -F',' -v LIBCOL=$LIB_COL -v TAGCOL=$TAG_COL 'NR>1 {print "lib_" $LIBCOL "_tag_" $TAGCOL}' $SEQUENCING_METADATA | sort | uniq)
 
@@ -86,13 +87,43 @@ for batch in "${sample_batch_prefix}"* ; do
 	
 done
 
-# exit
-
-# rm "${sample_batch_prefix}"*
 ################################################################################
 
+# write a file of names of each of the duplicates:
+dupnames="${temp_dir}"/dupnames
+awk -F';' 'BEGIN {print "sample"} {print $1}' "$infile" | sed 's/>//' > "${dupnames}"
+
+# first, count the number of duplicate files:
+n_files=$(find "${temp_dir}" -type f -name '*.dup*' | wc -l)
+max_files=$(ulimit -n)
 
 
+
+# this will paste row by row... takes 48s on a set of 300 files (samples) each containing 630023 lines (duplicates)
+paste -s -d, "${dupnames}" "${temp_dir}"/*.dup > "${duplicate_table}"
+
+# this will do columns; it takes a very long time.
+# for file in "${temp_dir}"/*; do cat final.dup | paste - $file >temp; cp temp final.dup; done; rm temp
+
+# cleanup
+# rm "${infile%/*}"/*.dup
+# rm "${sample_batch_prefix}"*
+
+# say that you're finished.
+echo $(date +%H:%M) "Identical sequences consolidated in file ""${duplicate_table}"
+
+# Write fasta file in order to blast sequences
+# echo $(date +%H:%M) "Writing fasta file of duplicate sequences"
+awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${infile}" > "${duplicate_fasta}"
+
+
+
+
+
+
+
+################################################################################
+# GRAVEYARD
 ################################################################################
 # OLD
 # for each of the library indexes,
@@ -116,13 +147,6 @@ done
 ################################################################################
 
 
-# write a file of names of each of the duplicates:
-awk -F';' 'BEGIN {print "sample"} {print $1}' $infile | sed 's/>//' > ${temp_dir}/dupnames
-
-# first, count the number of duplicate files:
-n_files=$(find "${temp_dir}" -type f -name '*.dup*' | wc -l)
-max_files=$(ulimit -n)
-
 # find all of the *.dup files, and paste them together, and put a name at the beginning of each line.
 # find "${temp_dir}" -type f -name '*.dup' -exec paste -d, {} \+ | awk '{ print "DUP_" NR-1 "," $0 }' > "${duplicate_table}"
 # after increasing ulimit (maximum number of files allowed to be open at once), this took "user	1m21.943s"
@@ -136,21 +160,3 @@ max_files=$(ulimit -n)
 
 # This fails
 # paste -d, "${temp_dir}"/*.dup >> "${duplicate_table}"
-
-
-# this will paste row by row... takes 48s on a set of 300 files (samples) each containing 630023 lines (duplicates)
-paste -s -d, "${temp_dir}"/dupnames "${temp_dir}"/*.dup > "${duplicate_table}"
-
-# this will do columns; it takes a very long time.
-# for file in "${temp_dir}"/*; do cat final.dup | paste - $file >temp; cp temp final.dup; done; rm temp
-
-# delete all of the '.dup' files
-# rm "${infile%/*}"/*.dup
-
-# say that you're finished.
-echo $(date +%H:%M) "Identical sequences consolidated in file ""${duplicate_table}"
-
-# Write fasta file in order to blast sequences
-# echo $(date +%H:%M) "Writing fasta file of duplicate sequences"
-awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${infile}" > "${infile%/*}"/duplicates.fasta
-
