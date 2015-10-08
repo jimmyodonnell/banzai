@@ -196,9 +196,9 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			-s $SCORING \
 			-j $n_cores
 
-		echo $(date +%H:%M) "Compressing PEAR output..."
-		find "${LIB_OUTPUT_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
-		echo $(date +%H:%M) "PEAR output compressed."
+		# echo $(date +%H:%M) "Compressing PEAR output..."
+		# find "${LIB_OUTPUT_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
+		# echo $(date +%H:%M) "PEAR output compressed."
 
 	fi
 
