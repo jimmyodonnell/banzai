@@ -186,7 +186,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			--reverse-fastq "${READ2}" \
 			--output "${MERGED_READS_PREFIX}" \
 			--min-overlap $MINOVERLAP \
-			--max-assembly-length $ASSMAX \
+			-m $ASSMAX \
 			--min-assembly-length $ASSMIN \
 			--min-trim-length $min_seq_length \
 			--quality-threshold $Quality_Threshold \
