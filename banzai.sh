@@ -255,8 +255,8 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		# Convert merged reads fastq to fasta
 		echo  $(date +%H:%M) "converting fastq to fasta..."
 		# TODO the .gz below looks fucked up...
-		seqtk seq -A "${MERGED_READS}".gz > "${MERGED_READS%%.*}".fasta
-		FILTERED_OUTPUT="${MERGED_READS%%.*}".fasta
+		seqtk seq -A "${MERGED_READS}".gz > "${MERGED_READS%.*}".fasta
+		FILTERED_OUTPUT="${MERGED_READS%.*}".fasta
 	fi
 
 
