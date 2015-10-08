@@ -185,16 +185,16 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			--forward-fastq "${READ1}" \
 			--reverse-fastq "${READ2}" \
 			--output "${MERGED_READS_PREFIX}" \
-			--min-overlap $MINOVERLAP \
+			-v $MINOVERLAP \
 			-m $ASSMAX \
-			--min-assembly-length $ASSMIN \
-			--min-trim-length $min_seq_length \
-			--quality-threshold $Quality_Threshold \
-			--max-uncalled-base $UNCALLEDMAX \
-			--test-method $TEST \
-			--p-value $PVALUE \
-			--score-method $SCORING \
-			--threads $n_cores
+			-n $ASSMIN \
+			-t $min_seq_length \
+			-q $Quality_Threshold \
+			-u $UNCALLEDMAX \
+			-g $TEST \
+			-p $PVALUE \
+			-s $SCORING \
+			-j $n_cores
 
 		echo $(date +%H:%M) "Compressing PEAR output..."
 		find "${LIB_OUTPUT_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
