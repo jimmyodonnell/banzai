@@ -289,7 +289,12 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 		# updated 20150521; one step solution using awk; removes anything after the first space!
 		FILTERED_RENAMED="${FILTERED_OUTPUT%.*}"_renamed.fasta
-		awk -F'[: ]' '{ if ( /^>/ ) print ">"$4":"$5":"$6":"$7"_lib_'${CURRENT_LIB##*/}'_"; else print $0}''' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
+		awk -F'[: ]' '{
+				if ( /^>/ )
+					print ">"$4":"$5":"$6":"$7"_lib_'${CURRENT_LIB##*/}'_";
+				else
+					print $0
+				}''' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
 
 		FILTERED_OUTPUT="${FILTERED_RENAMED}"
 
