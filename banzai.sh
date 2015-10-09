@@ -429,11 +429,21 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	done
 
-
+	################################################################################
 	# Count the occurrences of '_tag_' + the 6 characters following it in the concatenated file
+	################################################################################
+  # TODO !!! This will fail if there are underscores in the library names !!!
+	# an attempt at making this robust to underscores
+	# grep -E -o '_lib_.+?(?=_tag)_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
+
 	echo $(date +%H:%M) "Counting reads associated with each sample index (primer tag)..."
-	grep -E -o '_lib_._tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
+	grep -E -o '_lib_[^_]*_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
+
 	echo $(date +%H:%M) "Summary of sequences belonging to each sample index found in ""${CONCAT_DIR}""/1_demult_concat.fasta.tags"
+	################################################################################
+
+
+
 
 	################################################################################
 	# PRIMER REMOVAL

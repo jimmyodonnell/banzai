@@ -39,6 +39,9 @@ If you provide a CSV spreadsheet that contains metadata about the samples, banza
 
 It is VERY important that this file be encoded with UNIX line breaks. You can do this from Excel and TextWrangler. It doesn't appear to be critical that the text is encoded using UTF-8, though this is certainly the safest option. Early in the logfile you can check to be sure the correct number of tags and primer sequences were found.
 
+## LIBRARY NAMES ##
+As of 2015-10-09, libraries no longer have to be named anything in particular (e.g. A, B, lib1, lib2),
+BUT THEY CANNOT CONTAIN UNDERSCORES!
 
 ## Organization of raw data ##
 Your data (fastq files) can be compressed or not; but banzai currently only works with paired-end Illumina data. Thus, the bare minimum input is two fastq files corresponding to the first and second read. *Banzai will fail if there are files in your library folders that are not your raw data but have 'fastq' in the filename!* For example, if your library contains four files: "R1.fastq", "R1.fastq.gz", "R2.fastq", and "R2.fastq.gz". banzai will grab the first two (R1.fastq and R1.fastq.gz) and try to merge them, and (correctly) fail miserably.
@@ -104,4 +107,4 @@ caffeinate -i -s bash /Users/user_name/path/to/the/file/banzai.sh
 An alternate hack to have the pipeline print to terminal AND file, in case logging breaks:
 sh script.sh  2>&1 | tee ~/Desktop/logfile.txt
 
-* 2015-10-09 read length calculated from raw data.
+* 2015-10-09 read length calculated from raw data. Library names are flexible.
