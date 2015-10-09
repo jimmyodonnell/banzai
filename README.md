@@ -103,3 +103,5 @@ caffeinate -i -s bash /Users/user_name/path/to/the/file/banzai.sh
 
 An alternate hack to have the pipeline print to terminal AND file, in case logging breaks:
 sh script.sh  2>&1 | tee ~/Desktop/logfile.txt
+
+* 2015-10-09 read length calculated from raw data.

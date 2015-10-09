@@ -5,6 +5,9 @@
 # TODO eliminate looking for 'R1' and 'R2' in read names (just use first and second file in order)
 # TODO An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
 # TODO fix dereplication scripts
+# TODO make LIBRARY_DIRECTORIES an array by wrapping it in ()
+# TODO ALTERNATE READ LENGTH
+
 # set -e is not the right solution because it will cause the script to exit immediately (without cleaning up after itself or notifying the user) if there is a problem with the megan file or the R script.
 # Instead, I should probably build in checks of the input files (sequencing metadata)
 ################################################################################
@@ -107,6 +110,7 @@ fi
 ################################################################################
 # Look for any file with '.fastq' in the name in the parent directory
 # note that this will include ANY file with fastq -- including QC reports!
+# TODO make LIBRARY_DIRECTORIES an array by wrapping it in ()
 LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique )
 
 # Count library directories and print the number found
@@ -157,21 +161,20 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	LIB_OUTPUT_DIR="${ANALYSIS_DIR}"/${CURRENT_LIB##*/}
 	mkdir "${LIB_OUTPUT_DIR}"
 
-	################################################################################
+	##############################################################################
 	# MERGE PAIRED-END READS AND QUALITY FILTER (PEAR)
-	################################################################################
+	##############################################################################
 
-	################################################################################
+	##############################################################################
 	# CALCULATE EXPECTED AND MINIMUM OVERLAP OF PAIRED END SEQUENCES
-	################################################################################
-	# TODO ALTERNATE READ LENGTH
-	# head -n 100000 $infile | awk '{print length($0);}' | sort -nr | uniq | head -n 1
+	##############################################################################
+	LENGTH_READ=$( head -n 100000 "${READ1}" | awk '{print length($0);}' | sort -nr | uniq | head -n 1 )
 	OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
 	MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
 
-	################################################################################
+	##############################################################################
 	# CALCULATE MAXIMUM AND MINIMUM LENGTH OF MERGED READS
-	################################################################################
+	##############################################################################
 	ASSMAX=$(( $LENGTH_FRAG + 50 ))
 	ASSMIN=$(( $LENGTH_FRAG - 50 ))
 

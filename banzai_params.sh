@@ -46,11 +46,6 @@ LENGTH_FRAG="182"
 READ_LIB_FROM_SEQUENCING_METADATA="YES"
 LIBRARY_COLUMN_NAME="library"
 
-# What is the length of the reads of the Illumina run? (i.e. how long are the sequences in each of the run fastq files (R1 and R2)?)
-# TODO ?(If this isn't specified) just read the number of characters per line 2,6,10 -- compute max/average?
-LENGTH_READ="150"
-
-
 ################################################################################
 # MERGE PAIRED READS
 ################################################################################
@@ -179,9 +174,8 @@ MAXIMUM_MATCHES="400"
 ## MEGAN ##
 # For more information, see the manual provided with the software
 # Specify the path to the MEGAN executable file you want to use.
-# Note that in recent versions an executable was not provided; in that case use this:
-# /Applications/Megan/MEGAN.app/Contents/MacOS/JavaApplicationStub -g
-megan_exec='/Applications/megan/MEGAN'
+# Note that in recent versions an executable was not provided; in that case, you need to reference like so: '/Applications/MEGAN/MEGAN.app/Contents/MacOS/JavaApplicationStub'
+megan_exec='/Applications/MEGAN/MEGAN.app/Contents/MacOS/JavaApplicationStub'
 
 # What is the lowest taxonomic rank at which MEGAN should group OTUs?
 COLLAPSE_RANK1="Family"
