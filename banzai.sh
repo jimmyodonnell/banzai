@@ -10,6 +10,7 @@
 # TODO if LIBRARY_DIRECTORIES is an array, its length is "${#LIBRARY_DIRECTORIES[@]}"
 # TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
 # TODO LIBS_ARRAY is never used
+# TODO wrap primer removal '( ) &' to force into background and allow parallel processing
 
 # set -e is not the right solution because it will cause the script to exit immediately (without cleaning up after itself or notifying the user) if there is a problem with the megan file or the R script.
 # Instead, I should probably build in checks of the input files (sequencing metadata)
@@ -86,10 +87,15 @@ else
 	echo "Primers read from primer file."
 fi
 
+# make primer array
+read -a primers_arr <<< $( echo $PRIMER1 $PRIMER2 )
+
 # Reverse complement primers
 PRIMER1RC=$( echo ${PRIMER1} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
 PRIMER2RC=$( echo ${PRIMER2} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
 
+# make primer array
+read -a primersRC_arr <<< $( echo $PRIMER1RC $PRIMER2RC )
 
 
 ################################################################################
@@ -413,6 +419,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	echo $(date +%H:%M) "Concatenating fasta files..."
 	CONCAT_DIR="$ANALYSIS_DIR"/all_lib
 	mkdir "${CONCAT_DIR}"
+	CONCAT_FILE="${CONCAT_DIR}"/1_demult_concat.fasta
 
 	# TODO could move this into above loop after demultiplexing?
 	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
@@ -420,7 +427,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		LIB_OUTPUT_DIR="${ANALYSIS_DIR}"/${CURRENT_LIB##*/}
 
 		for TAG_SEQ in $TAGS; do
-			cat "${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/2_notags.fasta >> "${CONCAT_DIR}"/1_demult_concat.fasta
+			cat "${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/2_notags.fasta >> "${CONCAT_FILE}"
 		done
 
 		echo $(date +%H:%M) "Compressing fasta files..."
@@ -448,17 +455,23 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	################################################################################
 	# PRIMER REMOVAL
 	################################################################################
-	echo $(date +%H:%M) "Removing primers in library" "${CURRENT_LIB##*/}""..."
+	# (moot for concatenated file): echo $(date +%H:%M) "Removing primers in library" "${CURRENT_LIB##*/}""..."
 	# Remove PRIMER1 and PRIMER2 from the BEGINNING of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
 
 	# TODO wrap in '( ) &' to force into background and allow parallel processing
-	cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/1_demult_concat.fasta > "${CONCAT_DIR}"/5_primerL1_removed.fasta
-	cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/1_demult_concat.fasta > "${CONCAT_DIR}"/5_primerL2_removed.fasta
+	# i.e.
+	# for primer in "${primers_arr[@]}"; do
+	# 	( cutadapt -g ^"${primer}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_L"${primer}"_removed.fasta ) &
+	# done
+	# wait
+
+	cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_primerL1_removed.fasta
+	cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_primerL2_removed.fasta
 
 	# count lines in primer removal input
 	echo $(date +%H:%M) "Counting sequences in primer removal input..."
-	seq_N_demult_concat=$( grep -e '^>' --count "${CONCAT_DIR}"/1_demult_concat.fasta )
-	echo $(date +%H:%M) "${seq_N_demult_concat}" "sequences found in file" "${CONCAT_DIR}"/1_demult_concat.fasta
+	seq_N_demult_concat=$( grep -e '^>' --count "${CONCAT_FILE}" )
+	echo $(date +%H:%M) "${seq_N_demult_concat}" "sequences found in file" "${CONCAT_FILE}"
 
 	# compress left primer removal input
 	echo $(date +%H:%M) "Compressing left primer removal input..."
