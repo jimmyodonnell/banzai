@@ -294,7 +294,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 					print ">"$4":"$5":"$6":"$7"_lib_'${CURRENT_LIB##*/}'_";
 				else
 					print $0
-				}''' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
+				}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
 
 		FILTERED_OUTPUT="${FILTERED_RENAMED}"
 
@@ -310,11 +310,15 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	################################################################################
 	if [ "${REMOVE_HOMOPOLYMERS}" = "YES" ]; then
 		echo $(date +%H:%M) "Removing homopolymers..."
-		grep -E -i "(A|T|C|G)\1{$HOMOPOLYMER_MAX,}" "${FILTERED_OUTPUT}" -B 1 -n | cut -f1 -d: | cut -f1 -d- | sed '/^$/d' > "${CURRENT_LIB}"/homopolymer_line_numbers.txt
-		if [ -s "${CURRENT_LIB}"/homopolymer_line_numbers.txt ]; then
-			awk 'NR==FNR{l[$0];next;} !(FNR in l)' "${CURRENT_LIB}"/homopolymer_line_numbers.txt "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/3_no_homopolymers.fasta
-			awk 'NR==FNR{l[$0];next;} (FNR in l)' "${CURRENT_LIB}"/homopolymer_line_numbers.txt "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/homopolymeric_reads.fasta
+		HomoLineNo="${CURRENT_LIB}"/homopolymer_line_numbers.txt
+		grep -E -i -B 1 -n "(A|T|C|G)\1{$HOMOPOLYMER_MAX,}" "${FILTERED_OUTPUT}" | \
+			cut -f1 -d: | \
+			cut -f1 -d- | \
+			sed '/^$/d' > "${HomoLineNo}"
+		if [ -s "${HomoLineNo}" ]; then
 			DEMULTIPLEX_INPUT="${CURRENT_LIB}"/3_no_homopolymers.fasta
+			awk 'NR==FNR{l[$0];next;} !(FNR in l)' "${HomoLineNo}" "${FILTERED_OUTPUT}" > "${DEMULTIPLEX_INPUT}"
+			awk 'NR==FNR{l[$0];next;} (FNR in l)' "${HomoLineNo}" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/homopolymeric_reads.fasta
 		else
 			echo "No homopolymers found" > "${CURRENT_LIB}"/3_no_homopolymers.fasta
 			DEMULTIPLEX_INPUT="${FILTERED_OUTPUT}"
