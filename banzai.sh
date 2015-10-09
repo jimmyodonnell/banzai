@@ -7,6 +7,9 @@
 # TODO fix dereplication scripts
 # TODO make LIBRARY_DIRECTORIES an array by wrapping it in ()
 # TODO ALTERNATE READ LENGTH
+# TODO if LIBRARY_DIRECTORIES is an array, its length is "${#LIBRARY_DIRECTORIES[@]}"
+# TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
+# TODO LIBS_ARRAY is never used
 
 # set -e is not the right solution because it will cause the script to exit immediately (without cleaning up after itself or notifying the user) if there is a problem with the megan file or the R script.
 # Instead, I should probably build in checks of the input files (sequencing metadata)
@@ -28,8 +31,8 @@ ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
 mkdir "${ANALYSIS_DIR}"
 
 # Write a log file of output from this script (everything that prints to terminal)
-exec > >(tee "${ANALYSIS_DIR}"/logfile.txt) 2>&1
-# exec 2>&1
+LOGFILE="${ANALYSIS_DIR}"/logfile.txt
+exec > >(tee "${LOGFILE}") 2>&1
 
 echo "Analysis started at ""${START_TIME}" " and is located in ""${ANALYSIS_DIR}"
 
@@ -101,8 +104,10 @@ LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 ################################################################################
 if hash pigz 2>/dev/null; then
 	ZIPPER="pigz"
+	echo "pigz installation found"
 else
 	ZIPPER="gzip"
+	echo "pigz installation not found; using gzip"
 fi
 
 ################################################################################
@@ -114,10 +119,12 @@ fi
 LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique )
 
 # Count library directories and print the number found
+# TODO if LIBRARY_DIRECTORIES is an array, its length is "${#LIBRARY_DIRECTORIES[@]}"
 N_library_dir=$(echo $LIBRARY_DIRECTORIES | awk '{print NF}')
 echo "${N_library_dir}"" library directories found:"
 
 # Show the libraries that were found:
+# TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
 for i in $LIBRARY_DIRECTORIES; do echo "${i##*/}" ; done
 
 # Assign it to a variable for comparison
@@ -136,7 +143,8 @@ else
 	echo "Library names read from lib file (""${LIBS}"") total"
 fi
 # make library names into an array
-declare -a LIBS_ARRAY=($LIBS)
+# TODO LIBS_ARRAY is never used
+# declare -a LIBS_ARRAY=($LIBS)
 
 # Check that library names are the same in the metadata and file system
 if [ "$LIBS_FROM_DIRECTORIES" != "$LIBS" ]; then
@@ -144,6 +152,10 @@ if [ "$LIBS_FROM_DIRECTORIES" != "$LIBS" ]; then
 else
 	echo "Library directories and library names in metadata are the same - great jorb."
 fi
+
+# create a file to store tag efficiency data
+TAG_COUNT="${ANALYSIS_DIR}"/tag_count.txt
+echo "library   tag   left_tagged   right_tagged" >> "${TAG_COUNT}"
 
 ################################################################################
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
@@ -201,9 +213,6 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			-s $SCORING \
 			-j $n_cores
 
-		# echo $(date +%H:%M) "Compressing PEAR output..."
-		# find "${LIB_OUTPUT_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
-		# echo $(date +%H:%M) "PEAR output compressed."
 
 	fi
 
@@ -244,12 +253,6 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 				usearch -fastq_filter "${MERGED_READS}" -fastq_maxee "${Max_Expected_Errors}" -fastaout "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
 			fi
 
-
-			# TODO MOVE THIS TO END OF LIBRARY LEVEL STUFF
-			# Compress merged reads
-			# echo $(date +%H:%M) "Compressing merged reads..."
-			# "${ZIPPER}" "${MERGED_READS}"
-
 			# Remove annoying usearch linebreaks at 80 characters
 			echo  $(date +%H:%M) "removing fasta linebreaks..."
 			awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${FILTERED_OUTPUT%.*}"_linebreaks.fasta > "${FILTERED_OUTPUT}"
@@ -259,10 +262,17 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	else
 		# Convert merged reads fastq to fasta
 		echo  $(date +%H:%M) "converting fastq to fasta..."
-		# TODO the .gz below looks fucked up...
-		seqtk seq -A "${MERGED_READS}".gz > "${MERGED_READS%.*}".fasta
 		FILTERED_OUTPUT="${MERGED_READS%.*}".fasta
+		seqtk seq -A "${MERGED_READS}" > "${FILTERED_OUTPUT}"
 	fi
+
+	# Compress merged reads
+  echo $(date +%H:%M) "Compressing PEAR output..."
+  find "${LIB_OUTPUT_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
+  echo $(date +%H:%M) "PEAR output compressed."
+
+
+
 
 
 	if [ "${RENAME_READS}" = "YES" ]; then
@@ -277,11 +287,14 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		# sed -E "s/>([a-zA-Z0-9-]*:){4}/>/" "${CURRENT_LIB}"/tmp.fasta > "${FILTERED_OUTPUT%.*}"_renamed.fasta
 		# rm "${CURRENT_LIB}"/tmp.fasta
 
-		# updated 20150521; one step solution using awk; also removes spaces
-		awk -F'[: ]' '{ if ( />/ ) print ">"$4":"$5":"$6":"$7"_lib_'${CURRENT_LIB##*/}'_"; else print $0}''' "${FILTERED_OUTPUT}" > "${FILTERED_OUTPUT%.*}"_renamed.fasta
-		rm "${FILTERED_OUTPUT}"
+		# updated 20150521; one step solution using awk; removes anything after the first space!
+		FILTERED_RENAMED="${FILTERED_OUTPUT%.*}"_renamed.fasta
+		awk -F'[: ]' '{ if ( /^>/ ) print ">"$4":"$5":"$6":"$7"_lib_'${CURRENT_LIB##*/}'_"; else print $0}''' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
 
-		FILTERED_OUTPUT="${FILTERED_OUTPUT%.*}"_renamed.fasta
+		FILTERED_OUTPUT="${FILTERED_RENAMED}"
+
+		# rm "${FILTERED_OUTPUT}"
+
 	else
 		echo "Reads not renamed"
 	fi
@@ -315,26 +328,33 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	# Copy sequences to fasta files into separate directories based on tag sequence on left side of read
 	# TODO test for speed against removing the tag while finding it: wrap first tag regex in gsub(/pattern/,""):  awk 'gsub(/^.{0,9}'"$TAG_SEQ"'/,""){if . . .
-	echo $(date +%H:%M) "Demultiplexing: removing left tag in library" "${CURRENT_LIB##*/}""..."
+	echo $(date +%H:%M) "Demultiplexing: removing tags and adding to sequence ID in library" "${CURRENT_LIB##*/}""..."
 	for TAG_SEQ in $TAGS; do
 	(	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 		mkdir "${TAG_DIR}"
+		demult_file_L="${TAG_DIR}"/1_tagL_removed.fasta
+	  demult_file_R="${TAG_DIR}"/2_notags.fasta
 		# 20150522 changed {0,9} to {3} to eliminate flexibility (that could result in a read being assigned to >1 sample)
-		awk 'gsub(/^.{3}'"$TAG_SEQ"'/,"") {if (a && a !~ /^.{3}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_removed.fasta ) &
+		awk 'gsub(/^.{3}'"$TAG_SEQ"'/,"") {if (a && a !~ /^.{3}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${demult_file_L}"
 		# awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
-	done
-
-	wait
-
-	echo $(date +%H:%M) "Demultiplexing: removing right tag and adding tag sequence to sequence ID in library" "${CURRENT_LIB##*/}""..."
-	for TAG_SEQ in $TAGS; do
-	(	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 		TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
-		# 20150522 changed {0,9} to {3} to eliminate flexibility (that could result in a read being assigned to >1 sample)
-		awk 'gsub(/'"$TAG_RC"'.{3}$/,"") {if (a && a !~ /'"$TAG_RC"'.{3}$/) print a "tag_""'"$TAG_SEQ"'"; print } {a = $0}' "${TAG_DIR}"/1_tagL_removed.fasta > "${TAG_DIR}"/2_notags.fasta ) &
+		awk 'gsub(/'"$TAG_RC"'.{3}$/,"") {if (a && a !~ /'"$TAG_RC"'.{3}$/) print a "tag_""'"$TAG_SEQ"'"; print } {a = $0}' "${TAG_DIR}"/1_tagL_removed.fasta > "${demult_file_R}"
+		echo "${CURRENT_LIB##*/}" "${TAG_SEQ}" $(wc -l "${demult_file_L}" | awk '{ print ($1/2) }') $(wc -l "${demult_file_R}" | awk '{ print ($1/2)}') >> "${TAG_COUNT}" ) &
+
 	done
 
 	wait
+
+	# echo $(date +%H:%M) "Demultiplexing: removing right tag and adding tag sequence to sequence ID in library" "${CURRENT_LIB##*/}""..."
+	# for TAG_SEQ in $TAGS; do
+	# (	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+	# 	demult_file_R="${TAG_DIR}"/2_notags.fasta
+	# 	TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
+	# 	# 20150522 changed {0,9} to {3} to eliminate flexibility (that could result in a read being assigned to >1 sample)
+	# 	awk 'gsub(/'"$TAG_RC"'.{3}$/,"") {if (a && a !~ /'"$TAG_RC"'.{3}$/) print a "tag_""'"$TAG_SEQ"'"; print } {a = $0}' "${TAG_DIR}"/1_tagL_removed.fasta > "${demult_file_R}" ) &
+	# done
+	#
+	# wait
 
 done
 ################################################################################
