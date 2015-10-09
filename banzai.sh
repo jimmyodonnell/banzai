@@ -96,7 +96,7 @@ LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 ################################################################################
 # Specify compression utility
 ################################################################################
-if [ "$PIGZ_INSTALLED" = "YES" ]; then
+if hash pigz 2>/dev/null; then
 	ZIPPER="pigz"
 else
 	ZIPPER="gzip"

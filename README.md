@@ -34,6 +34,9 @@ Aside from the standard command line utilities (awk, sed, grep, etc) that are al
 * **[MEGAN](http://ab.inf.uni-tuebingen.de/software/megan5/)**: taxonomic assignment
 * **[R](https://www.r-project.org/)**: ecological analyses. Requires the packages **vegan** and **gtools**
 
+### Recommended ###
+* Compressing and decompressing files can be slow because standard, built-in utilities (gzip) do not run in parallel. Installing the parallel compression tool **[pigz](http://zlib.net/pigz/)** can yield substantial speedups. Banzai will check for pigz and use it if available.
+
 I recommend that before analyzing data, you check and report basic properties of the sequencing runs using **[fastqc](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)**. I have included a script to do this for all the fastq or fastq.gz files in any subdirectory of a directory (run_fastqc.sh).
 
 

@@ -225,9 +225,6 @@ PERFORM_CLEANUP="YES"
 # This will happen after the fastq has been converted to a fasta file at the quality filtering step.
 RENAME_READS="YES"
 
-# Is the parallel compression utility 'pigz' installed? (Get it here: http://zlib.net/pigz/)
-PIGZ_INSTALLED="YES"
-
 # If you want to receive a text message when the pipeline finishes, input your number here:
 PHONE_NUMBER="4077443377"
 
