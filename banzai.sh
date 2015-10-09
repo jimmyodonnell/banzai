@@ -38,8 +38,7 @@ else
 	n_cores=1
 	echo "Multiple cores not detected."
 fi
-# I don't think this is necessary, as getconf _NPROCESSORS_ONLN appears to detect hyperthreading capability
-# n_threads=$(( $n_cores * 2 ))
+
 
 
 
