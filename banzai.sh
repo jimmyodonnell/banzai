@@ -337,18 +337,34 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	# Copy sequences to fasta files into separate directories based on tag sequence on left side of read
 	# TODO test for speed against removing the tag while finding it: wrap first tag regex in gsub(/pattern/,""):  awk 'gsub(/^.{0,9}'"$TAG_SEQ"'/,""){if . . .
+	# 20150522 changed {0,9} to {3} to eliminate flexibility (that could result in a read being assigned to >1 sample)
+	# awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
+
 	echo $(date +%H:%M) "Demultiplexing: removing tags and adding to sequence ID in library" "${CURRENT_LIB##*/}""..."
 	for TAG_SEQ in $TAGS; do
 	(	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 		mkdir "${TAG_DIR}"
 		demult_file_L="${TAG_DIR}"/1_tagL_removed.fasta
 	  demult_file_R="${TAG_DIR}"/2_notags.fasta
-		# 20150522 changed {0,9} to {3} to eliminate flexibility (that could result in a read being assigned to >1 sample)
-		awk 'gsub(/^.{3}'"$TAG_SEQ"'/,"") {if (a && a !~ /^.{3}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${demult_file_L}"
-		# awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
+
+		# Left side tag
+		awk 'gsub(/^.{3}'"$TAG_SEQ"'/,"") {
+			if (a && a !~ /^.{3}'"$TAG_SEQ"'/)
+				print a;
+			print
+		} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${demult_file_L}"
+
+		# Right side tag
 		TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
-		awk 'gsub(/'"$TAG_RC"'.{3}$/,"") {if (a && a !~ /'"$TAG_RC"'.{3}$/) print a "tag_""'"$TAG_SEQ"'"; print } {a = $0}' "${TAG_DIR}"/1_tagL_removed.fasta > "${demult_file_R}"
-		echo "${CURRENT_LIB##*/}" "${TAG_SEQ}" $(wc -l "${demult_file_L}" | awk '{ print ($1/2) }') $(wc -l "${demult_file_R}" | awk '{ print ($1/2)}') >> "${TAG_COUNT}" ) &
+		awk 'gsub(/'"$TAG_RC"'.{3}$/,"") {
+			if (a && a !~ /'"$TAG_RC"'.{3}$/)
+				print a "tag_""'"$TAG_SEQ"'";
+			print
+		} {a = $0}' "${TAG_DIR}"/1_tagL_removed.fasta > "${demult_file_R}"
+
+		echo "${CURRENT_LIB##*/}" "${TAG_SEQ}" $(wc -l "${demult_file_L}" | \
+			awk '{ print ($1/2) }') $(wc -l "${demult_file_R}" | \
+			awk '{ print ($1/2)}') >> "${TAG_COUNT}" ) &
 
 	done
 
