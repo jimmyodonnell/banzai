@@ -13,12 +13,6 @@ bash /Users/user_name/path/to/the/file/banzai.sh
 
 It's important to use `bash` rather than `sh` or `.` to invoke the script. Someday I'll figure out a better workaround, but for now this was the only way I could guarantee the log file was created in the way I wanted.
 
-### This could take a while... ###
-In Mac OS Mountain Lion and later, you can override your computer's sleep settings by running the script like so:
-
-```sh
-caffeinate -i -s bash /Users/user_name/path/to/the/file/banzai.sh
-```
 
 ## Dependencies ##
 Aside from the standard command line utilities (awk, sed, grep, etc) that are already included on Unix machines, this script relies on the following tools:
@@ -37,7 +31,7 @@ Aside from the standard command line utilities (awk, sed, grep, etc) that are al
 ### Recommended ###
 * Compressing and decompressing files can be slow because standard, built-in utilities (gzip) do not run in parallel. Installing the parallel compression tool **[pigz](http://zlib.net/pigz/)** can yield substantial speedups. Banzai will check for pigz and use it if available.
 
-I recommend that before analyzing data, you check and report basic properties of the sequencing runs using **[fastqc](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)**. I have included a script to do this for all the fastq or fastq.gz files in any subdirectory of a directory (run_fastqc.sh).
+* I recommend that before analyzing data, you check and report basic properties of the sequencing runs using **[fastqc](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)**. I have included a script to do this for all the fastq or fastq.gz files in any subdirectory of a directory (run_fastqc.sh).
 
 
 ## Sequencing Pool Metadata ##
@@ -45,6 +39,9 @@ If you provide a CSV spreadsheet that contains metadata about the samples, banza
 
 It is VERY important that this file be encoded with UNIX line breaks. You can do this from Excel and TextWrangler. It doesn't appear to be critical that the text is encoded using UTF-8, though this is certainly the safest option. Early in the logfile you can check to be sure the correct number of tags and primer sequences were found.
 
+
+## Organization of raw data ##
+Your data (fastq files) can be compressed or not; but banzai currently only works with paired-end Illumina data. Thus, the bare minimum input is two fastq files corresponding to the first and second read. *Banzai will fail if there are files in your library folders that are not your raw data but have 'fastq' in the filename!* For example, if your library contains four files: "R1.fastq", "R1.fastq.gz", "R2.fastq", and "R2.fastq.gz". banzai will grab the first two (R1.fastq and R1.fastq.gz) and try to merge them, and (correctly) fail miserably.
 
 ## A note on removal of duplicate sequences##
 
@@ -87,6 +84,15 @@ Note that the original script also ouput a file of the sequences only (no names)
  - 1_merged.assembled.fastq
  - 1_merged.assembled_A.fastq
  - 1_merged.assembled_B.fastq
+
+
+
+### This could take a while... ###
+In Mac OS Mountain Lion and later, you can override your computer's sleep settings by running the script like so:
+
+```sh
+caffeinate -i -s bash /Users/user_name/path/to/the/file/banzai.sh
+```
 
 ## Known Issues/Bugs ##
 * As of 20150614, libraries must be in folders called lib1, lib2, etc. Need to fix the sed renaming scheme to accommodate variable library names

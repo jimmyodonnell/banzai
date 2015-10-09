@@ -148,8 +148,11 @@ fi
 for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	# Identify the forward and reverse fastq files.
-	READ1=$(find "${CURRENT_LIB}" -name '*R1*fastq*')
-	READ2=$(find "${CURRENT_LIB}" -name '*R2*fastq*')
+	READS=($(find "${CURRENT_LIB}" -name '*.fastq*'))
+	READ1="${READS[0]}"
+	READ2="${READS[1]}"
+	# READ1=$(find "${CURRENT_LIB}" -name '*R1*fastq*')
+	# READ2=$(find "${CURRENT_LIB}" -name '*R2*fastq*')
 
 	LIB_OUTPUT_DIR="${ANALYSIS_DIR}"/${CURRENT_LIB##*/}
 	mkdir "${LIB_OUTPUT_DIR}"
