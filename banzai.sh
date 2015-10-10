@@ -163,9 +163,7 @@ fi
 
 # Unique samples are given by combining the library and tags
 # TODO originally contained sort | uniq; this is unnecessary I think
-LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v TAGCOL=$TAG_COL 'NR>1 {
-	print "lib_" $LIBCOL "_tag_" $TAGCOL
-}' $SEQUENCING_METADATA | sort | uniq )
+LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v TAGCOL=$TAG_COL 'NR>1 { print "lib_" $LIBCOL "_tag_" $TAGCOL }' $SEQUENCING_METADATA | sort | uniq )
 
 # create a file to store tag efficiency data
 TAG_COUNT="${ANALYSIS_DIR}"/tag_count.txt
