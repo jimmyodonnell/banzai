@@ -8,13 +8,14 @@ N_lines=4000
 #take argument 1 and set it to variable my_dir
 my_dir="${1}"
 
+out_dir="${my_dir}"/subsets
+mkdir out_dir
+
 # find files with '.fastq.' somewhere in the filename
 file_list=($( find "${my_dir}" -type f -name '*.fastq*' ))
 
 # test whether pigz is installed
-which pigz
-
-if [ $? -eq 0 ]; then
+if command -v pigz >/dev/null 2>&1; then
   echo "pigz is installed"
   zipper="pigz"
 else
