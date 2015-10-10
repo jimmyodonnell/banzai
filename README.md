@@ -1,14 +1,16 @@
 #banzai!#
-
+🏄
 **banzai** is a BASH shell script that links together the disparate programs needed to process the raw sequencing results from an Illumina run into a table of the number of sequences per taxon found in a set of samples. Some preliminary ecological analyses are included as well.
 
 The script should run on Unix and Linux machines. The script makes heavy usage of Unix command line utilities (such as find, grep, sed, awk, and more) and is written for the BSD versions of those programs as found on standard installations of Mac OSX. I tried to use POSIX-compliant commands wherever possible.
 
 ## Basic implementation ##
-Simply edit the parameters in the file 'banzai_params.sh', then type into a terminal:
+**NEW!!!**
+*NOTE* that as of 2015-10-09, you must direct banzai.sh to your parameter file. This allows for much easier use when analyzing multiple types of projects. Parameter files can be called whatever you want -- e.g. `banzai_params_16s.sh`. When you invoke the file banzai.sh, it will source whatever file you give it using the first argument (separated by a space).
+Simply copy the file 'banzai_params.sh' into a new folder, set parameters as desired, then type into a terminal:
 
 ```sh
-bash /Users/user_name/path/to/the/file/banzai.sh
+bash /Users/user_name/path/to/the/file/banzai.sh   /User/user_name/path/to/param_file.sh
 ```
 
 It's important to use `bash` rather than `sh` or `.` to invoke the script. Someday I'll figure out a better workaround, but for now this was the only way I could guarantee the log file was created in the way I wanted.

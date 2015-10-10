@@ -25,7 +25,8 @@ START_TIME=$(date +%Y%m%d_%H%M)
 SCRIPT_DIR="$(dirname "$0")"
 
 # Read in the parameter file
-source "$SCRIPT_DIR/banzai_params.sh"
+# source "$SCRIPT_DIR/banzai_params.sh"
+source "${1}"
 
 # make an analysis directory with starting time timestamp
 ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
