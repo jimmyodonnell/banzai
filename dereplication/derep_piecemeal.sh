@@ -65,26 +65,26 @@ echo $LIB_TAG_MOD | tr ' ' '\n' | split -l "${n_cores}" - "${sample_batch_prefix
 for batch in "${sample_batch_prefix}"* ; do
 
 	echo processing "${batch##*/}"
-	
+
 # 	current_batch=$( cat "${batch}" ) # this reads whitespace rather than newline
-	
+
 	for sample in $( cat "$batch" ) ; do
-	  
+
 		# say that it's being processed
 		echo $(date +%H:%M) "Processing" "${sample}""..."
 
 		# Isolate this process to be put in the background
-		(		
-		
+		(
+
 		# write an output file called *.dup, start by printing the lib/tag being processed, then print a count the occurrences of the current lib/tag on each line of the input file
 		awk 'BEGIN {print "'$sample'" ; FS ="'${sample}'" } { print NF -1 }' "${infile}" > "${temp_dir}"/"${sample}".dup
-		
+
 		) &
-	
+
 	done
-	
+
 	wait
-	
+
 done
 
 ################################################################################
@@ -129,18 +129,18 @@ awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${infile}" > "${duplicate_fasta}"
 # for each of the library indexes,
 # for CURRENT_LIB in $LIBS; do
 	# Isolate this process to be put in the background
-# 	(	
+# 	(
 	# and for each of the primer tags in each of the libraries,
-# 	for TAG_SEQ in $TAGS; do	
+# 	for TAG_SEQ in $TAGS; do
 		# smash together the currently processed library and primer tag index as they are expected to occur in the file (e.g. "lib_A_tag_AATGAT")
-# 		LIB_TAG=lib_"${CURRENT_LIB}_tag_${TAG_SEQ}"		
+# 		LIB_TAG=lib_"${CURRENT_LIB}_tag_${TAG_SEQ}"
 		# say that it's being processed
 # 		echo $(date +%H:%M) "Processing" "${LIB_TAG}""..."
 		# write an output file called *.dup, start by printing the lib/tag being processed, then print a count the occurrences of the current lib/tag on each line of the input file
 # 		awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' "${infile}" > "${temp_dir}"/"${LIB_TAG}".dup
 # 		( awk 'BEGIN {print "'$libtag'" ; FS ="'${libtag}'" } { print NF -1 }' "${infile}" > "${temp_dir}"/"${libtag}".dup ) &
 # 	done
-	# and put that process in the background	
+	# and put that process in the background
 # 	) &
 # done
 # wait

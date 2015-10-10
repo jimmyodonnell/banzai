@@ -159,6 +159,13 @@ else
 	echo "Library directories and library names in metadata are the same - great jorb."
 fi
 
+
+# Unique samples are given by combining the library and tags
+# TODO originally contained sort | uniq; this is unnecessary I think
+LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v TAGCOL=$TAG_COL 'NR>1 {
+	print "lib_" $LIBCOL "_tag_" $TAGCOL
+}' $SEQUENCING_METADATA | sort | uniq )
+
 # create a file to store tag efficiency data
 TAG_COUNT="${ANALYSIS_DIR}"/tag_count.txt
 echo "library   tag   left_tagged   right_tagged" >> "${TAG_COUNT}"
@@ -458,6 +465,11 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# (moot for concatenated file): echo $(date +%H:%M) "Removing primers in library" "${CURRENT_LIB##*/}""..."
 	# Remove PRIMER1 and PRIMER2 from the BEGINNING of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
 
+	# count lines in primer removal input
+	echo $(date +%H:%M) "Counting sequences in primer removal input..."
+	seq_N_demult_concat=$( grep -e '^>' --count "${CONCAT_FILE}" )
+	echo $(date +%H:%M) "${seq_N_demult_concat}" "sequences found in file" "${CONCAT_FILE}"
+
 	# TODO wrap in '( ) &' to force into background and allow parallel processing
 	# i.e.
 	# for primer in "${primers_arr[@]}"; do
@@ -468,15 +480,18 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_primerL1_removed.fasta
 	cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_primerL2_removed.fasta
 
-	# count lines in primer removal input
-	echo $(date +%H:%M) "Counting sequences in primer removal input..."
-	seq_N_demult_concat=$( grep -e '^>' --count "${CONCAT_FILE}" )
-	echo $(date +%H:%M) "${seq_N_demult_concat}" "sequences found in file" "${CONCAT_FILE}"
-
 	# compress left primer removal input
 	echo $(date +%H:%M) "Compressing left primer removal input..."
 	"${ZIPPER}" "${CONCAT_DIR}"/1_demult_concat.fasta
 	echo $(date +%H:%M) "Left primer removal input compressed."
+
+
+	# TODO wrap in '( ) &' to force into background and allow parallel processing
+	# i.e.
+	# for primer in "${primersRC_arr[@]}"; do ------------------------------------------------------------------------------------->  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! file references will be an issue!
+	# 	( cutadapt -a ^"${primer}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_L"${primer}"_removed.fasta ) &
+	# done
+	# wait
 
 	# Remove the primer on the other end of the reads by reverse-complementing the files and then trimming PRIMER1 and PRIMER2 from the left side.
 	# NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
@@ -485,46 +500,129 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# seqtk seq -r "${CONCAT_DIR}"/5_primerL2_removed.fasta | cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${CONCAT_DIR}"/6_primerR2_removed.fasta
 	cutadapt -a "${PRIMER1RC}"$ -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/5_primerL2_removed.fasta > "${CONCAT_DIR}"/6_primerR2_removed.fasta
 	seqtk seq -r "${CONCAT_DIR}"/6_primerR1_removed.fasta > "${CONCAT_DIR}"/6_primerR1_removedRC.fasta
-	cat "${CONCAT_DIR}"/6_primerR1_removedRC.fasta "${CONCAT_DIR}"/6_primerR2_removed.fasta > "${CONCAT_DIR}"/7_no_primers.fasta
+
 	DEREP_INPUT="${CONCAT_DIR}"/7_no_primers.fasta
 
+	cat "${CONCAT_DIR}"/6_primerR1_removedRC.fasta "${CONCAT_DIR}"/6_primerR2_removed.fasta > "${DEREP_INPUT}"
+
 	################################################################################
-	# CONSOLIDATE IDENTICAL SEQUENCES
+	# CONSOLIDATE IDENTICAL SEQUENCES (DEREPLICATION)
 	################################################################################
 	echo $(date +%H:%M) "Identifying identical sequences... (python)"
 	python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
 	# Exclude singleton sequences (if NF > 2), count the number of sequences per duplicate (print NF-1), sort them by the number of sequences per duplicate (sort -nr), and precede with a name ("DUP_X", where X is the line number)
-	echo $(date +%H:%M) "Counting duplicates per identical sequence... (awk)"
-	awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".derep | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > "${DEREP_INPUT%/*}"/nosingle.txt
+	echo $(date +%H:%M) "Counting duplicates per identical sequence and excluding singletons... (awk)"
+	no_singletons="${DEREP_INPUT%/*}"/nosingle.txt
+
+	awk -F';' '{
+		if (NF > 2)
+			print NF-1 ";" $0
+		}' "${DEREP_INPUT}".derep | \
+	sort -nr | \
+	awk -F';' '{
+		print ">DUP_" NR ";" $0
+	}' > "${no_singletons}"
+
 
 	# COUNT OCCURRENCES PER SAMPLE (LIBRARY + TAG) PER DUPLICATE
-	# This will start as many processes as you have libraries... be careful!
-	echo $(date +%H:%M) "Consolidating identical sequences per sample... (awk)"
-	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
-		( for TAG_SEQ in $TAGS; do
-			LIB_TAG="lib_${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
-			echo $(date +%H:%M) "Processing" "${LIB_TAG}""..."
-			# the output of the awk function gsub is the number of replacements, so you could use this instead... however, it appears slower?
-			# ( awk 'BEGIN {print "'$LIB_TAG'" } { print gsub(/"'$LIB_TAG'"/,"") }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
-			awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup
-		done ) &
+
+	# assign a path for the output (a table of counts of each duplicate sequence in each unique combination of library and primer ("tag") indexes, and a fasta of all the duplicate sequences.
+	duplicate_table="${DEREP_INPUT%/*}"/duplicate_table.csv
+	duplicate_fasta="${DEREP_INPUT%/*}"/duplicates.fasta
+
+	# make a directory to store the temporary duplicate files
+	temp_dir="${DEREP_INPUT%/*}"/dup_temp
+	mkdir "${temp_dir}"
+
+	# set a file prefix for the batches of samples
+	sample_batch_prefix="${temp_dir}"/sample_batch_
+
+	# split the sample identifiers (lib + tag combination) into batches of no more than the number of available cores
+	echo $LIB_TAG_MOD | tr ' ' '\n' | split -l "${n_cores}" - "${sample_batch_prefix}"
+
+
+	# for each of the batches of files
+	for batch in "${sample_batch_prefix}"* ; do
+
+		echo processing "${batch##*/}"
+
+		# 	current_batch=$( cat "${batch}" ) # this reads whitespace rather than newline
+
+		for sample in $( cat "$batch" ) ; do
+
+			# say that it's being processed
+			echo $(date +%H:%M) "Processing" "${sample}""..."
+
+			# Isolate this process to be put in the background
+			(
+
+			# write an output file called *.dup, start by printing the lib/tag being processed, then print a count the occurrences of the current lib/tag on each line of the input file
+			awk 'BEGIN {print "'$sample'" ; FS ="'${sample}'" } { print NF -1 }' "${no_singletons}" > "${temp_dir}"/"${sample}".dup
+
+			) &
+
+		done
+
+		wait
 
 	done
 
-	wait
+	# write a file of names of each of the duplicates:
+	dupnames="${temp_dir}"/dupnames
+	awk -F';' 'BEGIN {print "sample"} {print $1}' "$no_singletons" | sed 's/>//' > "${dupnames}"
 
+	# first, count the number of duplicate files:
+	n_files=$(find "${temp_dir}" -type f -name '*.dup*' | wc -l)
 
-	# Write a csv file of the number of occurrences of each duplicate sequence per tag. (rows = sequences, cols = samples)
-	duplicate_table="${DEREP_INPUT%/*}"/dups.csv
-	find "${DEREP_INPUT%/*}" -type f -name '*.dup' -exec paste -d, {} \+ | awk '{ print "DUP_" NR-1 "," $0 }' > "${duplicate_table}"
-	# delete all of the '.dup' files
-	rm ${DEREP_INPUT%/*}/*.dup
+	# I think this was only relevant for a different approach
+	max_files=$(ulimit -n)
+
+	# this will paste row by row... takes 48s on a set of 300 files (samples) each containing 630023 lines (duplicates)
+	paste -s -d, "${dupnames}" "${temp_dir}"/*.dup > "${duplicate_table}"
+
+	# this will do columns; it takes a very long time.
+	# for file in "${temp_dir}"/*; do cat final.dup | paste - $file >temp; cp temp final.dup; done; rm temp
+
+	# cleanup
+	# rm "${infile%/*}"/*.dup
+	# rm "${sample_batch_prefix}"*
+
+	# say that you're finished.
+	echo $(date +%H:%M) "Identical sequences consolidated in file ""${duplicate_table}"
+
+	# OLD/UNSTABLE/BAD -- but generated CSV in different orientation
+	# This will start as many processes as you have libraries... be careful!
+	# echo $(date +%H:%M) "Consolidating identical sequences per sample... (awk)"
+	# for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
+	# 	( for TAG_SEQ in $TAGS; do
+	# 		LIB_TAG="lib_${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
+	# 		echo $(date +%H:%M) "Processing" "${LIB_TAG}""..."
+	# 		# the output of the awk function gsub is the number of replacements, so you could use this instead... however, it appears slower?
+	# 		# ( awk 'BEGIN {print "'$LIB_TAG'" } { print gsub(/"'$LIB_TAG'"/,"") }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
+	# 		awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup
+	# 	done ) &
+	# done
+	# wait
+	# # Write a csv file of the number of occurrences of each duplicate sequence per tag. (rows = sequences, cols = samples)
+	# duplicate_table="${DEREP_INPUT%/*}"/dups.csv
+	# find "${DEREP_INPUT%/*}" -type f -name '*.dup' -exec paste -d, {} \+ | awk '{ print "DUP_" NR-1 "," $0 }' > "${duplicate_table}"
+	# # delete all of the '.dup' files
+	# rm ${DEREP_INPUT%/*}/*.dup
 
 	# Write fasta file in order to blast sequences
 	echo $(date +%H:%M) "Writing fasta file of duplicate sequences"
-	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${DEREP_INPUT%/*}"/nosingle.txt > "${DEREP_INPUT%/*}"/no_duplicates.fasta
+	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${no_singletons}" > "${duplicate_fasta}"
+################################################################################
+
+
+
+
+
+
+
+
 
 	################################################################################
 	# CLUSTER OTUS
@@ -532,35 +630,53 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# Note that identical (duplicate) sequences were consolidated earlier;
 	# This step outputs a file (*.uc) that lists, for every sequence, which sequence it clusters with
 	if [ "$CLUSTER_OTUS" = "NO" ]; then
-		BLAST_INPUT="${DEREP_INPUT%/*}"/no_duplicates.fasta
+		BLAST_INPUT="${duplicate_fasta}"
 	else
 		echo $(date +%H:%M) "Clustering OTUs..."
+		# define output files (these will be in the same directory as the infile)
+		dir_out="${duplicate_fasta%/*}"/OTUs_usearch
+		mkdir "${dir_out}"
+		out_fasta="${dir_out}"/OTUs.fasta
+		out_fasta_linebreak="${dir_out}"/OTUs_linebreaks.fasta
+		# logfile="${dir_out}"/OTUs.log
+		out_uc="${dir_out}"/OTUs.uc
+
 		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-		UPARSE_OUT="${DEREP_INPUT%/*}"/OTU_uparse.txt
-		usearch -cluster_otus "${DEREP_INPUT%/*}"/no_duplicates.fasta -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uparseout "${UPARSE_OUT}"
+		# UPARSE_OUT="${DEREP_INPUT%/*}"/OTU_uparse.txt
+		# usearch -cluster_otus "${duplicate_fasta}" -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uparseout "${UPARSE_OUT}"
+		# execute usearch
+		usearch \
+			-cluster_otus "${duplicate_fasta}" \
+			-otu_radius_pct "${CLUSTER_RADIUS}" \
+			-sizein \
+			-sizeout \
+			-otus "${out_fasta_linebreak}" \
+			-uparseout "${out_uc}"
+			# -relabel OTU_ \
 
 		# remove the annoying line breaks
 		echo $(date +%H:%M) "Removing line breaks within fasta sequences generated by usearch (awk)..."
-		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta > "${DEREP_INPUT%/*}"/9_OTUs.fasta
+		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${out_fasta_linebreak}" > "${out_fasta}"
 		# usearch option -notmatched disappeared with version 8
 		# awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta > "${DEREP_INPUT%/*}"/9_notmatched.fasta
 
-		rm "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta # "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
+		# rm "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta # "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
 
 		################################################################################
 		# RESOLVE OTUS AND DUPLICATES
 		################################################################################
 		# Note that this drops sequences determined to be chimeras by usearch
-		DUPS_TO_OTUS="${DEREP_INPUT%/*}"/dups_to_otus.csv
-		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") { print $1 "," $7 } else if ($4 == "chimera") { print $1 "," "chimera"} }' "${UPARSE_OUT}" > "${DUPS_TO_OTUS}"
+		DUPS_TO_OTUS="${dir_out}"/dups_to_otus.csv
+		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") { print $1 "," $7 } else if ($4 == "chimera") { print $1 "," "chimera"} }' "${out_uc}" > "${DUPS_TO_OTUS}"
 
 		# Assign the path for the OTU table
-		OTU_table="${DEREP_INPUT%/*}"/OTU_table.csv
+		OTU_table="${dir_out}"/OTU_table.csv
 
 		# Convert duplicate table to OTU table using R script (arguments: duplicate table, dup to otu table, otu table path, concatenated directory (obsolete?))
 		Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${DUPS_TO_OTUS}" "${OTU_table}" "${CONCAT_DIR}"
 
-		BLAST_INPUT="${DEREP_INPUT%/*}"/9_OTUs.fasta
+		BLAST_INPUT="${out_fasta}"
+
 	fi
 
 
