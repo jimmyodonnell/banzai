@@ -52,7 +52,7 @@ fi
 
 # Copy these files into that directory as a verifiable log you can refer back to.
 cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
-cp "${SCRIPT_DIR}"/banzai_params.sh "${ANALYSIS_DIR}"/analysis_parameters.txt
+cp "${1}" "${ANALYSIS_DIR}"/analysis_parameters.txt
 
 
 
