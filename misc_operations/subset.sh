@@ -8,8 +8,8 @@ N_lines=4000
 #take argument 1 and set it to variable my_dir
 my_dir="${1}"
 
-out_dir="${my_dir}"/subsets
-mkdir out_dir
+# out_dir="${my_dir}"_subsets
+# mkdir out_dir
 
 # find files with '.fastq.' somewhere in the filename
 file_list=($( find "${my_dir}" -type f -name '*.fastq*' ))
@@ -26,6 +26,7 @@ fi
 # loop over files found
 for file in "${file_list[@]}"; do
 
+  # echo "${myfile##${my_dir}}"
   # If the extension is .gz
   if [[ "${file}" =~ \.gz$ ]]; then
 
