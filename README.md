@@ -50,7 +50,7 @@ As of 2015-10-09, libraries no longer have to be named anything in particular (e
 BUT THEY CANNOT CONTAIN UNDERSCORES or spaces!
 
 ## Organization of raw data ##
-Your data (fastq files) can be compressed or not; but banzai currently only works with paired-end Illumina data. Thus, the bare minimum input is two fastq files corresponding to the first and second read. *Banzai will fail if there are files in your library folders that are not your raw data but have 'fastq' in the filename!* For example, if your library contains four files: "R1.fastq", "R1.fastq.gz", "R2.fastq", and "R2.fastq.gz". banzai will grab the first two (R1.fastq and R1.fastq.gz) and try to merge them, and (correctly) fail miserably.
+Your data (fastq files) can be compressed or not; but banzai currently only works with paired-end Illumina data. Thus, the bare minimum input is two fastq files corresponding to the first and second read. *Banzai will fail if there are files in your library folders that are not your raw data but have 'fastq' in the filename!* For example, if your library contains four files: "R1.fastq", "R1.fastq.gz", "R2.fastq", and "R2.fastq.gz". banzai will grab the first two (R1.fastq and R1.fastq.gz) and try to merge them, and (correctly) fail miserably. Note that while PEAR 0.9.7 merges compressed (*.gz) files directly, PEAR 0.9.6 does not do so correctly. If given compressed files as input, banzai first decompresses them, which will add a little bit of time to the overall analysis.
 
 ## A note on removal of duplicate sequences##
 

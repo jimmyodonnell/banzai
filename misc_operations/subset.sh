@@ -32,7 +32,7 @@ for file in "${file_list[@]}"; do
 
     "${zipper}" -d "${file}"
 
-    my_fastq="${file%.*}"
+    my_fastq="${file%.gz}"
 
   else
 

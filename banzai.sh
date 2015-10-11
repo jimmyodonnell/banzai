@@ -11,6 +11,12 @@
 # TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
 # TODO LIBS_ARRAY is never used
 # TODO wrap primer removal '( ) &' to force into background and allow parallel processing
+# TODO add file test to end of each step and abort if necessary
+# if [[ -s $FILE ]] ; then
+# 	echo "$FILE has data."
+# else
+# 	echo "$FILE is empty."
+# fi ;
 
 # set -e is not the right solution because it will cause the script to exit immediately (without cleaning up after itself or notifying the user) if there is a problem with the megan file or the R script.
 # Instead, I should probably build in checks of the input files (sequencing metadata)
@@ -124,6 +130,15 @@ fi
 # note that this will include ANY file with fastq -- including QC reports!
 # TODO make LIBRARY_DIRECTORIES an array by wrapping it in ()
 LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique )
+
+# PEAR v0.9.6 does not correctly merge .gz files.
+# Look through fils and decompress if necessary.
+raw_files=($( find "${PARENT_DIR}" -name '*.fastq*' ))
+for myfile in "${raw_files[@]}"; do
+	if [[ "${myfile}" =~ \.gz$ ]]; then
+		"${ZIPPER}" -d "${myfile}"
+	fi
+done
 
 # Count library directories and print the number found
 # TODO if LIBRARY_DIRECTORIES is an array, its length is "${#LIBRARY_DIRECTORIES[@]}"
