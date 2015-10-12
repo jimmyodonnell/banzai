@@ -18,6 +18,9 @@ library(gtools)
 # read.csv("dups.csv", row.names = 1)
 dups <- read.csv(arguments[1], row.names = 1)
 
+# as of NextSeq run in July 2015, dereplication had to be majorly overhauled, resulting in transposed duplicate table.
+dups <- t(dups)
+
 # Read in dups to OTUs files
 dups_to_OTUs <- read.csv(arguments[2], header=TRUE, stringsAsFactor=FALSE)
 
@@ -41,7 +44,7 @@ OTU_table <- OTU_table[,-1]
 OTU_table <- OTU_table[mixedsort(rownames(OTU_table)),]
 
 # write output to CSV file
-write.csv(x = OTU_table, file = arguments[3])
+write.csv(x = OTU_table, file = arguments[3], quote = FALSE)
 
 
 
