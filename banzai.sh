@@ -523,7 +523,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# CONSOLIDATE IDENTICAL SEQUENCES (DEREPLICATION)
 	################################################################################
 	echo $(date +%H:%M) "Identifying identical sequences... (python)"
-	python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
+	python "$SCRIPT_DIR/dereplication/dereplicate_fasta.py" "${DEREP_INPUT}"
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
 	# Exclude singleton sequences (if NF > 2), count the number of sequences per duplicate (print NF-1), sort them by the number of sequences per duplicate (sort -nr), and precede with a name ("DUP_X", where X is the line number)
@@ -755,7 +755,7 @@ else
 
 		# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
 		echo $(date +%H:%M) "Consolidating identical sequences..."
-		python "$SCRIPT_DIR/dereplicate_fasta.py" "${DEREP_INPUT}"
+		python "$SCRIPT_DIR/dereplication/dereplicate_fasta.py" "${DEREP_INPUT}"
 
 		# REMOVE SINGLETONS
 		# usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
