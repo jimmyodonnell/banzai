@@ -30,9 +30,9 @@ START_TIME=$(date +%Y%m%d_%H%M)
 # Find the directory this script lives in, so it can find its friends.
 SCRIPT_DIR="$(dirname "$0")"
 
-# Read in the parameter file
-# source "$SCRIPT_DIR/banzai_params.sh"
-source "${1}"
+# Read in the parameter file (was source "$SCRIPT_DIR/banzai_params.sh"; now argument 1)
+param_file="${1}"
+source "${param_file}"
 
 # make an analysis directory with starting time timestamp
 ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
@@ -58,7 +58,7 @@ fi
 
 # Copy these files into that directory as a verifiable log you can refer back to.
 cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
-cp "${1}" "${ANALYSIS_DIR}"/analysis_parameters.txt
+cp "${param_file}" "${ANALYSIS_DIR}"/analysis_parameters.txt
 
 
 
@@ -699,7 +699,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	################################################################################
 	echo $(date +%H:%M) "BLASTing..."
 	blastn \
-		-query "${BLAST_INblast PUT}" \
+		-query "${BLAST_INPUT}" \
 		-db "$BLAST_DB" \
 		-num_threads "$n_cores" \
 		-perc_identity "${PERCENT_IDENTITY}" \
