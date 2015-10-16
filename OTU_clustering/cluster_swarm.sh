@@ -20,6 +20,7 @@ out_fasta="${dir_out}"/OTUs.fasta
 logfile="${dir_out}"/OTUs.log
 out_swarm="${dir_out}"/OTUs.swarm
 out_stats="${dir_out}"/stats.swarm
+dup_otu_map="${dir_out}"/dups_to_otus.csv
 
 # this will automatically find the number of cores on a Unix/Linux computer
 n_cores=$(getconf _NPROCESSORS_ONLN)
@@ -39,5 +40,20 @@ swarm \
 	# Note from swarm author: The -u option also slows does swarm a lot, do not use it if you don't really need results in that format.
 	# out_uc="${dir_out}"/OTUs.uc
 	# --uclust-file "${out_uc}" \
+
+
+
+# make a file mapping each duplicate to its OTU so OTU contingency table can be generated.
+# infile should be the output file from swarm -- currently called "OTUs.swarm"
+
+awk 'BEGIN{
+            print "Query,Match"
+          }
+          {
+            c = split($0, s);
+            for(n=1; n<=c; ++n)
+            print s[n] "," $1
+          }' "${out_swarm}" |\
+sed 's/;size=[0-9]*;//g' > "${dup_otu_map}"
 
 exit

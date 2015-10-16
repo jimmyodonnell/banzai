@@ -681,14 +681,15 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		# RESOLVE OTUS AND DUPLICATES
 		################################################################################
 		# Note that this drops sequences determined to be chimeras by usearch
-		DUPS_TO_OTUS="${dir_out}"/dups_to_otus.csv
-		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") { print $1 "," $7 } else if ($4 == "chimera") { print $1 "," "chimera"} }' "${out_uc}" > "${DUPS_TO_OTUS}"
-
+		dup_otu_map="${dir_out}"/dups_to_otus.csv
+		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") { print $1 "," $7 } else if ($4 == "chimera") { print $1 "," "chimera"} }' "${out_uc}" > "${dup_otu_map}"
+		# ----------------- end usearch-specific stuff
+		
 		# Assign the path for the OTU table
 		OTU_table="${dir_out}"/OTU_table.csv
 
 		# Convert duplicate table to OTU table using R script (arguments: (1) duplicate table, (2) dup to otu table, (3) otu table path
-		Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${DUPS_TO_OTUS}" "${OTU_table}"
+		Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${dup_otu_map}" "${OTU_table}"
 
 		BLAST_INPUT="${out_fasta}"
 
