@@ -18,7 +18,6 @@ dir_out="${infile%/*}"/OTUs_swarm
 mkdir "${dir_out}"
 out_fasta="${dir_out}"/OTUs.fasta
 logfile="${dir_out}"/OTUs.log
-out_uc="${dir_out}"/OTUs.uc
 out_swarm="${dir_out}"/OTUs.swarm
 out_stats="${dir_out}"/stats.swarm
 
@@ -33,10 +32,12 @@ swarm \
 	--output-file "${out_swarm}" \
 	--log "${logfile}" \
 	--statistics-file "${out_stats}" \
-	--uclust-file "${out_uc}" \
 	--seeds "${out_fasta}" \
 	--usearch-abundance \
-	"${infile}" 
+	"${infile}"
 
+	# Note from swarm author: The -u option also slows does swarm a lot, do not use it if you don't really need results in that format.
+	# out_uc="${dir_out}"/OTUs.uc
+	# --uclust-file "${out_uc}" \
 
 exit
