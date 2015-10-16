@@ -687,8 +687,8 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		# Assign the path for the OTU table
 		OTU_table="${dir_out}"/OTU_table.csv
 
-		# Convert duplicate table to OTU table using R script (arguments: duplicate table, dup to otu table, otu table path, concatenated directory (obsolete?))
-		Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${DUPS_TO_OTUS}" "${OTU_table}" "${CONCAT_DIR}"
+		# Convert duplicate table to OTU table using R script (arguments: (1) duplicate table, (2) dup to otu table, (3) otu table path
+		Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${DUPS_TO_OTUS}" "${OTU_table}"
 
 		BLAST_INPUT="${out_fasta}"
 
