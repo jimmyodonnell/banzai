@@ -17,7 +17,7 @@ blast_db="/local/blast-local-db/nt"
 # suggested outputs: XML (5) or uncommented tabular (6) or commented tabular (7)
 # "5" # XML
 # "6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle" # ***readable by MEGAN***
-# "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" # default from http://www.ncbi.nlm.nih.gov/books/NBK279675/: 
+# "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" # default from http://www.ncbi.nlm.nih.gov/books/NBK279675/:
 # "7 qseqid sseqid pident staxids sscinames scomnames sblastnames"
 output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle"
 
@@ -66,4 +66,3 @@ blastn \
 # old Usage:
 # nohup bash 'blast_script.sh file.fasta' &
 # "nohup" and "&" allow you to run it on the server, close your connection, and leave it running.
-

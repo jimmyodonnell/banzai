@@ -57,7 +57,7 @@ LIBRARY_COLUMN_NAME="library"
 # --quality-threshold
 Quality_Threshold=15
 
-# number of allowed uncalled bases (--max-uncalled-base)
+# proportion of allowed uncalled bases (--max-uncalled-base)
 UNCALLEDMAX=0
 
 # which statistical test (--test-method)
