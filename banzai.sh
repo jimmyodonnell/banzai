@@ -684,7 +684,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		dup_otu_map="${dir_out}"/dups_to_otus.csv
 		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") { print $1 "," $7 } else if ($4 == "chimera") { print $1 "," "chimera"} }' "${out_uc}" > "${dup_otu_map}"
 		# ----------------- end usearch-specific stuff
-		
+
 		# Assign the path for the OTU table
 		OTU_table="${dir_out}"/OTU_table.csv
 
@@ -700,6 +700,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# BLAST CLUSTERS
 	################################################################################
 	echo $(date +%H:%M) "BLASTing..."
+	blast_output="${DEREP_INPUT%/*}"/10_BLASTed.xml
 	blastn \
 		-query "${BLAST_INPUT}" \
 		-db "$BLAST_DB" \
@@ -709,7 +710,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		-evalue "${EVALUE}" \
 		-max_target_seqs "${MAXIMUM_MATCHES}" \
 		-outfmt 5 \
-		-out "${DEREP_INPUT%/*}"/10_BLASTed.xml
+		-out "${blast_output}"
 
 
 
@@ -853,7 +854,7 @@ done
 
 OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
-echo $(date +%H:%M) "passing args to R..."
+echo $(date +%H:%M) "passing args to R for preliminary analysis..."
 Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_METADATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}" "${ColumnName_SampleName}" "${ColumnName_SampleType}"
 
 
