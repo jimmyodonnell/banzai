@@ -524,6 +524,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# CONSOLIDATE IDENTICAL SEQUENCES (DEREPLICATION)
 	################################################################################
 	echo $(date +%H:%M) "Identifying identical sequences... (python)"
+	derep_output="${DEREP_INPUT}".derep
 	python "$SCRIPT_DIR/dereplication/dereplicate_fasta.py" "${DEREP_INPUT}"
 	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
@@ -534,7 +535,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	awk -F';' '{
 		if (NF > 2)
 			print NF-1 ";" $0
-		}' "${DEREP_INPUT}".derep | \
+		}' "${derep_output}" | \
 	sort -nr | \
 	awk -F';' '{
 		print ">DUP_" NR ";" $0
