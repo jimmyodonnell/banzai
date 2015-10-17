@@ -859,8 +859,15 @@ echo $(date +%H:%M) "passing args to R for preliminary analysis..."
 Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_METADATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}" "${ColumnName_SampleName}" "${ColumnName_SampleType}"
 
 
-REMOTE_PDF="${OUTPUT_PDF_DIR}"/analysis_results_"${START_TIME}".pdf
-cp "${OUTPUT_PDF}" "${REMOTE_PDF}"
+# EMPTY PDFs are 3829 bytes
+minimumsize=4000
+size_PDF=$(wc -c <"${OUTPUT_PDF}")
+if [ "${size_PDF}" -lt "${minimumsize}" ]; then
+    echo 'There was a problem generating the PDF.'
+else
+	REMOTE_PDF="${OUTPUT_PDF_DIR}"/analysis_results_"${START_TIME}".pdf
+	cp "${OUTPUT_PDF}" "${REMOTE_PDF}"
+fi
 
 
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
