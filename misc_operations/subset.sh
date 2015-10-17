@@ -8,8 +8,7 @@ N_lines=4000
 #take argument 1 and set it to variable my_dir
 my_dir="${1}"
 
-# out_dir="${my_dir}"_subsets
-# mkdir out_dir
+out_dir="${my_dir}"_sub
 
 # find files with '.fastq.' somewhere in the filename
 file_list=($( find "${my_dir}" -type f -name '*.fastq*' ))
@@ -23,30 +22,53 @@ else
   zipper="gzip"
 fi
 
+echo 
+
 # loop over files found
-for file in "${file_list[@]}"; do
+for current_file in "${file_list[@]}"; do
 
-  # echo "${myfile##${my_dir}}"
-  # If the extension is .gz
-  if [[ "${file}" =~ \.gz$ ]]; then
+  # If the extension is .gz, decompress
+  if [[ "${current_file}" =~ \.gz$ ]]; then
 
-    "${zipper}" -d "${file}"
+    echo 'decompressing' "${current_file}"
+    "${zipper}" -d "${current_file}"
 
-    my_fastq="${file%.gz}"
+    my_fastq="${current_file%.gz}"
 
   else
 
-    my_fastq="${file}"
+    my_fastq="${current_file}"
 
   fi
 
-  head -n "${N_lines}" "${my_fastq}" > "${my_fastq%.*}"_1K.fastq
+  echo 'fastq file is' "${my_fastq}"
+  
+  # get the file path relative to the parent (user-given) directory
+  subpath=${my_fastq##$my_dir}
+  
+  # append that relative path, minus the file name, to the output directory
+  new_dir="$out_dir${subpath%/*}"
+  
+  # make the new directory
+  mkdir -p "${new_dir}"
+  
+  # get everything after the final / (the filename) of original file
+  oldfile="${subpath##*/}"
+  
+  # append the "_sub.fastq" to the filename, and add to new directory sturcture
+  newfile="${new_dir}"/"${oldfile%.*}"_sub.fastq
+  echo new file is "${newfile}"
+
+  head -n "${N_lines}" "${my_fastq}" > "${newfile}"
 
   # if the input file was compressed, compress it again.
-  if [[ "${file}" =~ \.gz$ ]]; then
+  if [[ "${current_file}" =~ \.gz$ ]]; then
 
     "${zipper}" "${my_fastq}"
 
   fi
+  
+  # echo a blanke line to space out messages printing to screen
+  echo
 
 done
