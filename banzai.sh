@@ -712,6 +712,14 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		-outfmt 5 \
 		-out "${blast_output}"
 
+	# check for blast output
+	if [[ ! -s "${blast_output}"  ]]; then
+		echo
+		echo 'BLAST failed: the output file is empty or absent.'
+	    echo 'File should be:' "${blast_output}"
+		echo
+	fi
+
 
 
 
@@ -799,9 +807,12 @@ fi
 
 for DIR in "$DIRECTORIES"; do
 
-		# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
-		# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
-		# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
+	# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
+	# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
+	# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
+
+		# check for blast output
+		if [[ -s "${blast_output}"  ]]; then
 
 		# Specify paths to megan-related files
 		BLAST_XML="${DIR}"/10_BLASTed.xml
@@ -843,6 +854,13 @@ lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 
 		# Run the R script, passing the current tag directory as the directory to which R will "setwd()"
 		Rscript "$SCRIPT_DIR/megan_plotter.R" "${DIR}"
+
+	else
+		echo
+		echo 'BLAST failed: the output file is empty or absent.'
+		echo 'File should be:' "${blast_output}"
+		echo
+	fi
 
 done
 
