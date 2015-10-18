@@ -540,6 +540,13 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		print ">DUP_" NR ";" $0
 	}' > "${no_singletons}"
 
+	# check output
+	if [[ ! -s "${no_singletons}" ]] ; then
+	    echo 'There was a problem generating the nosingletons file. It is empty or absent.'
+	    echo 'This will cause problems counting sequences for dereplication.'
+	fi
+
+
 
 	# COUNT OCCURRENCES PER SAMPLE (LIBRARY + TAG) PER DUPLICATE
 
