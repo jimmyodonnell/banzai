@@ -83,18 +83,9 @@ declare -a TAGS_ARRAY=($TAGS)
 # Read in primers and create reverse complements.
 ################################################################################
 if [ "${READ_PRIMERS_FROM_SEQUENCING_METADATA}" = "YES" ]; then
+
 	PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$PRIMER_1_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER1_COL) print i; exit}' $SEQUENCING_METADATA)
 	PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$PRIMER_2_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER2_COL) print i; exit}' $SEQUENCING_METADATA)
-
-	# check if primer columns found
-	if [[ "${PRIMER1_COLNUM}" + "${PRIMER2_COLNUM}" -lt 2 ]]; then
-	  echo
-	  echo 'Primer columns not found! Check primer column names.'
-	  echo
-	  echo 'Aborting script.'
-	fi
-
-
 	PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM 'NR==2 {print $PRIMER1_COL}' $SEQUENCING_METADATA)
 	PRIMER2=$(awk -F',' -v PRIMER2_COL=$PRIMER2_COLNUM 'NR==2 {print $PRIMER2_COL}' $SEQUENCING_METADATA)
 	echo "Primers read from sequencing metadata:" "${PRIMER1}" "${PRIMER2}"
