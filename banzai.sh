@@ -629,6 +629,20 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# Write fasta file in order to blast sequences
 	echo $(date +%H:%M) "Writing fasta file of duplicate sequences"
 	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${no_singletons}" > "${duplicate_fasta}"
+
+	# check if duplicate fasta and duplicate table exist. (Might need to check size)
+	if [[ ! -s "${duplicate_fasta}" ]] ; then
+	    echo 'There was a problem generating the duplicate fasta file. It is empty or absent.'
+	    echo 'The remainder of the script, including OTU clustering, depends on this file.'
+	    echo 'Aborting script.'
+	    exit
+	fi
+	if [[ ! -s "${duplicate_table}" ]] ; then
+	    echo 'There was a problem generating the duplicate table. It is empty or absent.'
+	    echo 'Aborting script.'
+	    exit
+	fi
+
 ################################################################################
 
 
