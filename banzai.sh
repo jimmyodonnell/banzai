@@ -11,7 +11,6 @@
 # TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
 # TODO LIBS_ARRAY is never used
 # TODO wrap primer removal '( ) &' to force into background and allow parallel processing
-# TODO fix curl call with mail -s "banzai is finished" 4077443377@tmomail.net <temp.txt
 # TODO add file test to end of each step and abort if necessary
 # if [[ -s $FILE ]] ; then
 # 	echo "$FILE has data."
@@ -881,7 +880,7 @@ else
 fi
 
 FINISH_TIME=$(date +%Y%m%d_%H%M)
-# TODO fix curl call with mail -s "banzai is finished" 4077443377@tmomail.net <temp.txt
-curl -sS http://textbelt.com/text -d number=$PHONE_NUMBER -d message="Pipeline finished! Started $START_TIME Finished $FINISH_TIME"
+
+echo 'Pipeline finished! Started at' $START_TIME 'and finished at' $FINISH_TIME | mail -s "banzai is finished" "${EMAIL_ADDRESS}"
 
 echo -e '\nAll finished!'

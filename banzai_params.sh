@@ -220,7 +220,7 @@ PERFORM_CLEANUP="YES"
 RENAME_READS="YES"
 
 # If you want to receive a text message when the pipeline finishes, input your number here:
-PHONE_NUMBER="4077443377"
+EMAIL_ADDRESS="4077443377@tmomail.net"
 
 
 
