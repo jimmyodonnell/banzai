@@ -34,6 +34,35 @@ SCRIPT_DIR="$(dirname "$0")"
 param_file="${1}"
 source "${param_file}"
 
+# check if param file exists:
+if [[ -s "${param_file}" ]] ; then
+	echo "Reading analysis parameters from:"
+	echo "${param_file}"
+else
+	echo
+	echo 'ERROR! Could not find analysis parameter file. You specified the file path:'
+	echo
+	echo "${param_file}"
+	echo
+	echo 'That file is empty or does not exist. Aborting script.'
+	exit
+fi
+
+
+# check if sequencing metadata exists
+if [[ -s "${SEQUENCING_METADATA}" ]] ; then
+	echo "Reading sequencing metadata from:"
+	echo "${SEQUENCING_METADATA}"
+else
+	echo
+	echo 'ERROR! Could not find sequencing metadata file. You specified the file path:'
+	echo
+	echo "${SEQUENCING_METADATA}"
+	echo
+	echo 'That file is empty or does not exist. Aborting script.'
+	exit
+fi
+
 # make an analysis directory with starting time timestamp
 ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
 mkdir "${ANALYSIS_DIR}"
