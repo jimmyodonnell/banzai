@@ -685,6 +685,14 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") { print $1 "," $7 } else if ($4 == "chimera") { print $1 "," "chimera"} }' "${out_uc}" > "${dup_otu_map}"
 		# ----------------- end usearch-specific stuff
 
+		# check that dup to otu map is greater than 12 bytes
+		minsize=12
+		size_dup_otu_map=$(wc -c <"${dup_otu_map}")
+		if [ $size_dup_otu_map -lt $minsize ]; then
+		    echo 'There was an error generating the dup-to-otu map.'
+		fi
+
+
 		# Assign the path for the OTU table
 		OTU_table="${dir_out}"/OTU_table.csv
 
