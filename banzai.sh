@@ -519,6 +519,15 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	cat "${CONCAT_DIR}"/6_primerR1_removedRC.fasta "${CONCAT_DIR}"/6_primerR2_removed.fasta > "${DEREP_INPUT}"
 
+	# check that it worked (derep input / no primers)
+	if [[ ! -s "${DEREP_INPUT}" ]] ; then
+	    echo 'ERROR: Input file for dereplication is empty or absent.'
+	    echo 'This will cause problems for all remaining steps, so script will exit.'
+	    exit
+	fi
+
+
+
 	################################################################################
 	# CONSOLIDATE IDENTICAL SEQUENCES (DEREPLICATION)
 	################################################################################
