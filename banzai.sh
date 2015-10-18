@@ -525,7 +525,14 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	echo $(date +%H:%M) "Identifying identical sequences... (python)"
 	derep_output="${DEREP_INPUT}".derep
 	python "$SCRIPT_DIR/dereplication/dereplicate_fasta.py" "${DEREP_INPUT}"
-	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
+
+	# check for derep output
+	if [[ ! -s "${derep_output}" ]] ; then
+	    echo 'ERROR: python dereplication output is empty or absent.'
+	    echo 'This will cause problems for all remaining steps, so script will exit.'
+	    exit
+	fi
+
 
 	# Exclude singleton sequences (if NF > 2), count the number of sequences per duplicate (print NF-1), sort them by the number of sequences per duplicate (sort -nr), and precede with a name ("DUP_X", where X is the line number)
 	echo $(date +%H:%M) "Counting duplicates per identical sequence and excluding singletons... (awk)"
