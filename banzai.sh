@@ -70,6 +70,14 @@ if [ "${READ_TAGS_FROM_SEQUENCING_METADATA}" = "YES" ]; then
 	TAGS=$(awk -F',' -v TAGCOL=$TAG_COL 'NR>1 {print $TAGCOL}' $SEQUENCING_METADATA | sort | uniq)
 	N_index_sequences=$(echo $TAGS | awk '{print NF}')
 	echo "Multiplex tags read from sequencing metadata (""${N_index_sequences}"") total"
+	# check if number of tags is greater than one:
+	if [[ "${N_index_sequences}" -lt 2 ]]; then
+	  echo
+	  echo "${N_index_sequences}" 'index sequences found, but there should be more than 1.'
+	  echo
+	  echo 'Aborting script.'
+	fi
+
 else
 	TAGS=$(tr '\n' ' ' < "${TAG_FILE}" )
 	N_index_sequences=$(echo $TAGS | awk '{print NF}')
