@@ -691,6 +691,19 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		# Convert duplicate table to OTU table using R script (arguments: (1) duplicate table, (2) dup to otu table, (3) otu table path
 		Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${dup_otu_map}" "${OTU_table}"
 
+		# check if OTU table and OTU fasta exist (and/or are of size gt 1?)
+		if [[ ! -s "${OTU_fasta}" ]] ; then
+		    echo 'There was a problem generating the OTU fasta file. It is empty or absent.'
+		    echo 'Aborting script.'
+		    exit
+		fi
+		if [[ ! -s "${OTU_table}" ]] ; then
+		    echo 'There was a problem generating the OTU table. It is empty or absent.'
+		    echo 'Aborting script.'
+		    exit
+		fi
+
+
 		BLAST_INPUT="${OTU_fasta}"
 
 	fi
