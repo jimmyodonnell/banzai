@@ -174,6 +174,7 @@ LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n
 raw_files=($( find "${PARENT_DIR}" -name '*.fastq*' ))
 for myfile in "${raw_files[@]}"; do
 	if [[ "${myfile}" =~ \.gz$ ]]; then
+		echo $(date +%H:%M) "decompressing "${myfile}""
 		"${ZIPPER}" -d "${myfile}"
 	fi
 done
