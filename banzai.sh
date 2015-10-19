@@ -1,22 +1,18 @@
 #!/usr/bin/env bash
 
+echo
+echo
+echo -e "       " "\x20\xf0\x9f\x8f\x84" " "  "\xc2\xa1" BANZAI !
+echo
+echo
 # Pipeline for analysis of MULTIPLEXED Illumina data, a la Jimmy
 # TODO add library size variable
-# TODO eliminate looking for 'R1' and 'R2' in read names (just use first and second file in order)
 # TODO An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
-# TODO fix dereplication scripts
 # TODO make LIBRARY_DIRECTORIES an array by wrapping it in ()
 # TODO ALTERNATE READ LENGTH
 # TODO if LIBRARY_DIRECTORIES is an array, its length is "${#LIBRARY_DIRECTORIES[@]}"
 # TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
 # TODO LIBS_ARRAY is never used
-# TODO wrap primer removal '( ) &' to force into background and allow parallel processing
-# TODO add file test to end of each step and abort if necessary
-# if [[ -s $FILE ]] ; then
-# 	echo "$FILE has data."
-# else
-# 	echo "$FILE is empty."
-# fi ;
 
 # set -e is not the right solution because it will cause the script to exit immediately (without cleaning up after itself or notifying the user) if there is a problem with the megan file or the R script.
 # Instead, I should probably build in checks of the input files (sequencing metadata)

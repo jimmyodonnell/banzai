@@ -105,9 +105,7 @@ HOMOPOLYMER_MAX="7"
 # Or you can specify a text file containing only these tags (choose "NO", and then specify path to the tag file).
 # This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
 # To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
-# TODO remove after check: READ_TAGS_FROM_SEQUENCING_METADATA="YES" # ["YES"|"NO"] if NO, you must specify the TAG_FILE below
 TAG_COLUMN_NAME="tag_sequence"
-# TODO remove after check: TAG_FILE='/Users/threeprime/temp_big/12sHopkins/run_20140930/test/oligotags_6bp_d3.txt'
 
 
 # How many nucleotides pad the 5' end of the tag sequence?
