@@ -11,29 +11,32 @@ infile="${1}"
 
 # maximum number of differences allowed between two amplicons
 # two  amplicons will be grouped if they have this many (or fewer) differences
-swarm_differences=1
+cluster_radius="$(( 100 - ${CLUSTERING_PERCENT} ))"
+# swarm_differences=1
 
 # define output files (these will be in the same directory as the infile)
-dir_out="${infile%/*}"/OTUs_swarm
-mkdir "${dir_out}"
-out_fasta="${dir_out}"/OTUs.fasta
-logfile="${dir_out}"/OTUs.log
-out_swarm="${dir_out}"/OTUs.swarm
-out_stats="${dir_out}"/stats.swarm
-dup_otu_map="${dir_out}"/dups_to_otus.csv
+OTU_dir="${infile%/*}"/OTUs_swarm
+mkdir "${OTU_dir}"
+OTU_fasta="${OTU_dir}"/OTUs.fasta
+logfile="${OTU_dir}"/OTUs.log
+out_swarm="${OTU_dir}"/OTUs.swarm
+out_stats="${OTU_dir}"/stats.swarm
+dup_otu_map="${OTU_dir}"/dups_to_otus.csv
+BLAST_INPUT="${OTU_fasta}"
+OTU_table="${OTU_dir}"/OTU_table.csv
 
 # this will automatically find the number of cores on a Unix/Linux computer
 n_cores=$(getconf _NPROCESSORS_ONLN)
 
 # execute swarm
 swarm \
-	--differences "${swarm_differences}" \
+	--differences "${cluster_radius}" \
 	--fastidious \
 	--threads "${n_cores}" \
 	--output-file "${out_swarm}" \
 	--log "${logfile}" \
 	--statistics-file "${out_stats}" \
-	--seeds "${out_fasta}" \
+	--seeds "${OTU_fasta}" \
 	--usearch-abundance \
 	"${infile}"
 
@@ -56,4 +59,4 @@ awk 'BEGIN{
           }' "${out_swarm}" |\
 sed 's/;size=[0-9]*;//g' > "${dup_otu_map}"
 
-exit
+# exit

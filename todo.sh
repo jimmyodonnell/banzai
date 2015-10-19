@@ -3,47 +3,52 @@
 
 
 # TODO add case statement for clustering
-cluster_method="swarm" #[ swarm | vsearch | usearch ]
+SCRIPT_DIR=$( dirname "${0}" )
+cluster_method="swarm" #[ swarm | vsearch | usearch | none ]
+duplicate_fasta="/Users/jimmy.odonnell/Desktop/Analysis_20151013_1719/all_lib/duplicates.fasta"
 
 case "${cluster_method}" in
 
     "swarm" )
 
-        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh
+        echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
+        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${duplicate_fasta}"
 
     ;;
 
     "vsearch" )
 
-        source "${SCRIPT_DIR}"/OTU_clustering/cluster_vsearch.sh
+        echo $(date +%H:%M) 'Clustering sequences into OTUs using vsearch'
+        source "${SCRIPT_DIR}"/OTU_clustering/cluster_vsearch.sh "${duplicate_fasta}"
 
     ;;
 
     "usearch" )
 
-        source "${SCRIPT_DIR}"/OTU_clustering/cluster_usearch.sh
+        echo $(date +%H:%M) 'Clustering sequences into OTUs using usearch'
+        source "${SCRIPT_DIR}"/OTU_clustering/cluster_usearch.sh "${duplicate_fasta}"
+
+    ;;
+
+    "none" )
+
+        echo $(date +%H:%M) 'No OTU clustering will be performed.'
+        BLAST_INPUT="${duplicate_fasta}"
 
     ;;
 
     * )
 
         echo "${cluster_method}" 'is an invalid clustering method.'
-        echo 'Must be one of swarm, vsearch, or usearch. Using swarm.'
-        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh
+        echo 'Must be one of swarm, vsearch, usearch, or none.'
+        echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
+        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${duplicate_fasta}"
 
     ;;
 
 esac
 
 
-# after usearch, check if there was an error:
-
-usearch_exit_status=$( echo $? )
-if [[ "${usearch_exit_status}" = 1 ]]; then
-  echo 'usearch exited with an error -- something went wrong!'
-  echo 'Aborting script.'
-  exit
-fi
 
 
 
