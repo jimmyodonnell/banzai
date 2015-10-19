@@ -537,30 +537,85 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# done
 	# wait
 
-	cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_primerL1_removed.fasta
-	cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_primerL2_removed.fasta
+	# remove primer 1 from left side of sequences
+	primerL1_removed="${CONCAT_DIR}"/5_primerL1_removed.fasta
+	( cutadapt \
+		-g ^"${PRIMER1}" \
+		-e "${PRIMER_MISMATCH_PROPORTION}" \
+		-m "${LENGTH_ROI_HALF}" \
+		--discard-untrimmed \
+		"${CONCAT_FILE}" > "${primerL1_removed}" ) &
+
+	# remove primer 2 from left side of sequences
+	primerL2_removed="${CONCAT_DIR}"/5_primerL2_removed.fasta
+	( cutadapt \
+		-g ^"${PRIMER2}" \
+		-e "${PRIMER_MISMATCH_PROPORTION}" \
+		-m "${LENGTH_ROI_HALF}" \
+		--discard-untrimmed \
+		"${CONCAT_FILE}" > "${primerL2_removed}" ) &
+
+	wait
 
 	# compress left primer removal input
 	echo $(date +%H:%M) "Compressing left primer removal input..."
 	"${ZIPPER}" "${CONCAT_DIR}"/1_demult_concat.fasta
 	echo $(date +%H:%M) "Left primer removal input compressed."
 
+	# check for cutadapt/primer removal success.
+	if [[ ! -s "${primerL1_removed}" ]]; then
+	  echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
+		echo "${primerL1_removed}"
+	  echo 'Aborting script'
+	  exit
+	fi
+	# check for cutadapt/primer removal success.
+	if [[ ! -s "${primerL2_removed}" ]]; then
+	  echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
+		echo "${primerL2_removed}"
+	  echo 'Aborting script'
+	  exit
+	fi
 
-	# TODO wrap in '( ) &' to force into background and allow parallel processing
-	# i.e.
-	# for primer in "${primersRC_arr[@]}"; do ------------------------------------------------------------------------------------->  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! file references will be an issue!
-	# 	( cutadapt -a ^"${primer}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_L"${primer}"_removed.fasta ) &
-	# done
-	# wait
+	# Remove the reverse complement of primer 1 from the right side of sequences
+	primerR1_removed="${CONCAT_DIR}"/6_primerR1_removed.fasta
+	( cutadapt \
+		-a "${PRIMER2RC}"$ \
+		-e "${PRIMER_MISMATCH_PROPORTION}" \
+		-m "${LENGTH_ROI_HALF}" \
+		--discard-untrimmed \
+		"${primerL1_removed}" > "${primerR1_removed}" ) &
 
-	# Remove the primer on the other end of the reads by reverse-complementing the files and then trimming PRIMER1 and PRIMER2 from the left side.
-	# NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
-	# seqtk seq -r "${CONCAT_DIR}"/5_primerL1_removed.fasta | cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${CONCAT_DIR}"/6_primerR1_removed.fasta
-	cutadapt -a "${PRIMER2RC}"$ -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/5_primerL1_removed.fasta > "${CONCAT_DIR}"/6_primerR1_removed.fasta
-	# seqtk seq -r "${CONCAT_DIR}"/5_primerL2_removed.fasta | cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${CONCAT_DIR}"/6_primerR2_removed.fasta
-	cutadapt -a "${PRIMER1RC}"$ -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/5_primerL2_removed.fasta > "${CONCAT_DIR}"/6_primerR2_removed.fasta
+	# Remove the reverse complement of primer 2 from the right side of sequences
+	primerR2_removed="${CONCAT_DIR}"/6_primerR2_removed.fasta
+	( cutadapt \
+		-a "${PRIMER1RC}"$ \
+		-e "${PRIMER_MISMATCH_PROPORTION}" \
+		-m "${LENGTH_ROI_HALF}" \
+		--discard-untrimmed \
+		"${primerL2_removed}" > "${primerR2_removed}" ) &
+
+	wait
+
+	# check for cutadapt/primer removal success.
+	if [[ ! -s "${primerR1_removed}" ]]; then
+		echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
+		echo "${primerR1_removed}"
+		echo 'Aborting script'
+		exit
+	fi
+	# check for cutadapt/primer removal success.
+	if [[ ! -s "${primerR2_removed}" ]]; then
+		echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
+		echo "${primerR2_removed}"
+		echo 'Aborting script'
+		exit
+	fi
+
+	# Remove reverse-complement the sequences in which the RC of primer 1 was found on the right side
 	seqtk seq -r "${CONCAT_DIR}"/6_primerR1_removed.fasta > "${CONCAT_DIR}"/6_primerR1_removedRC.fasta
 
+	# paste together the contents of the files that primers were removed from.
 	DEREP_INPUT="${CONCAT_DIR}"/7_no_primers.fasta
 
 	cat "${CONCAT_DIR}"/6_primerR1_removedRC.fasta "${CONCAT_DIR}"/6_primerR2_removed.fasta > "${DEREP_INPUT}"

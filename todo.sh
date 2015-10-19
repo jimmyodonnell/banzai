@@ -48,7 +48,6 @@ fi
 
 
 
-
 # TODO line 89
 # check if primer columns found
 PRIMER_COL_SUM=$(( "${PRIMER1_COLNUM}" + "${PRIMER2_COLNUM}" ))
