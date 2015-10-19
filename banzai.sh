@@ -99,7 +99,7 @@ if [[ "${N_index_sequences}" -gt 1 ]]; then
 	echo "Multiplex tags read from sequencing metadata (""${N_index_sequences}"") total"
 else
   echo
-  echo "${N_index_sequences}" 'index sequences found. There should probably be more than 1.'
+  echo 'ERROR:' "${N_index_sequences}" 'index sequences found. There should probably be more than 1.'
   echo
   echo 'Aborting script.'
 	exit
@@ -117,7 +117,15 @@ PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM 'NR==2 {print $PRIMER1_COL}' 
 PRIMER2=$(awk -F',' -v PRIMER2_COL=$PRIMER2_COLNUM 'NR==2 {print $PRIMER2_COL}' $SEQUENCING_METADATA)
 echo "Primers read from sequencing metadata:" "${PRIMER1}" "${PRIMER2}"
 
-
+if [[ -n "${PRIMER1}" && -n "${PRIMER2}" ]]; then
+  echo 'Primers read from metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
+  echo 'Primer sequences:' "${PRIMER1}" "${PRIMER2}"
+else
+  echo 'ERROR:' 'At least one primer is not valid'
+  echo 'Looked in metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
+  echo 'Aborting script'
+  exit
+fi
 
 # make primer array
 read -a primers_arr <<< $( echo $PRIMER1 $PRIMER2 )

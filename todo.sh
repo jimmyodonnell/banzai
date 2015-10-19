@@ -1,33 +1,5 @@
 #!/usr/bin/env bash
 
-PRIMER1_COLNUM=1
-PRIMER2_COLNUM=2
-PRIMER1=""
-PRIMER2="auhs"
-
-if [[ -n "${PRIMER1}" && -n "${PRIMER2}" ]]; then
-  echo 'at least one primer is not valid'
-  echo 'Looked in metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
-else
-  echo "primers are  null"
-  echo 'Looked in metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
-fi
-
-
-
-exit
-# TODO line 89
-# check if primer columns found
-PRIMER_COL_SUM=$(( "${PRIMER1_COLNUM}" + "${PRIMER2_COLNUM}" ))
-if [[ "${PRIMER_COL_SUM}" -lt 2 ]]; then
-  echo
-  echo 'Primer columns not found! Check primer column names.'
-  echo
-  echo 'Aborting script.'
-fi
-
-
-exit
 
 
 # TODO add case statement for clustering
