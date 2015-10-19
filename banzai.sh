@@ -94,25 +94,21 @@ cp "${param_file}" "${ANALYSIS_DIR}"/analysis_parameters.txt
 ################################################################################
 # LOAD MULTIPLEX TAGS
 ################################################################################
-if [ "${READ_TAGS_FROM_SEQUENCING_METADATA}" = "YES" ]; then
-	TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == TAG_COL_NAME) print i; exit}' $SEQUENCING_METADATA)
-	TAGS=$(awk -F',' -v TAGCOL=$TAG_COL 'NR>1 {print $TAGCOL}' $SEQUENCING_METADATA | sort | uniq)
-	N_index_sequences=$(echo $TAGS | awk '{print NF}')
-	echo "Multiplex tags read from sequencing metadata (""${N_index_sequences}"") total"
-	# check if number of tags is greater than one:
-	if [[ "${N_index_sequences}" -lt 2 ]]; then
-	  echo
-	  echo "${N_index_sequences}" 'index sequences found, but there should be more than 1.'
-	  echo
-	  echo 'Aborting script.'
-	fi
+TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == TAG_COL_NAME) print i; exit}' $SEQUENCING_METADATA)
+TAGS=$(awk -F',' -v TAGCOL=$TAG_COL 'NR>1 {print $TAGCOL}' $SEQUENCING_METADATA | sort | uniq)
+N_index_sequences=$(echo $TAGS | awk '{print NF}')
 
+# check if number of tags is greater than one:
+if [[ "${N_index_sequences}" -gt 1 ]]; then
+	echo "Multiplex tags read from sequencing metadata (""${N_index_sequences}"") total"
 else
-	TAGS=$(tr '\n' ' ' < "${TAG_FILE}" )
-	N_index_sequences=$(echo $TAGS | awk '{print NF}')
-	echo "Multiplex tags read from tag file (""${N_index_sequences}"") total"
+  echo
+  echo "${N_index_sequences}" 'index sequences found. There should probably be more than 1.'
+  echo
+  echo 'Aborting script.'
+	exit
 fi
-# make tag sequences into an array
+
 declare -a TAGS_ARRAY=($TAGS)
 
 
