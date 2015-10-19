@@ -70,13 +70,3 @@ exit
 # 2: In max(x) : no non-missing arguments to max; returning -Inf
 # Execution halted
 # There was a problem generating the PDF.
-
-####################################################################
-# Mai Tai recipe from Momiji in Seattle:
-# 2 oz	aged rum
-# 0.75 oz	fresh squeezed lime juice
-# 0.5 oz	orgeat
-# 0.5 oz	triple sec
-# 0.25 oz	simple syrup
-# Shake, strain, and enjoy!
-####################################################################

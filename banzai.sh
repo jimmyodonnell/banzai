@@ -2,7 +2,7 @@
 
 echo
 echo
-echo -e "       " "\x20\xf0\x9f\x8f\x84" " "  "\xc2\xa1" BANZAI !
+echo -e '\t' "\x20\xf0\x9f\x8f\x84" " "  "\xc2\xa1" BANZAI !
 echo
 echo
 # Pipeline for analysis of MULTIPLEXED Illumina data, a la Jimmy
@@ -1056,4 +1056,15 @@ FINISH_TIME=$(date +%Y%m%d_%H%M)
 
 echo 'Pipeline finished! Started at' $START_TIME 'and finished at' $FINISH_TIME | mail -s "banzai is finished" "${EMAIL_ADDRESS}"
 
-echo -e '\nAll finished!'
+echo -e '\n'$(date +%H:%M)'\tAll finished! Why not treat yourself to a...\n'
+echo
+echo -e '~~~ MAI TAI ~~~'
+echo -e '2 oz\taged rum'
+echo -e '0.75 oz\tfresh squeezed lime juice'
+echo -e '0.5 oz\torgeat'
+echo -e '0.5 oz\ttriple sec'
+echo -e '0.25 oz\tsimple syrup'
+echo -e 'Shake, strain, and enjoy!' '\xf0\x9f\x8d\xb9\x0a''\n'
+
+# echo -e '\n''\xf0\x9f\x8d\xb9\x0a''\n'
+# echo -e "       " "\x20\xf0\x9f\x8f\x84" " "  "\xc2\xa1" BANZAI !
