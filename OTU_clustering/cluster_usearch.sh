@@ -11,7 +11,6 @@
 infile="${1}"
 
 # percent similarity within which two sequences will be clustered into an OTU
-cluster_radius="$(( 100 - ${CLUSTERING_PERCENT} ))"
 # cluster_radius=1
 
 # define output files (these will be in the same directory as the infile)
@@ -23,6 +22,7 @@ OTU_fasta_linebreak="${OTU_dir}"/OTUs_linebreaks.fasta
 out_uc="${OTU_dir}"/OTUs.uc
 dup_otu_map="${OTU_dir}"/dups_to_otus.csv
 BLAST_INPUT="${OTU_fasta}"
+OTU_table="${OTU_dir}"/OTU_table.csv
 
 
 # this will automatically find the number of cores on a Unix/Linux computer
@@ -60,6 +60,3 @@ awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${OTU_fa
 ################################################################################
 # Note that this drops sequences determined to be chimeras by usearch
 awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") { print $1 "," $7 } else if ($4 == "chimera") { print $1 "," "chimera"} }' "${out_uc}" > "${dup_otu_map}"
-
-
-exit

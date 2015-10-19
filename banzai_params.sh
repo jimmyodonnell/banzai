@@ -142,9 +142,8 @@ CLUSTER_OTUS="YES"
 # What method should be used to cluster OTUs?
 cluster_method="swarm" #[ swarm | vsearch | usearch ]
 
-# What percent similarity must sequences share to be considered the same OTU?
-# Note that this must be an integer. Contact me if this is a problem
-CLUSTERING_PERCENT="99"
+# At what radius of similarity should OTUs be grouped into a cluster?
+cluster_radius="1"
 
 # Exclude from the analysis OTUs which are less abundant than what percent?
 # Recommendation from Bokulich et al. (2013, Nature Methods): 0.005%

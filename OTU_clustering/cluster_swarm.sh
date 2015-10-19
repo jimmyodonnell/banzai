@@ -11,8 +11,7 @@ infile="${1}"
 
 # maximum number of differences allowed between two amplicons
 # two  amplicons will be grouped if they have this many (or fewer) differences
-cluster_radius="$(( 100 - ${CLUSTERING_PERCENT} ))"
-# swarm_differences=1
+# cluster_radius="1"
 
 # define output files (these will be in the same directory as the infile)
 OTU_dir="${infile%/*}"/OTUs_swarm
@@ -58,5 +57,3 @@ awk 'BEGIN{
             print s[n] "," $1
           }' "${out_swarm}" |\
 sed 's/;size=[0-9]*;//g' > "${dup_otu_map}"
-
-# exit

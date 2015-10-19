@@ -1,54 +1,13 @@
 #!/usr/bin/env bash
 
-
-
-# TODO add case statement for clustering
-SCRIPT_DIR=$( dirname "${0}" )
-cluster_method="swarm" #[ swarm | vsearch | usearch | none ]
-duplicate_fasta="/Users/jimmy.odonnell/Desktop/Analysis_20151013_1719/all_lib/duplicates.fasta"
-
-case "${cluster_method}" in
-
-    "swarm" )
-
-        echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
-        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${duplicate_fasta}"
-
-    ;;
-
-    "vsearch" )
-
-        echo $(date +%H:%M) 'Clustering sequences into OTUs using vsearch'
-        source "${SCRIPT_DIR}"/OTU_clustering/cluster_vsearch.sh "${duplicate_fasta}"
-
-    ;;
-
-    "usearch" )
-
-        echo $(date +%H:%M) 'Clustering sequences into OTUs using usearch'
-        source "${SCRIPT_DIR}"/OTU_clustering/cluster_usearch.sh "${duplicate_fasta}"
-
-    ;;
-
-    "none" )
-
-        echo $(date +%H:%M) 'No OTU clustering will be performed.'
-        BLAST_INPUT="${duplicate_fasta}"
-
-    ;;
-
-    * )
-
-        echo "${cluster_method}" 'is an invalid clustering method.'
-        echo 'Must be one of swarm, vsearch, usearch, or none.'
-        echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
-        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${duplicate_fasta}"
-
-    ;;
-
-esac
-
-
+# TODO check for all dependencies
+if hash pigz 2>/dev/null; then
+	ZIPPER="pigz"
+	echo "pigz installation found"
+else
+	ZIPPER="gzip"
+	echo "pigz installation not found; using gzip"
+fi
 
 
 
