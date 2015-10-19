@@ -41,7 +41,6 @@ frag_size_column="fragment_size_BA"
 LENGTH_FRAG="182"
 
 # Your metadata must have a column corresponding to the subfolders containing the raw reads.
-# As of now, counting the number of sequences per library/primer index will only work if library names are a single character. Thus, use letters.
 # In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
 READ_LIB_FROM_SEQUENCING_METADATA="YES"
 LIBRARY_COLUMN_NAME="library"
@@ -122,13 +121,10 @@ CONCATENATE_SAMPLES="YES"
 # PRIMER REMOVAL
 ################################################################################
 # Specify the primers used to generate these amplicons.
-# As with the multiplex tags, you can grab these from the file SEQUENCING_METADATA.
-# In that case, you must indicate the column names of the forward and reverse primers
-READ_PRIMERS_FROM_SEQUENCING_METADATA="YES" # ["YES"|"NO"] if NO, you must specify the PRIMER_FILE below
+# As with the multiplex tags, Banzai will grab these from the file SEQUENCING_METADATA.
+# You must indicate the column names of the forward and reverse primers
 PRIMER_1_COLUMN_NAME="primer_sequence_F"
 PRIMER_2_COLUMN_NAME="primer_sequence_R"
-# Alternatively, you can specify the path to a fasta file containing the two primers used to generate the amplicons you sequenced:
-PRIMER_FILE='/Users/threeprime/temp_big/12sHopkins/run_20140930/primers_12s.txt'
 
 # What proportion of mismatches are you willing to accept when looking for primers?
 # Recommended: "0.10"

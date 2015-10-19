@@ -6,7 +6,7 @@ echo -e "       " "\x20\xf0\x9f\x8f\x84" " "  "\xc2\xa1" BANZAI !
 echo
 echo
 # Pipeline for analysis of MULTIPLEXED Illumina data, a la Jimmy
-# TODO add library size variable
+# TODO add library-specific size variable
 # TODO An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
 # TODO make LIBRARY_DIRECTORIES an array by wrapping it in ()
 # TODO ALTERNATE READ LENGTH
@@ -111,18 +111,13 @@ declare -a TAGS_ARRAY=($TAGS)
 ################################################################################
 # Read in primers and create reverse complements.
 ################################################################################
-if [ "${READ_PRIMERS_FROM_SEQUENCING_METADATA}" = "YES" ]; then
+PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$PRIMER_1_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER1_COL) print i; exit}' $SEQUENCING_METADATA)
+PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$PRIMER_2_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER2_COL) print i; exit}' $SEQUENCING_METADATA)
+PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM 'NR==2 {print $PRIMER1_COL}' $SEQUENCING_METADATA)
+PRIMER2=$(awk -F',' -v PRIMER2_COL=$PRIMER2_COLNUM 'NR==2 {print $PRIMER2_COL}' $SEQUENCING_METADATA)
+echo "Primers read from sequencing metadata:" "${PRIMER1}" "${PRIMER2}"
 
-	PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$PRIMER_1_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER1_COL) print i; exit}' $SEQUENCING_METADATA)
-	PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$PRIMER_2_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER2_COL) print i; exit}' $SEQUENCING_METADATA)
-	PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM 'NR==2 {print $PRIMER1_COL}' $SEQUENCING_METADATA)
-	PRIMER2=$(awk -F',' -v PRIMER2_COL=$PRIMER2_COLNUM 'NR==2 {print $PRIMER2_COL}' $SEQUENCING_METADATA)
-	echo "Primers read from sequencing metadata:" "${PRIMER1}" "${PRIMER2}"
-else
-	PRIMER1=$( awk 'NR==2' "${PRIMER_FILE}" )
-	PRIMER2=$( awk 'NR==4' "${PRIMER_FILE}" )
-	echo "Primers read from primer file."
-fi
+
 
 # make primer array
 read -a primers_arr <<< $( echo $PRIMER1 $PRIMER2 )
@@ -1021,7 +1016,7 @@ done
 # PRELIMINARY ANALYSES
 ################################################################################
 # Once you have a final CSV file of the number of occurences of each OTU in each sample, run some preliminary analyses in R
-
+# TODO rename preliminary to OTU analyses; move analysis script to OTU analysis directory
 OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
 echo $(date +%H:%M) "passing args to R for preliminary analysis..."
