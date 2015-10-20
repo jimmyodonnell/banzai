@@ -10,8 +10,9 @@
 input_fasta="${1}"
 
 # DATABASE
-# for full nt on UW CEG server: blast_db="/local/blast-local-db/nt"
-blast_db="/local/blast-local-db/nt"
+# full nt on UW CEG server: blast_db="/local/blast-local-db/nt"
+# full nt on NWFSC iMac: /Users/jimmy.odonnell/NCBI/databases/nt/nt
+blast_db="/Users/jimmy.odonnell/NCBI/databases/nt/nt"
 
 # OUTPUT FORMAT
 # suggested outputs: XML (5) or uncommented tabular (6) or commented tabular (7)
@@ -42,6 +43,15 @@ start_time=$(date +%Y%m%d_%H%M)
 # Automatically detect and set the number of cores
 n_cores=$(getconf _NPROCESSORS_ONLN)
 
+# make the output file name based on the choice of format
+outfile_base="${input_fasta%/*}"/blasted_"${start_time}"
+if [[ "${output_format}" = "5" ]] ; then
+	extension="xml"
+else
+	extension="txt"
+fi
+outfile="${outfile_base}"."${extension}"
+
 blastn \
 	-db "${blast_db}" \
 	-query "${input_fasta}" \
@@ -51,7 +61,7 @@ blastn \
 	-max_target_seqs 500 \
 	-culling_limit 20 \
 	-outfmt  "${output_format}" \
-	-out blasted_"${start_time}".tsv \
+	-out "${outfile}" \
 	-num_threads "${n_cores}"
 
 
