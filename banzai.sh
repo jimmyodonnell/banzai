@@ -821,6 +821,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# CHECK FOR CHIMERAS
 	##############################################################################
 	if [[ "${remove_chimeras}" = "YES" ]] ; then
+		echo $(date +%H:%M) 'Looking for chimeras in OTU fasta file using vsearch'
 		source "${SCRIPT_DIR}"/chimera_check.sh "${OTU_fasta}"
 		BLAST_INPUT="${chimera_free_fasta}"
 	else
