@@ -3,22 +3,6 @@
 
 
 
-# TODO add vsearch fastq filtering
-
-MERGED_READS="/Users/jimmy.odonnell/Desktop/Analysis_20151013_1719/A/1_merged.assembled.fastq"
-Max_Expected_Errors="0.5"
-FILTERED_OUTPUT=myfile.fasta
-
-# usearch -fastq_filter "${MERGED_READS}" -fastq_maxee "${Max_Expected_Errors}" -fastaout "${FILTERED_OUTPUT}"
-
-exit
-
-
-
-exit
-
-
-
 
 
 

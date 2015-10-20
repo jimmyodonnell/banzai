@@ -5,10 +5,10 @@
 # INPUT
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="/Users/threeprime/Desktop/20150717/libraries/kelly_lab"
+PARENT_DIR="/Users/jimmy.odonnell/Desktop/Kelly_Lab_Big/Illumina_Data_Raw/20150717/libraries/kelly_lab_sub"
 
 # Where is the sequencing metadata file? (SEE FORMATTING GUIDELINES IN README!)
-SEQUENCING_METADATA="/Users/threeprime/Desktop/20150717/libraries/kelly_lab/SEQUENCING_POOL_20150618.csv"
+SEQUENCING_METADATA="/Users/jimmy.odonnell/Desktop/Kelly_Lab_Big/Illumina_Data_Raw/20150717/libraries/kelly_lab/SEQUENCING_POOL_20150618.csv"
 
 
 ################################################################################
@@ -16,12 +16,12 @@ SEQUENCING_METADATA="/Users/threeprime/Desktop/20150717/libraries/kelly_lab/SEQU
 ################################################################################
 # This script will generate a directory (folder) containing the output of the script.
 # Where do you want this new folder to go?
-ANALYSIS_DIRECTORY="/Users/threeprime/Desktop"
+ANALYSIS_DIRECTORY="/Users/jimmy.odonnell/Desktop"
 
 # You can optionally specify a folder into which the script copies a PDF containing some results.
 # The pdf is created by default in the analysis folder specified above, but
 # if you set this to your DropBox or Google Drive Folder, you can check it out from anywhere.
-OUTPUT_PDF_DIR="/Users/threeprime/Desktop"
+OUTPUT_PDF_DIR="/Users/jimmy.odonnell/Desktop"
 
 
 ################################################################################
@@ -83,7 +83,7 @@ min_seq_length=75
 # The only software that currently implements this is usearch, but it requires breaking up files larger than ~4GB
 # I think this can be written in python relatively easily, but I haven't gotten to it yet.
 # For more information on this parameter, Google the usearch help
-Perform_Expected_Error_Filter="NO" # [YES|NO]
+Perform_Expected_Error_Filter="YES" # [YES|NO]
 Max_Expected_Errors="0.5"
 
 ################################################################################
@@ -150,6 +150,11 @@ cluster_radius="1"
 min_OTU_abun="0.005"
 # TODO: incorporate into OTU filtering script
 
+################################################################################
+# FILTER CHIMERIC SEQUENCES (vsearch)
+################################################################################
+# Would you like to check for and filter out chimeras?
+remove_chimeras="YES"
 
 ################################################################################
 # TAXONOMIC ANNOTATION
@@ -158,13 +163,15 @@ min_OTU_abun="0.005"
 # For more information on these parameters, type into a terminal window: blastn -help
 # Specify the path to the BLAST database.
 # Note this should be a path to any one of three files WITHOUT their extension *.nhr, *.nin, or *.nsq
-BLAST_DB='/Users/threeprime/temp_big/NCBI/nt_DB/16S_20150511/Metazoa16S20141113.fasta'
+BLAST_DB='/Users/jimmy.odonnell/NCBI/databases/nt/nt'
 # BLAST PARAMETERS
 PERCENT_IDENTITY="97"
-WORD_SIZE="11"
+WORD_SIZE="30"
 EVALUE="1e-20"
 # number of matches recorded in the alignment:
-MAXIMUM_MATCHES="400"
+MAXIMUM_MATCHES="500"
+culling_limit="20"
+
 
 ################################################################################
 ## MEGAN ##

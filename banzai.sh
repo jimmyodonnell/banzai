@@ -815,11 +815,17 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		    exit
 		fi
 
-
-		BLAST_INPUT="${OTU_fasta}"
-
 	fi
 
+	##############################################################################
+	# CHECK FOR CHIMERAS
+	##############################################################################
+	if [[ "${remove_chimeras}" = "YES" ]] ; then
+		source "${SCRIPT_DIR}"/chimera_check.sh "${OTU_fasta}"
+		BLAST_INPUT="${chimera_free_fasta}"
+	else
+		BLAST_INPUT="${OTU_fasta}"
+	fi
 
 	################################################################################
 	# BLAST CLUSTERS
@@ -834,6 +840,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		-word_size "${WORD_SIZE}" \
 		-evalue "${EVALUE}" \
 		-max_target_seqs "${MAXIMUM_MATCHES}" \
+		-culling_limit "${culling_limit}" \
 		-outfmt 5 \
 		-out "${blast_output}"
 

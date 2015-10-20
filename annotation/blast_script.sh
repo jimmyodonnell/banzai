@@ -55,7 +55,7 @@ outfile="${outfile_base}"."${extension}"
 blastn \
 	-db "${blast_db}" \
 	-query "${input_fasta}" \
-	-perc_identity 95 \
+	-perc_identity 97 \
 	-word_size 30 \
 	-evalue 1e-20 \
 	-max_target_seqs 500 \
