@@ -2,7 +2,7 @@
 
 🏄
 
-**banzai** is a BASH shell script that links together the disparate programs needed to process the raw sequencing results from an Illumina run into a table of the number of sequences per taxon found in a set of samples. Some preliminary ecological analyses are included as well.
+**banzai** is a BASH (shell) script that links together the disparate programs needed to process the raw sequencing results from an Illumina run into a contingency table of the number of sequences per taxon found in a set of samples. Some preliminary ecological analyses are included as well.
 
 The script should run on Unix and Linux machines. The script makes heavy usage of Unix command line utilities (such as find, grep, sed, awk, and more) and is written for the BSD versions of those programs as found on standard installations of Mac OSX. I tried to use POSIX-compliant commands wherever possible.
 
@@ -22,10 +22,9 @@ It's important to use `bash` rather than `sh` or `.` to invoke the script. Somed
 Aside from the standard command line utilities (awk, sed, grep, etc) that are already included on Unix machines, this script relies on the following tools:
 
 * **[PEAR](http://sco.h-its.org/exelixis/web/software/pear/)**: merging paired-end reads
-* **[usearch](http://www.drive5.com/usearch/)**: filtering paired reads on the basis of the sum of the error probabilities (maximum expected errors). This can be turned off, probably without much change in final data quality. We used to do OTU clustering with usearch, but the 32bit version can't handle larger data sets.
-* **[swarm](https://github.com/torognes/swarm)**: OTU clustering
-* **[vsearch](https://github.com/torognes/vsearch)**: OTU clustering
 * **[cutadapt](https://github.com/marcelm/cutadapt)**: primer removal (I might replace with awk)
+* **[vsearch](https://github.com/torognes/vsearch)**: sequence quality filtering (requires version 1.4.0 or greater); OTU clustering
+* **[swarm](https://github.com/torognes/swarm)**: OTU clustering
 * **[seqtk](https://github.com/lh3/seqtk)**: reverse complementing entire fastq/a files
 * **[python](https://www.python.org/)**: fast consolidation of duplicate sequences (installed by default on Macs)
 * **[blast+](http://www.ncbi.nlm.nih.gov/books/NBK279690/)**: taxonomic assignment
@@ -37,6 +36,8 @@ Aside from the standard command line utilities (awk, sed, grep, etc) that are al
 
 * I recommend that before analyzing data, you check and report basic properties of the sequencing runs using **[fastqc](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)**. I have included a script to do this for all the fastq or fastq.gz files in any subdirectory of a directory (run_fastqc.sh).
 
+### Optional/Deprecated ###
+* **[usearch](http://www.drive5.com/usearch/)**: filtering paired reads on the basis of the sum of the error probabilities (maximum expected errors). This can be turned off, probably without much change in final data quality. We used to do OTU clustering with usearch, but the 32bit version can't handle larger data sets.
 
 ## Sequencing Pool Metadata ##
 If you provide a CSV spreadsheet that contains metadata about the samples, banzai can read some of the parameters from it, like the primers and multiplex index sequences. You need to provide the file path to the spreadsheet, and the relevant column names.
@@ -50,7 +51,7 @@ As of 2015-10-09, libraries no longer have to be named anything in particular (e
 BUT THEY CANNOT CONTAIN UNDERSCORES or spaces!
 
 ## Organization of raw data ##
-Your data (fastq files) can be compressed or not; but banzai currently only works with paired-end Illumina data. Thus, the bare minimum input is two fastq files corresponding to the first and second read. *Banzai will fail if there are files in your library folders that are not your raw data but have 'fastq' in the filename!* For example, if your library contains four files: "R1.fastq", "R1.fastq.gz", "R2.fastq", and "R2.fastq.gz". banzai will grab the first two (R1.fastq and R1.fastq.gz) and try to merge them, and (correctly) fail miserably. Note that while PEAR 0.9.7 merges compressed (*.gz) files directly, PEAR 0.9.6 does not do so correctly. If given compressed files as input, banzai first decompresses them, which will add a little bit of time to the overall analysis.
+Your data (fastq files) can be compressed or not; but banzai currently only works with paired-end Illumina data. Thus, the bare minimum input is two fastq files corresponding to the first and second read. *Banzai will fail if there are files in your library folders that are not your raw data but have 'fastq' in the filename!* For example, if your library contains four files: "R1.fastq", "R1.fastq.gz", "R2.fastq", and "R2.fastq.gz". banzai will grab the first two (R1.fastq and R1.fastq.gz) and try to merge them, and (correctly) fail miserably. Note that while PEAR 0.9.7 merges compressed (\*.gz) files directly, PEAR 0.9.6 does not do so correctly. If given compressed files as input, banzai first decompresses them, which will add a little bit of time to the overall analysis.
 
 ## A note on removal of duplicate sequences##
 
