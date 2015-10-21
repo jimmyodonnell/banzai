@@ -24,20 +24,26 @@ output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sst
 
 # IDENTITY
 # percent identity suggestions: 97, 98, 99
+identity="97"
 
 # NUMBER OF MATCHES
 # suggested: 200, 500
+num_matches="500"
 
 # CULLING_LIMIT
+# "If the query range of a hit is enveloped by that of at least this many higher-scoring hits, delete the hit"
 # suggestion changed from 5 to 20 (20150805) because the lower (and default) number can produce odd results when there are several species with similar high scores.
+culling_limit="20"
 
 # WORD SIZE
 # larger word sizes yield substantial speedups. Smaller words yield more hits.
 # default = 11; minimum = 7
 # RPK suggests 30.
+word_size="30"
 
 # E VALUE
 # No suggestions as of 20150819
+evalue="1e-20"
 
 # Automatically detect the time and set it to make a unique filename
 start_time=$(date +%Y%m%d_%H%M)
@@ -57,11 +63,11 @@ outfile="${outfile_base}"."${extension}"
 blastn \
 	-db "${blast_db}" \
 	-query "${input_fasta}" \
-	-perc_identity 97 \
-	-word_size 30 \
-	-evalue 1e-20 \
-	-max_target_seqs 500 \
-	-culling_limit 20 \
+	-perc_identity "${identity}" \
+	-word_size "${word_size}" \
+	-evalue "${evalue}" \
+	-max_target_seqs "${num_matches}" \
+	-culling_limit "${culling_limit}" \
 	-outfmt  "${output_format}" \
 	-out "${outfile}" \
 	-num_threads "${n_cores}"
