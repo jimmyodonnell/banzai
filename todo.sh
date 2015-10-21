@@ -2,6 +2,7 @@
 
 # TODO compress nosingle.txt and 7_no_primers.fasta.derep
 
+# TODO add --debug / --verbose flag to generate files.
 
 # TODO add library-specific size variable
 # TODO An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
