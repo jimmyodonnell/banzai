@@ -8,14 +8,6 @@ echo -e '\t' "\x20\xf0\x9f\x8f\x84" " "  "\xc2\xa1" BANZAI !
 echo
 echo
 
-# TODO add library-specific size variable
-# TODO An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
-# TODO make LIBRARY_DIRECTORIES an array by wrapping it in ()
-# TODO ALTERNATE READ LENGTH
-# TODO if LIBRARY_DIRECTORIES is an array, its length is "${#LIBRARY_DIRECTORIES[@]}"
-# TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
-# TODO LIBS_ARRAY is never used
-# TODO check for all dependencies
 
 ################################################################################
 # RAW DATA, ANALYSIS PARAMETERS, AND GENERAL SETTINGS
