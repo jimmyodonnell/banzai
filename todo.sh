@@ -2,17 +2,49 @@
 
 # TODO compress nosingle.txt and 7_no_primers.fasta.derep
 
-# TODO add --debug / --verbose flag to generate files.
+# TODO move all scripts into subdirectories
+
+# TODO add vsearch clustering
 
 # TODO add library-specific size variable
+
 # TODO An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
+
+# TODO LIBS_ARRAY is never used
 # TODO make LIBRARY_DIRECTORIES an array by wrapping it in ()
-# TODO ALTERNATE READ LENGTH
 # TODO if LIBRARY_DIRECTORIES is an array, its length is "${#LIBRARY_DIRECTORIES[@]}"
 # TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
-# TODO LIBS_ARRAY is never used
+
 # TODO check for all dependencies
+
 # TODO LIB_TAG_MOD originally contained sort | uniq; this is unnecessary I think
+
+# TODO add `trap "killall background" EXIT` or `trap 'kill $(jobs -p)' EXIT` to kill background processes on exit
+
+# TODO Add decontamination script
+
+# TODO Add normalization
+
+# TODO streamline config file
+
+# TODO Incorporate warnings for missing columns in metadata
+
+# TODO Add library names variable (require alpha?)
+
+# TODO write table:
+ # - rows: libraries, tags (including rows for whole libraries)
+ # - column: numbers for number of sequences: successfully merged, filtered, forward index, both indexes (parallelizable using grep during awk demultiplexing?), primer 1, primer 2, singletons, (dups? otus?)
+
+# TODO Find primer index as a function of 6bp preceeding or following primer seq  `grep -E -o '^.{6}'"${primer_F}"''`
+
+# TODO add --debug / --verbose flag to generate files.
+# TODO Potential files to be removed as part of cleanup at the end of script:
+# - homopolymer_line_numbers.txt
+# - 2_filtered.fasta
+# - 1_merged.assembled.fastq
+# - 1_merged.assembled_A.fastq
+# - 1_merged.assembled_B.fastq
+
 
 
 # TODO remove whitespace from sequence labels?
@@ -98,3 +130,43 @@ exit
 # 2: In max(x) : no non-missing arguments to max; returning -Inf
 # Execution halted
 # There was a problem generating the PDF.
+
+# TODO documentation:
+# shamelessly stolen from https://github.com/geraldinepascal/FROGS
+Legend for the next schemas:
+    .: Complete nucleic sequence
+    !: Region of interest
+    *: PCR primers
+
+Paired-end classical protocol:
+    In the paired-end protocol R1 and R2 must share a nucleic region.
+    For example the amplicons on V3-V4 regions can have a length between
+    350 and 500nt; with 2*300pb sequencing the overlap is between 250nt
+    and 100nt.
+    From:                                    To:
+     rDNA .........!!!!!!................    ......!!!!!!!!!!!!!!!!!!!.....
+     Ampl      ****!!!!!!****                  ****!!!!!!!!!!!!!!!!!!!****
+       R1      --------------                  --------------
+       R2      --------------                               --------------
+
+    The maximum overlap between R1 and R2 can be the complete overlap.
+        Inconvenient maximum overlap:
+        R1    --------------
+        R2   --------------
+    In this case it is necessary to trim R1 and R2 ends before the process.
+
+    The minimum overlap between R1 and R2 can have 15nt. With less the
+    overlap can be incorrect.
+
+Single-end classical protocol:
+    rDNA .........!!!!!!................
+    Ampl      ****!!!!!!****
+    Read      --------------
+
+Custom protocol
+    rDNA .....!!!!!!!!!!!!!!............
+    Ampl      ****!!!!!!****
+    Read      --------------
+
+Note: The amplicons can have a length variability.
+      The R1 and R2 can have different length.

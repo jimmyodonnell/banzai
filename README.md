@@ -75,43 +75,22 @@ The output file is as follows:
 
 	AATAGCGCTACGT; READ1; READ2; READ3
 
-Note that the original script also ouput a file of the sequences only (no names), but I removed this functionality on 20150417
-
-##Wishlist/TODO/notes to self##
-* add `trap "killall background" EXIT` or `trap 'kill $(jobs -p)' EXIT` to kill background processes on exit
-* Add decontamination script
-* Add normalization
-* streamline config file
-* Incorporate warnings for missing columns in metadata
-* Add library names variable (require alpha?)
-* write table:
- - rows: libraries, tags (including rows for whole libraries)
- - column: numbers for number of sequences: successfully merged, filtered, forward index, both indexes (parallelizable using grep during awk demultiplexing?), primer 1, primer 2, singletons, (dups? otus?)
-* Find primer index as a function of 6bp preceeding or following primer seq  `grep -E -o '^.{6}'"${primer_F}"''`
-* Potential files to be removed as part of cleanup at the end of script:
- - homopolymer_line_numbers.txt
- - 2_filtered.fasta
- - 1_merged.assembled.fastq
- - 1_merged.assembled_A.fastq
- - 1_merged.assembled_B.fastq
-
-
+Note that the original script also output a file of the sequences only (no names), but I removed this functionality on 20150417
 
 ### This could take a while... ###
-In Mac OS Mountain Lion and later, you can override your computer's sleep settings by running the script like so:
+In Mac OS 10.8 (Mountain Lion) and later, you can override your computer's sleep settings by running the script like so:
 
 ```sh
 caffeinate -i -s bash /Users/user_name/path/to/the/file/banzai.sh
 ```
 
 ## Known Issues/Bugs ##
-* As of 20150614, libraries must be in folders called lib1, lib2, etc. Need to fix the sed renaming scheme to accommodate variable library names
+* Currently awaiting catastrophic finding...
 
 ###Notes###
-
-2014 11 12: Noticed that the reverse tag removal step removes the tag label from the sequenceID line of fasta files if the tag sequence is RC-palindromic!
-
 An alternate hack to have the pipeline print to terminal AND file, in case logging breaks:
 sh script.sh  2>&1 | tee ~/Desktop/logfile.txt
 
+* 2015-10-19 expected error filtering implemented via vsearch. OTU clustering can be done with swarm or usearch.
 * 2015-10-09 read length calculated from raw data. Library names are flexible.
+* 2014-11-12 Noticed that the reverse tag removal step removed the tag label from the sequenceID line of fasta files if the tag sequence is RC-palindromic!
