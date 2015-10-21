@@ -40,57 +40,92 @@ then
     mkdir /selinux
     echo 0 > /selinux/enforce
 
-    echo Add epel, remi, and postgres repositories
+    echo Add epel, remi, and required system libraries and packages
     yum makecache fast
     yum -y install wget git
     wget -q -N http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
-    wget -q -N http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
-    rpm -Uvh remi-release-7*.rpm epel-release-7*.rpm
+    ##wget -q -N http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+    ##rpm -Uvh remi-release-7*.rpm epel-release-7*.rpm
 
+    yum install -y xz-libs gcc perl-Archive-Any perl-Digest-MD5 perl-List-MoreUtils R
 
     yum -y groups install "GNOME Desktop"
 fi
 
 # Commands that work on any *nix
 
+echo Install PEAR
+wget -q -N http://sco.h-its.org/exelixis/web/software/pear/files/pear-0.9.6-bin-64.tar.gz
+tar xzf pear-0.9.6-bin-64.tar.gz
+cp pear-0.9.6-bin-64/pear-0.9.6-bin-64 /usr/local/bin
 
-echo Build and install gdal
-wget -q -N http://download.osgeo.org/gdal/2.0.0/gdal-2.0.0.tar.gz        
-tar xzf gdal-2.0.0.tar.gz
-cd gdal-2.0.0
-export PATH=$(pwd):$PATH
-./configure --with-python
-gmake && gmake install
+echo Build and install SWARM
+git clone https://github.com/torognes/swarm.git
+cd swarm/src/
+make
+cd ../../
+cp swarm/bin/swarm /usr/local/bin
+
+echo Build and install VSEARCH
+git clone https://github.com/torognes/vsearch.git
+cd vsearch
+./autogen.sh
+./configure
+make
+make install
+cd ..
+make
+
+echo Install CUTADAPT
+pip install cutadapt
+
+echo Build and install SEQTK
+git clone https://github.com/lh3/seqtk.git
+cd seqtk
+make
+cp seqtk /usr/local/bin
+cp trimadap /usr/local/bin
 cd ..
 
+echo Install BLAST+
+wget -q -N ftp://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/ncbi-blast-2.2.31+-2.x86_64.rpm
+rpm -ivh ncbi-blast-2.2.31+-2.x86_64.rpm
 
-# Required to install the netCDF4 python module
-echo "Need to sudo to install hdf5 packages..."
-sudo yum -y install hdf5 hdf5-devel
-if [ $? -ne 0 ] ; then
-    echo "Exiting $0"
-    exit 1
-fi
+echo Install MEGAN
+wget -q -N http://ab.inf.uni-tuebingen.de/data/software/megan5/download/MEGAN_unix_5_10_6.sh
+unset DISPLAY
+bash MEGAN_unix_5_10_6.sh -q
 
-# Required to install the netCDF4 python module
-wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.tar.gz
-tar -xzf netcdf-4.3.3.tar.gz
-cd netcdf-4.3.3
-./configure --enable-hl --enable-shared
-make; sudo make install
-cd ..
+echo Install VEGAN and GTOOLS
+wget -q -N https://cran.rstudio.com/src/contrib/gtools_3.5.0.tar.gz
+cat <<EOR > install-packages.r
+install.packages("vegan", repos="http://r-forge.r-project.org/")
+install.packages("gtools_3.5.0.tar.gz", repos=NULL, type="source")
+EOR
+Rscript install-packages.r
 
+echo Install FASTQC
+pushd /opt
+wget -q -N http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.3.zip
+unzip fastqc_v0.11.3.zip
+chmod +x /opt/FastQC/fastqc
+ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc
+popd
+
+echo Install RSTUDIO SERVER
+wget -q -N http://download2.rstudio.org/rstudio-server-rhel-0.99.486-x86_64.rpm
+rpm -ivh rstudio-server-rhel-0.99.486-x86_64.rpm
 
 echo Build database for locate command
 updatedb
 
-echo Configure and start services
-/usr/bin/systemctl enable httpd.service
-/usr/bin/systemctl start httpd.service
+##echo Configure and start services
+##/usr/bin/systemctl enable httpd.service
+##/usr/bin/systemctl start httpd.service
 
-echo Modifying local firewall to allow incoming connections on port 80
-firewall-cmd --zone=public --add-port=80/tcp --permanent
-firewall-cmd --reload
+##echo Modifying local firewall to allow incoming connections on port 80
+##firewall-cmd --zone=public --add-port=80/tcp --permanent
+##firewall-cmd --reload
 
 echo Configuring vim edit environment
 cd /home/$USER
@@ -107,6 +142,7 @@ git clone https://github.com/MBARIMike/banzai banzaigit
 echo Giving user $USER ownership of everything in /home/$USER
 chown -R $USER /home/$USER
 
-echo Banzai provisioning finished
-echo ----------------------------
+echo -------------------------------------
+echo Banzai pipeline provisioning finished
+echo -------------------------------------
 
