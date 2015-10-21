@@ -32,7 +32,9 @@ output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sst
 # suggestion changed from 5 to 20 (20150805) because the lower (and default) number can produce odd results when there are several species with similar high scores.
 
 # WORD SIZE
-# larger word sizes yield substantial speedups. RPK suggests 30.
+# larger word sizes yield substantial speedups. Smaller words yield more hits.
+# default = 11; minimum = 7
+# RPK suggests 30.
 
 # E VALUE
 # No suggestions as of 20150819
