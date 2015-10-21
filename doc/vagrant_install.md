@@ -1,7 +1,7 @@
 Building a Banzai development system 
 ====================================
 
-First, install [Vagrant](https://www.vagrantup.com/) and and [VirtualBox](doc/VirtualBox.md)
+First, install [Vagrant](https://www.vagrantup.com/) and and [VirtualBox](VirtualBox.md)
 &mdash; there are standard installers for Mac, Windows, and Linux. Then create an empty folder 
 off your home directory such as `Vagrants/banzaivm`, open a command prompt window, cd to that 
 folder, and enter these commands:
