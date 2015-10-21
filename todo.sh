@@ -15,8 +15,6 @@
 # TODO if LIBRARY_DIRECTORIES is an array, its length is "${#LIBRARY_DIRECTORIES[@]}"
 # TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
 
-# TODO check for all dependencies
-
 # TODO LIB_TAG_MOD originally contained sort | uniq; this is unnecessary I think
 
 # TODO add `trap "killall background" EXIT` or `trap 'kill $(jobs -p)' EXIT` to kill background processes on exit

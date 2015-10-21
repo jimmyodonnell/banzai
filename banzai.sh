@@ -10,7 +10,7 @@ echo
 
 
 ################################################################################
-# RAW DATA, ANALYSIS PARAMETERS, AND GENERAL SETTINGS
+# CHECK FOR RAW DATA
 ################################################################################
 
 # Define a variable called START_TIME
@@ -52,15 +52,30 @@ else
 	exit
 fi
 
-# make an analysis directory with starting time timestamp
-ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
-mkdir "${ANALYSIS_DIR}"
+################################################################################
+# CHECK FOR DEPENDENCIES
+################################################################################
+dependencies=($( echo pear cutadapt vsearch swarm seqtk python blastn R ))
+echo 'Checking for dependencies:' "${dependencies[@]}"
+for i in "${dependencies[@]}"; do
+	if hash "${i}" 2>/dev/null; then
+	# if command -v "${i}" >/dev/null 2>&1; then
+		echo 'Found program' "${i}" 'in' $( which "${i}" )
+	else
+		echo 'ERROR: A program on which this script depends was not found:' "${i}"
+		echo 'Aborting script.'
+		exit
+	fi
+done
 
-# Write a log file of output from this script (everything that prints to terminal)
-LOGFILE="${ANALYSIS_DIR}"/logfile.txt
-exec > >(tee "${LOGFILE}") 2>&1
-
-echo "Analysis started at ""${START_TIME}" " and is located in ""${ANALYSIS_DIR}"
+# Specify compression utility
+if hash pigz 2>/dev/null; then
+	ZIPPER="pigz"
+	echo "pigz installation found"
+else
+	ZIPPER="gzip"
+	echo "pigz installation not found; using gzip"
+fi
 
 # Detect number of cores on machine; set variable
 n_cores=$(getconf _NPROCESSORS_ONLN)
@@ -71,8 +86,15 @@ else
 	echo "Multiple cores not detected."
 fi
 
+# make an analysis directory with starting time timestamp
+ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
+mkdir "${ANALYSIS_DIR}"
 
+# Write a log file of output from this script (everything that prints to terminal)
+LOGFILE="${ANALYSIS_DIR}"/logfile.txt
+exec > >(tee "${LOGFILE}") 2>&1
 
+echo "Analysis started at ""${START_TIME}" " and is located in ""${ANALYSIS_DIR}"
 
 # Copy these files into that directory as a verifiable log you can refer back to.
 cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
@@ -138,16 +160,6 @@ EXTRA_SEQ=${TAGS_ARRAY[0]}${TAGS_ARRAY[0]}$PRIMER1$PRIMER2
 LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
 LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
-################################################################################
-# Specify compression utility
-################################################################################
-if hash pigz 2>/dev/null; then
-	ZIPPER="pigz"
-	echo "pigz installation found"
-else
-	ZIPPER="gzip"
-	echo "pigz installation not found; using gzip"
-fi
 
 ################################################################################
 # Find raw sequence files
@@ -158,7 +170,7 @@ fi
 LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique )
 
 # PEAR v0.9.6 does not correctly merge .gz files.
-# Look through fils and decompress if necessary.
+# Look through files and decompress if necessary.
 raw_files=($( find "${PARENT_DIR}" -name '*.fastq*' ))
 for myfile in "${raw_files[@]}"; do
 	if [[ "${myfile}" =~ \.gz$ ]]; then
