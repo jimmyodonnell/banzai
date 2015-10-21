@@ -1048,6 +1048,3 @@ echo -e '\t0.5 oz\torgeat'
 echo -e '\t0.5 oz\ttriple sec'
 echo -e '\t0.25 oz\tsimple syrup'
 echo -e '\tShake, strain, and enjoy!' '\xf0\x9f\x8d\xb9\x0a''\n'
-
-# echo -e '\n''\xf0\x9f\x8d\xb9\x0a''\n'
-# echo -e "       " "\x20\xf0\x9f\x8f\x84" " "  "\xc2\xa1" BANZAI !
