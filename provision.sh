@@ -55,19 +55,19 @@ fi
 
 # Commands that work on any *nix
 
-echo Install PEAR
+echo Installing PEAR...
 wget -q -N http://sco.h-its.org/exelixis/web/software/pear/files/pear-0.9.6-bin-64.tar.gz
 tar xzf pear-0.9.6-bin-64.tar.gz
 cp pear-0.9.6-bin-64/pear-0.9.6-bin-64 /usr/local/bin
 
-echo Build and install SWARM
+echo Building and installing SWARM...
 git clone https://github.com/torognes/swarm.git
 cd swarm/src/
 make
 cd ../../
 cp swarm/bin/swarm /usr/local/bin
 
-echo Build and install VSEARCH
+echo Building and installing VSEARCH...
 git clone https://github.com/torognes/vsearch.git
 cd vsearch
 ./autogen.sh
@@ -77,10 +77,10 @@ make install
 cd ..
 make
 
-echo Install CUTADAPT
+echo Installing CUTADAPT...
 pip install cutadapt
 
-echo Build and install SEQTK
+echo Building and installing SEQTK...
 git clone https://github.com/lh3/seqtk.git
 cd seqtk
 make
@@ -88,16 +88,16 @@ cp seqtk /usr/local/bin
 cp trimadap /usr/local/bin
 cd ..
 
-echo Install BLAST+
+echo Installing BLAST+...
 wget -q -N ftp://ftp.ncbi.nlm.nih.gov/blast/executables/LATEST/ncbi-blast-2.2.31+-2.x86_64.rpm
 rpm -ivh ncbi-blast-2.2.31+-2.x86_64.rpm
 
-echo Install MEGAN
+echo Installing MEGAN...
 wget -q -N http://ab.inf.uni-tuebingen.de/data/software/megan5/download/MEGAN_unix_5_10_6.sh
 unset DISPLAY
 bash MEGAN_unix_5_10_6.sh -q
 
-echo Install VEGAN and GTOOLS
+echo Installing VEGAN and GTOOLS in R...
 wget -q -N https://cran.rstudio.com/src/contrib/gtools_3.5.0.tar.gz
 cat <<EOR > install-packages.r
 install.packages("vegan", repos="http://r-forge.r-project.org/")
@@ -105,13 +105,22 @@ install.packages("gtools_3.5.0.tar.gz", repos=NULL, type="source")
 EOR
 Rscript install-packages.r
 
-echo Install FASTQC
+echo Installing FASTQC...
 pushd /opt
 wget -q -N http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.3.zip
 unzip fastqc_v0.11.3.zip
 chmod +x /opt/FastQC/fastqc
 ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc
 popd
+
+echo Building and installing PIGZ...
+wget -q -N http://zlib.net/pigz/pigz-2.3.3.tar.gz
+tar xzf pigz-2.3.3.tar.gz
+cd pigz-2.3.3
+make
+cp pigz /usr/local/bin
+cd ..
+
 
 # Appears to be installed by R
 ##echo Install RSTUDIO SERVER
@@ -121,6 +130,7 @@ popd
 echo Build database for locate command
 updatedb
 
+# Not sure if we'll need a web server, but this is how it's configured and started
 ##echo Configure and start services
 ##/usr/bin/systemctl enable httpd.service
 ##/usr/bin/systemctl start httpd.service
@@ -144,7 +154,7 @@ git clone https://github.com/MBARIMike/banzai banzai
 echo Giving user $USER ownership of everything in /home/$USER
 chown -R $USER /home/$USER
 
-echo -------------------------------------
-echo Banzai pipeline provisioning finished
-echo -------------------------------------
+echo --------------------------------------
+echo Banzai pipeline provisioning completed
+echo --------------------------------------
 
