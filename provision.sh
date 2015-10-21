@@ -44,10 +44,11 @@ then
     yum makecache fast
     yum -y install wget git
     wget -q -N http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
-    ##wget -q -N http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
-    ##rpm -Uvh remi-release-7*.rpm epel-release-7*.rpm
+    wget -q -N http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+    rpm -Uvh remi-release-7*.rpm epel-release-7*.rpm
 
     yum install -y xz-libs gcc perl-Archive-Any perl-Digest-MD5 perl-List-MoreUtils R
+    yum install -y autoconf automake python-devel python-pip zlib-devel perl-Archive-Tar
 
     yum -y groups install "GNOME Desktop"
 fi
@@ -112,9 +113,10 @@ chmod +x /opt/FastQC/fastqc
 ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc
 popd
 
-echo Install RSTUDIO SERVER
-wget -q -N http://download2.rstudio.org/rstudio-server-rhel-0.99.486-x86_64.rpm
-rpm -ivh rstudio-server-rhel-0.99.486-x86_64.rpm
+# Appears to be installed by R
+##echo Install RSTUDIO SERVER
+##wget -q -N http://download2.rstudio.org/rstudio-server-rhel-0.99.486-x86_64.rpm
+##rpm -ivh rstudio-server-rhel-0.99.486-x86_64.rpm
 
 echo Build database for locate command
 updatedb
