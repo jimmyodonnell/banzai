@@ -139,7 +139,7 @@ EOT
 
 echo Cloning Banzai repo from https://github.com/MBARIMike/banzai...
 mkdir dev && cd dev
-git clone https://github.com/MBARIMike/banzai banzaigit
+git clone https://github.com/MBARIMike/banzai banzai
 
 echo Giving user $USER ownership of everything in /home/$USER
 chown -R $USER /home/$USER
