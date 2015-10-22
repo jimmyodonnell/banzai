@@ -76,7 +76,6 @@ cd vsearch
 make
 make install
 cd ..
-make
 
 echo Installing CUTADAPT...
 pip install cutadapt
