@@ -59,6 +59,7 @@ echo Installing PEAR...
 wget -q -N http://sco.h-its.org/exelixis/web/software/pear/files/pear-0.9.6-bin-64.tar.gz
 tar xzf pear-0.9.6-bin-64.tar.gz
 cp pear-0.9.6-bin-64/pear-0.9.6-bin-64 /usr/local/bin
+ln -s /usr/local/bin/pear-0.9.6-bin-64 /usr/local/bin/pear
 
 echo Building and installing SWARM...
 git clone https://github.com/torognes/swarm.git
