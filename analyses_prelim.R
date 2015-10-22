@@ -13,16 +13,18 @@
 # If you want to run this interactively, just comment out the following line, un-comment the 8 lines after that, and make all of those the appropriate file paths/arguments (see numbers above).
 arguments<-commandArgs(TRUE)
 # arguments <- c(
-#   "/Users/threeprime/Desktop/debug.pdf",
-#   "/Users/threeprime/temp_big/20150717_nextseq/Analysis_20151019_1918/all_lib/OTUs_swarm/OTU_table.csv",
-#   "/Users/threeprime/temp_big/20150717_nextseq/SEQUENCING_POOL_20150618.csv",
-#   "library",
-#   "tag_sequence",
-#   "sample_name",
-#   "sample_type")
+  # "/Users/threeprime/Desktop/debug.pdf",
+  # "/Users/threeprime/temp_big/20150717_nextseq/Analysis_20151019_1918/all_lib/OTUs_swarm/OTU_table.csv",
+  # "/Users/threeprime/temp_big/20150717_nextseq/SEQUENCING_POOL_20150618.csv",
+  # "library",
+  # "tag_sequence",
+  # "sample_name",
+  # "sample_type")
 
 # initialize PDF
 pdf(file = arguments[1])
+
+par_orig <- par()
 
 # READ IN THE DATA
 DATA <- read.csv(arguments[2], row.names = 1)
@@ -46,7 +48,7 @@ DATA <- DATA[,order(colSums(DATA), decreasing = TRUE)]
 
 
 # make a vector that will link the OTU file and the sequencing pool
-row_check <- paste(metadata[,arguments[4]], "tag", metadata[,arguments[5]], sep = "_")
+row_check <- paste("lib", metadata[,arguments[4]], "tag", metadata[,arguments[5]], sep = "_")
 metadata <- cbind(metadata, row_check)
 
 # link the metadata file to the OTU file
@@ -55,13 +57,49 @@ tag_to_samplename <- metadata[tag_to_sequencing_data, arguments[6]]
 
 # plot the number of reads per sample binned by sample origin (environmental samples and controls)
 data_by_sample <- split(rowSums(DATA), tag_to_samplename)
-stripchart(data_by_sample, las = 2, cex.axis = 0.8, pch = 1, vertical = TRUE, main = "Reads per sample")
-SD_reads <- c(median(rowSums(DATA)) - sd(rowSums(DATA)), median(rowSums(DATA)) + sd(rowSums(DATA)))
-polygon(x = c(0, length(data_by_sample)+1, length(data_by_sample)+1, 0), y = rep(SD_reads, each = 2), col = "#BEBEBE50", border = NA)
+stripchart(
+	data_by_sample, 
+	las = 2, 
+	# cex.axis = 0.4, 
+	pch = 1, 
+	vertical = TRUE, 
+	xaxt = "n", 
+	main = "Reads per sample"
+	)
+	
+axis(
+	side = 1, 
+	at = 1:length(data_by_sample), 
+	labels = names(data_by_sample), 
+	cex.axis = 0.4, 
+	las = 2
+	)
+
+SD_reads <- c(
+	median(rowSums(DATA)) - sd(rowSums(DATA)), 
+	median(rowSums(DATA)) + sd(rowSums(DATA))
+	)
+	
+polygon(
+	x = c(0, length(data_by_sample)+1, length(data_by_sample)+1, 0), 
+	y = rep(SD_reads, each = 2), 
+	col = "#BEBEBE50", 
+	border = NA
+	)
+	
 abline(h = median(rowSums(DATA)), lty = 2)
 
 # plot total sum of reads per dup/OTU across samples
-plot(colSums(DATA), pch = 20, cex = 0.5, main = "total reads per OTU")
+par() <- par_orig
+plot(
+	colSums(DATA), 
+	# log = "y", 
+	pch = 20, 
+	cex = 0.5, 
+	main = "Total reads per OTU across samples", 
+	xlab = "OTU rank", 
+	ylab = "Number of reads"
+	)
 
 # create matrix of tag sequence and library number
 TAG_LIB <- strsplit(rownames(DATA), "_")
@@ -73,11 +111,12 @@ DATA.df <- cbind(TAG_LIB, as.data.frame(DATA))
 
 
 # Order the OTU data the same as the sequencing pool sample data
-DATA.df <- DATA.df[match(interaction(metadata[c("tag_sequence", "library")]), interaction(DATA.df[c("Tag", "Lib")])),]
+DATA.df <- DATA.df[
+					match(
+					interaction(metadata[c("tag_sequence", "library")]), 
+					interaction(DATA.df[c("Tag", "Lib")])),
+				]
 
-
-# rows after row 25 are garbage, delete them.
-# metadata <- metadata[1:25,]
 
 # make a vector of sample names in the right order (corresponding to the tag sequence from OTU table)
 # sample_name <- metadata$sample_name[match(interaction(DATA.df[c("Tag", "Lib")]), interaction(metadata[c("tag_sequence", "library")]))]
@@ -99,7 +138,12 @@ DATA.df <- DATA.df[match(interaction(metadata[c("tag_sequence", "library")]), in
 # sample_type[which(sample_name == "DIH20-20140709")] <- "filter_blank"
 
 # add those to the data frame and check it out
-DATA.df <- cbind(sample_name = metadata[, arguments[6]], sample_type = metadata[,arguments[7]], DATA.df)
+DATA.df <- cbind(
+	sample_name = metadata[, arguments[6]], 
+	sample_type = metadata[,arguments[7]], 
+	DATA.df
+	)
+	
 # DATA.df[,1:5]
 
 # Incorporate sample name into rownames of DATA (otu table stored as matrix)

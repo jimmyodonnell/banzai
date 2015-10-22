@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# TODO add flexibility to stripchart "Reads by sample" in otu analyses
+
 # TODO compress nosingle.txt and 7_no_primers.fasta.derep
 
 # TODO move all scripts into subdirectories
