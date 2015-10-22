@@ -14,8 +14,8 @@
 arguments<-commandArgs(TRUE)
 # arguments <- c(
 #   "/Users/threeprime/Desktop/debug.pdf",
-#   "/Users/threeprime/Desktop/Analysis_20150526_1525/all_lib/OTU_table.csv",
-#   "/Users/threeprime/temp_big/12sHopkins/sample_data/12S_tagged_run_metadata_20150525.csv",
+#   "/Users/threeprime/temp_big/20150717_nextseq/Analysis_20151019_1918/all_lib/OTUs_swarm/OTU_table.csv",
+#   "/Users/threeprime/temp_big/20150717_nextseq/SEQUENCING_POOL_20150618.csv",
 #   "library",
 #   "tag_sequence",
 #   "sample_name",
@@ -32,7 +32,7 @@ DATA <- read.csv(arguments[2], row.names = 1)
 
 # Read in spreadsheet from labwork, which contains columns of sample names and corresponding tag sequences
 # for original formatting see "/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20141113_time_series/sample_data.csv"
-SAMPLES <- read.csv(arguments[3])
+metadata <- read.csv(arguments[3])
 
 # transpose OTU data to the appropriate orientation (samples are rows, OTUs are columns)
 DATA <- t(as.matrix(DATA))
@@ -46,12 +46,12 @@ DATA <- DATA[,order(colSums(DATA), decreasing = TRUE)]
 
 
 # make a vector that will link the OTU file and the sequencing pool
-row_check <- paste(SAMPLES[,arguments[4]], "tag", SAMPLES[,arguments[5]], sep = "_")
-SAMPLES <- cbind(SAMPLES, row_check)
+row_check <- paste(metadata[,arguments[4]], "tag", metadata[,arguments[5]], sep = "_")
+metadata <- cbind(metadata, row_check)
 
-# link the SAMPLES file to the OTU file
-tag_to_sequencing_data <- match(rownames(DATA), SAMPLES$row_check)
-tag_to_samplename <- SAMPLES[tag_to_sequencing_data, arguments[6]]
+# link the metadata file to the OTU file
+tag_to_sequencing_data <- match(rownames(DATA), metadata$row_check)
+tag_to_samplename <- metadata[tag_to_sequencing_data, arguments[6]]
 
 # plot the number of reads per sample binned by sample origin (environmental samples and controls)
 data_by_sample <- split(rowSums(DATA), tag_to_samplename)
@@ -73,24 +73,24 @@ DATA.df <- cbind(TAG_LIB, as.data.frame(DATA))
 
 
 # Order the OTU data the same as the sequencing pool sample data
-DATA.df <- DATA.df[match(interaction(SAMPLES[c("tag_sequence", "library")]), interaction(DATA.df[c("Tag", "Lib")])),]
+DATA.df <- DATA.df[match(interaction(metadata[c("tag_sequence", "library")]), interaction(DATA.df[c("Tag", "Lib")])),]
 
 
 # rows after row 25 are garbage, delete them.
-# SAMPLES <- SAMPLES[1:25,]
+# metadata <- metadata[1:25,]
 
 # make a vector of sample names in the right order (corresponding to the tag sequence from OTU table)
-# sample_name <- SAMPLES$sample_name[match(interaction(DATA.df[c("Tag", "Lib")]), interaction(SAMPLES[c("tag_sequence", "library")]))]
+# sample_name <- metadata$sample_name[match(interaction(DATA.df[c("Tag", "Lib")]), interaction(metadata[c("tag_sequence", "library")]))]
 # note I think it is safer to reorder the OTU data to match up with the sequencing pool first,
 # thus, just use
-# SAMPLES$sample_name
+# metadata$sample_name
 
 # for some reason there was an empty level, which caused problems down the road
 # sample_name <- droplevels(sample_name)
 
 # SAMPLE TYPE
 # Extract the data from the sequencing sample pool spreadsheet
-# SAMPLES$sample_type
+# metadata$sample_type
 # make a vector of sample types (environmental, tissue, filter blank)
 # first just make them all environmental
 # sample_type <- rep("environ", nrow(DATA.df))
@@ -99,7 +99,7 @@ DATA.df <- DATA.df[match(interaction(SAMPLES[c("tag_sequence", "library")]), int
 # sample_type[which(sample_name == "DIH20-20140709")] <- "filter_blank"
 
 # add those to the data frame and check it out
-DATA.df <- cbind(sample_name = SAMPLES[, arguments[6]], sample_type = SAMPLES[,arguments[7]], DATA.df)
+DATA.df <- cbind(sample_name = metadata[, arguments[6]], sample_type = metadata[,arguments[7]], DATA.df)
 # DATA.df[,1:5]
 
 # Incorporate sample name into rownames of DATA (otu table stored as matrix)
