@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# TODO add checks for installation of R packages
+
 # TODO add flexibility to stripchart "Reads by sample" in otu analyses
 
 # TODO compress nosingle.txt and 7_no_primers.fasta.derep
