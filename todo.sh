@@ -2,6 +2,8 @@
 
 # TODO add checks for installation of R packages
 
+# TODO be aware of potential problems between awk versions on Linux and Mac. On a Mac, the output of `awk --version` is `awk version 20070501` (BSD, I believe)
+
 # TODO add flexibility to stripchart "Reads by sample" in otu analyses
 
 # TODO compress nosingle.txt and 7_no_primers.fasta.derep
