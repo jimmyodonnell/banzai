@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+# TODO add sequence table? (this would be a huge file)
+possible columns:
+original seqid (from sequencer)
+modified seqid (redundancies/whitespace removed)
+sampleid (lib/tag combo?)
+duplicate (duplicate name from dups.fasta)
+otu (otu name from otus.fasta)
+
+
 # TODO add checks for installation of R packages
 
 # TODO be aware of potential problems between awk versions on Linux and Mac. On a Mac, the output of `awk --version` is `awk version 20070501` (BSD, I believe)
