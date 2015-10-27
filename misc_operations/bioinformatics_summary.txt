@@ -1,0 +1,39 @@
+Bioinformatics Summary:
+
+
+After sequences were demultiplexed by the sequencing facility on the basis of the ligated (library) index, we merged forward and reverse paired-end reads and performed quality control using PEAR (pear --help | grep 'PEAR v' latex:\cite{Zhang2014}).
+
+Reads were discarded if more than "$UNCALLEDMAX" of its bases were uncalled, 
+
+If a read contained two consecutive base calls with quality scores less than "$Quality_Threshold" (i.e. probability of incorrect base call = XXX), these bases and all subsequent bases were removed from the read before merging. 
+
+
+Read alignments were scored using the 
+if [ "$SCORING" == 2 ] then;
+	echo "assembly scoring method, using +1 for match and -1 for mismatch, multiplied by base quality scores."
+fi
+if [ "$SCORING" == 1 ] then;
+	echo "observed expected alignment scores with +1 for match and -1 for mismatch."
+fi
+
+Merged reads were assessed for statistical significance using 
+if [ "$TEST" == 1 ] then;
+	echo "observed expected alignment scores"
+fi
+if [ "$TEST" == 2 ] then;
+	echo "maximal acceptance probability"
+fi
+
+and merged reads with a p-value greater than $PVALUE were discarded
+
+
+                                        
+Forward and reverse reads were merged using PEAR v0.9.4 \cite{Zhang2014} and discarded if more than 0.01 of the bases were uncalled. If a read contained two consecutive base calls with quality scores less than 15 (i.e. probability of incorrect base call = 0.0316), these bases and all subsequent bases were removed from the read. 
+
+Paired reads for which the probability of matching by chance alone exceeded 0.01 were not assembled and omitted from the analysis. 
+
+Assembled reads were discarded if assembled sequences were not between 50 and 168 bp long, or if reads did not overlap by at least 100 bp.
+
+
+Merged reads were discarded if the sum of the per-base error probabilities was greater than 0.5 (``expected errors'' USEARCH v7.0.1090 \cite{Edgar2010}. Sequences were demultiplexed on the basis of the 6bp index sequence at base positions 4-9 at both ends using the programming language AWK. Primer sequences were removed using cutadapt v1.7.1 \cite{Martin2011}, allowing for 2 mismatches in the primer sequence. To speed up subsequent clustering, identical sequences were consolidated in python. Singleton sequences were removed. Sequences were clustered into operational taxonomic units (OTUs) using usearch v7.0.1090 with a clustering radius of 1\%, and chimeric sequences were removed \cite{Edgar2010}. The final data are thus a matrix of counts of OTUs present in each sample.
+
