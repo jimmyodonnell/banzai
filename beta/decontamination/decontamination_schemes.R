@@ -15,7 +15,7 @@
 # ALSO,
 # 5. Remove any reads from the target OTU used in the control.
 
-pdf(file = "remove_contamination.pdf")
+pdf(file = "decontamination_schemes.pdf")
 # PROLOGUE
 # either load your data:
 # samples_all <- read.csv(file = "OTU_table.csv")
@@ -67,7 +67,12 @@ dimnames(samples_con) <- list(
 # barplot(samples_con)
 
 samples_all <- cbind(samples_env, samples_con)
-barplot(samples_all, ylab = "number of reads", main = "Full Dataset")
+barplot(
+	samples_all, 
+	ylab = "number of reads", 
+	main = "Full Dataset", 
+	ylim = c(0, N_reads)
+	)
 
 
 ################################################################################
@@ -88,19 +93,35 @@ contam_sum_max <- max(colSums(samples_con[!(rownames(samples_all) %in% control_t
 # Set to zero any OTU occurrence below the maximum contaminating OTU abundance
 samples_threshold <- samples_all
 samples_threshold[samples_threshold <= contam_max] <- 0
-barplot(samples_threshold, ylab = "number of reads", main = "Remove OTUs rarer than most abundant contamination")
+barplot(
+	samples_threshold, 
+	ylab = "number of reads", 
+	main = "Remove OTUs rarer than most abundant contamination", 
+	ylim = c(0, N_reads)
+	)
+
 
 ################################################################################
 # 1B. remove from the environmental samples this amount from EVERY OTU.
 samples_contam_removed <- samples_all - contam_max
-barplot(samples_contam_removed, ylab = "number of reads", main = "Every OTU trimmed of contaminant proportion")
+barplot(
+	samples_contam_removed, 
+	ylab = "number of reads", 
+	main = "Every OTU trimmed of contaminant proportion", 
+	ylim = c(0, N_reads)
+	)
 
 ################################################################################
 # 2. Calculate the maximum abundance for *every* OTU in the controls, and remove this amount from this OTU in any other samples in which it occurs.
 contam_max_OTU <- apply(X = samples_con, MARGIN = 1, FUN = max)
 samples_OTU_subtract <- samples_all - contam_max_OTU
 samples_OTU_subtract[samples_OTU_subtract < 0] <- 0
-barplot(samples_OTU_subtract, ylab = "number of reads", main = "OTU-specific contamination removed")
+barplot(
+	samples_OTU_subtract, 
+	ylab = "number of reads", 
+	main = "OTU-specific contamination removed", 
+	ylim = c(0, N_reads)
+	)
 
 
 ################################################################################
@@ -118,7 +139,12 @@ for(i in 1:ncol(samples_all)){
   )
   samples_contam_sum[smallest,i] <- 0
 }
-barplot(samples_contam_sum, ylab = "number of reads", main = "Remove tail equal to proportion of contamination in control")
+barplot(
+	samples_contam_sum, 
+	ylab = "number of reads", 
+	main = "Remove tail equal to proportion of contamination in control", 
+	ylim = c(0, N_reads)
+	)
 
 
 ################################################################################
@@ -126,7 +152,12 @@ barplot(samples_contam_sum, ylab = "number of reads", main = "Remove tail equal 
 OTUs_contam <- names(which(rowSums(samples_con) > 0))
 samples_contam_OTU <- samples_all
 samples_contam_OTU[OTUs_contam,] <- 0
-barplot(samples_contam_OTU, ylab = "number of reads", main = "Remove all OTUs found in controls")
+barplot(
+	samples_contam_OTU, 
+	ylab = "number of reads", 
+	main = "Remove all OTUs found in controls", 
+	ylim = c(0, N_reads)
+	)
 
 
 ################################################################################
@@ -134,6 +165,11 @@ barplot(samples_contam_OTU, ylab = "number of reads", main = "Remove all OTUs fo
 # REMOVE CONTROL TAXON FROM ALL SAMPLES
 control_removed <- samples_all[(rownames(samples_all) %in% control_taxon),]
 samples_no_control <- samples_all[!(rownames(samples_all) %in% control_taxon),]
-barplot(samples_no_control, ylab = "number of reads", main = "Remove control taxon")
+barplot(
+	samples_no_control, 
+	ylab = "number of reads", 
+	main = "Remove control taxon", 
+	ylim = c(0, N_reads)
+	)
 
 dev.off()
