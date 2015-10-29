@@ -146,11 +146,8 @@ exit
 
 # TODO documentation:
 
-ROI = region of interest
-
-
 Genomic DNA:    ----------------------------------------------------------------
-ROI:                             ~~~~~~~~~~~~~~~~~~~~~~~~
+target region:                   ~~~~~~~~~~~~~~~~~~~~~~~~
 
 PCR
 Primers:                   ******                        ******
