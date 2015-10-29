@@ -145,7 +145,44 @@ exit
 # There was a problem generating the PDF.
 
 # TODO documentation:
-# shamelessly stolen from https://github.com/geraldinepascal/FROGS
+
+ROI = region of interest
+
+
+Genomic DNA:    ----------------------------------------------------------------
+ROI:                             ~~~~~~~~~~~~~~~~~~~~~~~~
+
+PCR
+Primers:                   ******                        ******
+Secondary index:        +++                                    +++
+full primer:            +++******                        ******+++
+amplicon:               +++******~~~~~~~~~~~~~~~~~~~~~~~~******+++
+
+LIBRARY PREP
+primary index:       :::                                          :::
+adapter:           aa                                                aa
+final fragment:    aa:::+++******~~~~~~~~~~~~~~~~~~~~~~~~******+++:::aa
+
+SEQUENCING
+Read 1:            aa:::+++******~~~~~~~~~~~~~~
+Read 2:                                    ~~~~~~~~~~~~~~******+++:::aa
+
+DEMULTIPLEXING (PRIMARY)
+Read 1:                 +++******~~~~~~~~~~~~~~
+Read 2:                                    ~~~~~~~~~~~~~~******+++
+
+READ MERGING
+merged reads:           +++******~~~~~~~~~~~~~~~~~~~~~~~~******+++
+
+DEMULTIPLEXING (SECONDARY)
+                           ******~~~~~~~~~~~~~~~~~~~~~~~~******
+
+PRIMER REMOVAL
+                                 ~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+# following was shamelessly stolen from https://github.com/geraldinepascal/FROGS
 Legend for the next schemas:
     .: Complete nucleic sequence
     !: Region of interest
