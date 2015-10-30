@@ -3,7 +3,7 @@
 # Remove OTUs lower than a given threshold
 
 # Usage: (from terminal)
-# Rscript this_script_name.R "0.005" /path/to/OTU_table.csv
+# Rscript this_script_name.R 0.005 /path/to/OTU_table.csv
 
 # expects two arguments: 
 # 1: the threshold percent below which to disregard OTUs
