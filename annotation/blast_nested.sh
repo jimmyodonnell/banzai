@@ -5,6 +5,8 @@
 # 2. quoted and space separated identity values at which to perform nested blast
 # e.g. : "100 99 98 97 95 90 85 80" (default if no value given.)
 
+# note: should be impervious to duplicate or unordered values
+
 # usage:
 # bash "/path/to/blast_script.sh" "/path/to/input/query.fasta" "100 99 98 97 95 90 85 80"
 
@@ -46,7 +48,10 @@ echo ~~~~~~~~~~~~~~~~~~~~ BLAST PARAMETERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # percent identity suggestions: 97, 98, 99
 # grab from argument 2:
 if [[ -n "${2}" ]]; then
-	nested_identities=( $(echo "${2}") )
+	# read the argument into an array
+	arg_id_arr=( $(echo "${2}") )
+	# sort the array by decreasing numeric value and grab only uniq values
+	nested_identities=($(printf '%s\n' "${arg_id_arr[@]}" | sort -nr | uniq ))
 	echo "Nested identities read from command line argument."
 else
 	nested_identities=( 100 99 98 97 95 90 85 80 )
