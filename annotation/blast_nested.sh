@@ -38,6 +38,18 @@ else
 	exit
 fi
 
+# assemble output directory path
+out_dir="${fasta_orig%/*}"/"blast_""${start_time}"
+echo "Output will be stored in this directory:"
+echo "${out_dir}"
+echo
+
+# make the output directory
+mkdir "${out_dir}"
+
+# make the logfile
+LOGFILE="${out_dir}"/logfile.txt
+exec > >(tee "${LOGFILE}") 2>&1
 
 
 ################################################################################
@@ -102,16 +114,6 @@ output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sst
 echo "Output format:" "${output_format}"
 
 ################################################################################
-
-
-# assemble output directory path
-out_dir="${fasta_orig%/*}"/"blast_""${start_time}"
-echo "Output will be stored in this directory:"
-echo "${out_dir}"
-echo
-
-# make the output directory
-mkdir "${out_dir}"
 
 # number of identities
 # N_iter="${#nested_identities[@]}"
