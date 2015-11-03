@@ -5,14 +5,42 @@
 
 # Suggestions below are based on tests run by Ryan Kelly and Jimmy O'Donnell
 
+
+# Automatically detect the time and set it to make a unique filename
+start_time=$(date +%Y%m%d_%H%M)
+
+echo $(date +%H:%M) "Running nested BLAST script..."
+
 # QUERY
 # a fasta file, read as the first argument
 fasta_orig="${1}"
+# fasta_orig="/Users/jimmy.odonnell/Desktop/temp.fasta"
+
+# check if input file exists:
+if [[ -s "${fasta_orig}" ]] ; then
+	echo "Original fasta input:"
+	echo "${fasta_orig}"
+	echo
+else
+	echo
+	echo 'ERROR! Could not find input fasta file. You specified the file path:'
+	echo
+	echo "${fasta_orig}"
+	echo
+	echo 'That file is empty or does not exist. Aborting script.'
+	exit
+fi
+
+
+
+################################################################################
+#~~~~~~~~~~~~~~~~~~~~ BLAST PARAMETERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+################################################################################
 
 # IDENTITY
 # percent identity suggestions: 97, 98, 99
 nested_identities=( 100 99 98 97 95 90 85 80 )
-echo ${nested_identities[@]}
+echo "Blast will run at these identity values:" ${nested_identities[@]}
 
 # DATABASE
 # full nt on UW CEG server: blast_db="/local/blast-local-db/nt"
@@ -46,61 +74,70 @@ word_size="7"
 # No suggestions as of 20150819
 evalue="1e-20"
 
-
 # Automatically detect and set the number of cores
 n_cores=$(getconf _NPROCESSORS_ONLN)
 
+################################################################################
 
 
-# Automatically detect the time and set it to make a unique filename
-start_time=$(date +%Y%m%d_%H%M)
+# assemble output directory path
+out_dir="${fasta_orig%/*}"/"blast_""${start_time}"
+echo "Output will be stored in:"
+echo "${out_dir}"
+echo
 
-
-out_dir="${input_fasta%/*}"/"blast_out_""${start_time}"
-
-# mkdir "${out_dir}"
+# make the output directory
+mkdir "${out_dir}"
 
 # number of identities
-N_iter="${#nested_identities[@]}"
-echo $N_iter
+# N_iter="${#nested_identities[@]}"
 
-for iter in $(seq 0 "${N_iter}" )
+for iter in "${nested_identities[@]}"
 # for iter in "${nested_identities}"
 do
 
-	echo "Performing blast search at" "${nested_identities[iter]}""% identity"
-
-done
-
-exit
-
 	# input file
-	if [ $iter == 1 ]; then
+	if [ $iter == "${nested_identities[0]}" ]; then
 		fasta_iter="${fasta_orig}"
 	else
-		fasta_iter=""
+		fasta_iter="${fasta_out}"
 	fi
+
+	# count the number of input sequences
+	N_seq=$( grep '^>' -c "${fasta_iter}" )
 
 	infile_seqids="${fasta_iter%.*}".names
 
-	awk '/^>/ { print }' $fasta_iter > "${infile_seqids}"
+	# note that leading '>' and trailing ';' are removed
+	awk '/^>/ { print }' $fasta_iter | sed -e 's/^>//g' -e 's/;$//g' > "${infile_seqids}"
 	# alt: awk '/^>/ { print }' $fasta_iter | sort | uniq
 
-	identity="${nested_identities[iter]}"
+	echo "${iter}" "${iter}" "${iter}" "${iter}" "${iter}" "${iter}" "${iter}"
+	echo "Performing blast search at" "${iter}""% identity"
+
+
+	echo "blast will query file:" "($N_seq sequence(s))"
+	echo "${fasta_iter}"
+
+	# echo "input sequence IDs (fasta headers) in file:"
+	# echo "${infile_seqids}"
+	# echo
 
 	# make the output file name based on the choice of format
-	outfile_base="${input_fasta%/*}"/blasted_"${start_time}"
+	outfile_base="${out_dir}"/blasted_"${start_time}"
 	if [[ "${output_format}" = "5" ]] ; then
 		extension="xml"
 	else
 		extension="txt"
 	fi
-	outfile="${outfile_base}"."${extension}"
+	outfile="${outfile_base}"_i"${iter}"."${extension}"
+
+	echo "blastn is running at identity" $iter "... (started at $(date +%H:%M))"
 
 	blastn \
 		-db "${blast_db}" \
-		-query "${input_fasta}" \
-		-perc_identity "${identity}" \
+		-query "${fasta_iter}" \
+		-perc_identity "${iter}" \
 		-word_size "${word_size}" \
 		-evalue "${evalue}" \
 		-max_target_seqs "${num_matches}" \
@@ -109,14 +146,45 @@ exit
 		-out "${outfile}" \
 		-num_threads "${n_cores}"
 
-	no_hits="${fasta_iter%.*}".nohits
-	awk '{ print ">"$1";" }' $outfile  | uniq | comm -31 - "${infile_seqids}" > "${no_hits}"
+
+	echo "Finished blast at "${iter}"% identity at $(date +%H:%M)"
+	echo "Blast results in file:"
+	echo "${outfile}"
+	echo
+	# touch $outfile
+
+	# EXTRACT SEQUENCES THAT HAD NO HITS
+	# make file path
+	no_hits="${outfile_base}"_i"${iter}".nohits
+
+	# grab the sequence IDs from the blast outfile, remove duplicates, compare to the seqIDs in the input fasta file, write to new file
+	awk '{ print $1 }' "${outfile}" | uniq | comm -31 - "${infile_seqids}" > "${no_hits}"
 	# alt 1: awk '{ print $1 }' $blast_out | sort | uniq
 	# alt 2: cut -d '    ' -f 1
 
+	if [[ -s "${no_hits}" ]]; then
+		N_nohits=$( wc -l "${no_hits}" )
+		echo "${N_nohits}" "Sequences had no hit in database. Sequence IDs with no blast hit can be found in file:"
+		echo "${no_hits}"
+		echo
+	else
+		echo "All sequences had hits at identity" "${iter}"
+		echo "Exiting nested blast analysis."
+		break
+	fi
 
 
-		"${infile_seqids}"
+	# Write fasta file for next blast:
+	fasta_out="${outfile_base}"_i"${iter}"_nohits.fasta
+	echo "Sequences with no blast hit can be found in fasta file:"
+	echo "${fasta_out}"
+	echo
+	# touch $fasta_out
 
+	grep -f "${no_hits}" "${fasta_iter}" -A 1 | sed '/^--$/d' > "${fasta_out}"
+
+	# rm "${infile_seqids}"
 
 done
+
+# exit
