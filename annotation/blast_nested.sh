@@ -163,7 +163,7 @@ do
 	# alt 2: cut -d '    ' -f 1
 
 	if [[ -s "${no_hits}" ]]; then
-		N_nohits=$( wc -l "${no_hits}" )
+		N_nohits=$( wc -l "${no_hits}" | awk '{ print $1 }' )
 		echo "${N_nohits}" "Sequences had no hit in database. Sequence IDs with no blast hit can be found in file:"
 		echo "${no_hits}"
 		echo
