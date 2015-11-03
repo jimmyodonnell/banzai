@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
+# bash script requiring two arguments:
+# 1. path to fasta file to blast
+# 2. quoted and space separated identity values at which to perform nested blast
+# e.g. : "100 99 98 97 95 90 85 80" (default if no value given.)
+
 # usage:
-# bash "/path/to/blast_script.sh" "/path/to/input/query.fasta"
+# bash "/path/to/blast_script.sh" "/path/to/input/query.fasta" "100 99 98 97 95 90 85 80"
 
 # Suggestions below are based on tests run by Ryan Kelly and Jimmy O'Donnell
 
@@ -9,7 +14,7 @@
 # Automatically detect the time and set it to make a unique filename
 start_time=$(date +%Y%m%d_%H%M)
 
-echo $(date +%H:%M) "Running nested BLAST script..."
+# echo $(date +%H:%M) "Running nested BLAST script..."
 
 # QUERY
 # a fasta file, read as the first argument
@@ -34,18 +39,53 @@ fi
 
 
 ################################################################################
-#~~~~~~~~~~~~~~~~~~~~ BLAST PARAMETERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+echo ~~~~~~~~~~~~~~~~~~~~ BLAST PARAMETERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ################################################################################
 
 # IDENTITY
 # percent identity suggestions: 97, 98, 99
-nested_identities=( 100 99 98 97 95 90 85 80 )
-echo "Blast will run at these identity values:" ${nested_identities[@]}
+# grab from argument 2:
+if [[ -n "${2}" ]]; then
+	nested_identities=( "${2}" )
+	echo "Nested identities read from command line argument."
+else
+	nested_identities=( 100 99 98 97 95 90 85 80 )
+	echo "Nested identities argument not found; setting to default."
+fi
+echo "Identity values:" ${nested_identities[@]}
 
 # DATABASE
 # full nt on UW CEG server: blast_db="/local/blast-local-db/nt"
 # full nt on NWFSC iMac: /Users/jimmy.odonnell/NCBI/databases/nt/nt
 blast_db="/Users/jimmy.odonnell/NCBI/databases/nt/nt"
+echo "Database:" "${blast_db}"
+
+# NUMBER OF MATCHES
+# suggested: 200, 500
+num_matches="500"
+echo "Maximum matches per sequence:" "${num_matches}"
+
+# CULLING_LIMIT
+# "If the query range of a hit is enveloped by that of at least this many higher-scoring hits, delete the hit"
+# suggestion changed from 5 to 20 (20150805) because the lower (and default) number can produce odd results when there are several species with similar high scores.
+culling_limit="20"
+echo "Max high quality hits before culling lower quality:" "${blast_db}"
+
+# WORD SIZE
+# larger word sizes yield substantial speedups. Smaller words yield more hits.
+# default = 11; minimum = 7
+# RPK suggests 30.
+word_size="10"
+echo "Word size:" "${word_size}"
+
+# E VALUE
+# No suggestions as of 20150819
+evalue="1e-20"
+echo "E-Value:" "${evalue}"
+
+# Automatically detect and set the number of cores
+n_cores=$(getconf _NPROCESSORS_ONLN)
+echo "Number of threads:" "${n_cores}"
 
 # OUTPUT FORMAT
 # suggested outputs: XML (5) or uncommented tabular (6) or commented tabular (7)
@@ -54,35 +94,14 @@ blast_db="/Users/jimmy.odonnell/NCBI/databases/nt/nt"
 # "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" # default from http://www.ncbi.nlm.nih.gov/books/NBK279675/:
 # "7 qseqid sseqid pident staxids sscinames scomnames sblastnames"
 output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle"
-
-# NUMBER OF MATCHES
-# suggested: 200, 500
-num_matches="500"
-
-# CULLING_LIMIT
-# "If the query range of a hit is enveloped by that of at least this many higher-scoring hits, delete the hit"
-# suggestion changed from 5 to 20 (20150805) because the lower (and default) number can produce odd results when there are several species with similar high scores.
-culling_limit="20"
-
-# WORD SIZE
-# larger word sizes yield substantial speedups. Smaller words yield more hits.
-# default = 11; minimum = 7
-# RPK suggests 30.
-word_size="10"
-
-# E VALUE
-# No suggestions as of 20150819
-evalue="1e-20"
-
-# Automatically detect and set the number of cores
-n_cores=$(getconf _NPROCESSORS_ONLN)
+echo "Output format:" "${output_format}"
 
 ################################################################################
 
 
 # assemble output directory path
 out_dir="${fasta_orig%/*}"/"blast_""${start_time}"
-echo "Output will be stored in:"
+echo "Output will be stored in this directory:"
 echo "${out_dir}"
 echo
 
@@ -113,7 +132,7 @@ do
 	# alt: awk '/^>/ { print }' $fasta_iter | sort | uniq
 
 	echo "${iter}" "${iter}" "${iter}" "${iter}" "${iter}" "${iter}" "${iter}"
-	echo "Performing blast search at" "${iter}""% identity"
+	# echo "Performing blast search at" "${iter}""% identity"
 
 
 	echo "blast will query file:" "($N_seq sequence(s))"
@@ -132,7 +151,7 @@ do
 	fi
 	outfile="${outfile_base}"_i"${iter}"."${extension}"
 
-	echo "blastn is running at identity" $iter "... (started at $(date +%H:%M))"
+	echo $(date +%H:%M) "blastn is running at" $iter"% identity..."
 
 	blastn \
 		-db "${blast_db}" \
@@ -147,7 +166,7 @@ do
 		-num_threads "${n_cores}"
 
 
-	echo "Finished blast at "${iter}"% identity at $(date +%H:%M)"
+	echo $(date +%H:%M) "blastn finished at "${iter}"% identity."
 	echo "Blast results in file:"
 	echo "${outfile}"
 	echo
