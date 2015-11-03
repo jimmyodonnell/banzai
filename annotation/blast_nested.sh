@@ -68,7 +68,7 @@ culling_limit="20"
 # larger word sizes yield substantial speedups. Smaller words yield more hits.
 # default = 11; minimum = 7
 # RPK suggests 30.
-word_size="7"
+word_size="10"
 
 # E VALUE
 # No suggestions as of 20150819
