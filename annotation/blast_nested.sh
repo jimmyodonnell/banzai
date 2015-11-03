@@ -46,7 +46,7 @@ echo ~~~~~~~~~~~~~~~~~~~~ BLAST PARAMETERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # percent identity suggestions: 97, 98, 99
 # grab from argument 2:
 if [[ -n "${2}" ]]; then
-	nested_identities=( "${2}" )
+	nested_identities=( $(echo "${2}") )
 	echo "Nested identities read from command line argument."
 else
 	nested_identities=( 100 99 98 97 95 90 85 80 )
@@ -116,7 +116,7 @@ for iter in "${nested_identities[@]}"
 do
 
 	# input file
-	if [ $iter == "${nested_identities[0]}" ]; then
+	if [ "${iter}" == "${nested_identities[0]}" ]; then
 		fasta_iter="${fasta_orig}"
 	else
 		fasta_iter="${fasta_out}"
