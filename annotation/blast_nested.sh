@@ -92,7 +92,7 @@ echo "Max high quality hits before culling lower quality:" "${blast_db}"
 # larger word sizes yield substantial speedups. Smaller words yield more hits.
 # default = 11; minimum = 7
 # RPK suggests 30.
-word_size="10"
+word_size="9"
 echo "Word size:" "${word_size}"
 
 # E VALUE
