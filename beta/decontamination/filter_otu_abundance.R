@@ -51,7 +51,10 @@ system(paste("mkdir", out_dir))
 total_reads <- sum(otu_table)
 
 # calculate total OTUs
-N_otus_in <- ncol(otu_table)
+N_otus_in <- sum(colSums(otu_table) > 0)
+
+# you could first strip the table of OTUs that don't contain data
+# otu_table[, colSums(otu_table) > 0]
 
 # calculate number of samples
 N_samples <- nrow(otu_table)
@@ -152,6 +155,16 @@ write.csv(
 	file = file.path(out_dir, "otu_table_filtered_per_samp.csv"), 
 	quote = FALSE
 )
+
+# write file of OTU names:
+write.table(
+	x = paste(">", colnames(otu_table_stripped_samp), ";", sep = ""), 
+	file = file.path(out_dir, "otu_names_samp.txt"), 
+	quote = FALSE, 
+	col.names = FALSE, 
+	row.names = FALSE
+	)
+
 
 
 #############################################################################################
