@@ -49,7 +49,7 @@ samples_all <- samples_targ
 id_control <- sample_id[metadata[, col_sampletype] == name_control ]
 
 # get the IDS of the samples from this project
-id_project <- sample_id[metadata[, col_project] == name_project ]
+id_project <- sample_id[metadata[, col_project] %in% name_project ]
 
 
 # break data into control and experimental samples
