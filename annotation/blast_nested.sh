@@ -79,13 +79,13 @@ echo "Database:" "${blast_db}"
 
 # NUMBER OF MATCHES
 # suggested: 200, 500
-num_matches="500"
+num_matches="1000"
 echo "Maximum matches per sequence:" "${num_matches}"
 
 # CULLING_LIMIT
 # "If the query range of a hit is enveloped by that of at least this many higher-scoring hits, delete the hit"
 # suggestion changed from 5 to 20 (20150805) because the lower (and default) number can produce odd results when there are several species with similar high scores.
-culling_limit="20"
+culling_limit="100"
 echo "Max high quality hits before culling lower quality:" "${blast_db}"
 
 # WORD SIZE
@@ -97,6 +97,7 @@ echo "Word size:" "${word_size}"
 
 # E VALUE
 # No suggestions as of 20150819
+# nested e values: "1e-100"
 evalue="1e-20"
 echo "E-Value:" "${evalue}"
 
