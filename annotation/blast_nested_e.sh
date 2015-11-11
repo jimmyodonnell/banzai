@@ -57,18 +57,8 @@ echo ~~~~~~~~~~~~~~~~~~~~ BLAST PARAMETERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # IDENTITY
 # percent identity suggestions: 97, 98, 99
-# grab from argument 2:
-if [[ -n "${2}" ]]; then
-	# read the argument into an array
-	arg_id_arr=( $(echo "${2}") )
-	# sort the array by decreasing numeric value and grab only uniq values
-	nested_identities=($(printf '%s\n' "${arg_id_arr[@]}" | sort -nr | uniq ))
-	echo "Nested identities read from command line argument."
-else
-	nested_identities=( 100 99 98 97 95 90 85 80 )
-	echo "Nested identities argument not found; setting to default."
-fi
-echo "Identity values:" ${nested_identities[@]}
+identity="95"
+echo "Identity value:" ${identity}
 
 # DATABASE
 # full nt on UW CEG server: blast_db="/local/blast-local-db/nt"
@@ -97,8 +87,18 @@ echo "Word size:" "${word_size}"
 # E VALUE
 # No suggestions as of 20150819
 # nested e values: "1e-100"
-evalue="1e-20"
-echo "E-Value:" "${evalue}"
+# grab from argument 2:
+if [[ -n "${2}" ]]; then
+	# read the argument into an array
+	arg_evalue_array=( $(echo "${2}") )
+	# sort the array by decreasing numeric value and grab only uniq values
+	nested_evalues=($(printf '%s\n' "${arg_evalue_array[@]}" | sort -nr | uniq ))
+	echo "Nested e-values read from command line argument."
+else
+	nested_evalues=( 0 4.430273e-52 3.077510e-48 2.137807e-44 1.485037e-40 1.031588e-36 7.165977e-33 4.977879e-29 3.457907e-25 2.402052e-21 1.668597e-17 1.159098e-13 )
+	echo "Nested e-values argument not found; setting to default."
+fi
+echo "E-Values:" "${nested_evalues[@]}"
 
 # Automatically detect and set the number of cores
 n_cores=$(getconf _NPROCESSORS_ONLN)
@@ -116,14 +116,14 @@ echo "Output format:" "${output_format}"
 ################################################################################
 
 # number of identities
-# N_iter="${#nested_identities[@]}"
+# N_iter="${#nested_evalues[@]}"
 
-for iter in "${nested_identities[@]}"
-# for iter in "${nested_identities}"
+for iter in "${nested_evalues[@]}"
+# for iter in "${nested_evalues}"
 do
 
 	# input file
-	if [ "${iter}" == "${nested_identities[0]}" ]; then
+	if [ "${iter}" == "${nested_evalues[0]}" ]; then
 		fasta_iter="${fasta_orig}"
 	else
 		fasta_iter="${fasta_out}"
@@ -156,16 +156,16 @@ do
 	else
 		extension="txt"
 	fi
-	outfile="${outfile_base}"_i"${iter}"."${extension}"
+	outfile="${outfile_base}"_e"${iter}"."${extension}"
 
-	echo $(date +%H:%M) "blastn is running at" $iter"% identity..."
+	echo $(date +%H:%M) "blastn is running at" $iter" e-value..."
 
 	blastn \
 		-db "${blast_db}" \
 		-query "${fasta_iter}" \
-		-perc_identity "${iter}" \
+		-perc_identity "${identity}" \
 		-word_size "${word_size}" \
-		-evalue "${evalue}" \
+		-evalue "${iter}" \
 		-max_target_seqs "${num_matches}" \
 		-culling_limit "${culling_limit}" \
 		-outfmt  "${output_format}" \
@@ -173,7 +173,7 @@ do
 		-num_threads "${n_cores}"
 
 
-	echo $(date +%H:%M) "blastn finished at "${iter}"% identity."
+	echo $(date +%H:%M) "blastn finished at "${iter}" e-value."
 	echo "Blast results in file:"
 	echo "${outfile}"
 	echo
@@ -181,7 +181,7 @@ do
 
 	# EXTRACT SEQUENCES THAT HAD NO HITS
 	# make file path
-	no_hits="${outfile_base}"_i"${iter}".nohits
+	no_hits="${outfile_base}"_e"${iter}".nohits
 
 	# grab the sequence IDs from the blast outfile, remove duplicates, compare to the seqIDs in the input fasta file, write to new file
 	awk '{ print $1 }' "${outfile}" | uniq | comm -31 - "${infile_seqids}" > "${no_hits}"
@@ -194,14 +194,14 @@ do
 		echo "${no_hits}"
 		echo
 	else
-		echo "All sequences had hits at identity" "${iter}"
+		echo "All sequences had hits at e-value" "${iter}"
 		echo "Exiting nested blast analysis."
 		break
 	fi
 
 
 	# Write fasta file for next blast:
-	fasta_out="${outfile_base}"_i"${iter}"_nohits.fasta
+	fasta_out="${outfile_base}"_e"${iter}"_nohits.fasta
 	echo "Sequences with no blast hit can be found in fasta file:"
 	echo "${fasta_out}"
 	echo
