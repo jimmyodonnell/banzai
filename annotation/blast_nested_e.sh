@@ -213,4 +213,5 @@ do
 
 done
 
+echo $(date +%H:%M) "Nested e-value blast completed."
 # exit

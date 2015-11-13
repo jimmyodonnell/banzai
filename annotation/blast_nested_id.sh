@@ -214,4 +214,6 @@ do
 
 done
 
+echo $(date +%H:%M) "Nested percent identity blast completed."
+
 # exit
