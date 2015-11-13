@@ -402,7 +402,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			if (a && a !~ /'"$TAG_RC"'.{3}$/)
 				print a "tag_""'"$TAG_SEQ"'";
 			print
-		} {a = $0}' "${TAG_DIR}"/1_tagL_removed.fasta > "${demult_file_R}"
+		} {a = $0}' "${demult_file_L}" > "${demult_file_R}"
 
 		echo "${CURRENT_LIB##*/}" "${TAG_SEQ}" $(wc -l "${demult_file_L}" | \
 			awk '{ print ($1/2) }') $(wc -l "${demult_file_R}" | \
