@@ -138,13 +138,6 @@ do
 	awk '/^>/ { print }' $fasta_iter | sed -e 's/^>//g' -e 's/;$//g' > "${infile_seqids}"
 	# alt: awk '/^>/ { print }' $fasta_iter | sort | uniq
 
-	echo "${iter}" "${iter}" "${iter}" "${iter}" "${iter}" "${iter}" "${iter}"
-	# echo "Performing blast search at" "${iter}""% identity"
-
-
-	echo "blast will query file:" "($N_seq sequence(s))"
-	echo "${fasta_iter}"
-
 	# echo "input sequence IDs (fasta headers) in file:"
 	# echo "${infile_seqids}"
 	# echo
@@ -158,6 +151,9 @@ do
 	fi
 	hits="${hits_base}"_e"${iter}"."${extension}"
 
+	echo "${iter}" "${iter}" "${iter}" "${iter}" "${iter}" "${iter}" "${iter}"
+	echo "blast will query file:" "($N_seq sequence(s))"
+	echo "${fasta_iter}"
 	echo $(date +%H:%M) "blastn is running at" $iter" e-value..."
 
 	blastn \
