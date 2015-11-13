@@ -150,13 +150,13 @@ do
 	# echo
 
 	# make the output file name based on the choice of format
-	outfile_base="${out_dir}"/blasted_"${start_time}"
+	hits_base="${out_dir}"/blasted_"${start_time}"
 	if [[ "${output_format}" = "5" ]] ; then
 		extension="xml"
 	else
 		extension="txt"
 	fi
-	outfile="${outfile_base}"_e"${iter}"."${extension}"
+	hits="${hits_base}"_e"${iter}"."${extension}"
 
 	echo $(date +%H:%M) "blastn is running at" $iter" e-value..."
 
@@ -169,22 +169,22 @@ do
 		-max_target_seqs "${num_matches}" \
 		-culling_limit "${culling_limit}" \
 		-outfmt  "${output_format}" \
-		-out "${outfile}" \
+		-out "${hits}" \
 		-num_threads "${n_cores}"
 
 
 	echo $(date +%H:%M) "blastn finished at "${iter}" e-value."
 	echo "Blast results in file:"
-	echo "${outfile}"
+	echo "${hits}"
 	echo
-	# touch $outfile
+	# touch $hits
 
 	# EXTRACT SEQUENCES THAT HAD NO HITS
 	# make file path
-	no_hits="${outfile_base}"_e"${iter}".nohits
+	no_hits="${hits_base}"_e"${iter}".nohits
 
-	# grab the sequence IDs from the blast outfile, remove duplicates, compare to the seqIDs in the input fasta file, write to new file
-	awk '{ print $1 }' "${outfile}" | uniq | comm -31 - "${infile_seqids}" > "${no_hits}"
+	# grab the sequence IDs from the blast hits, remove duplicates, compare to the seqIDs in the input fasta file, write to new file
+	awk '{ print $1 }' "${hits}" | uniq | comm -31 - "${infile_seqids}" > "${no_hits}"
 	# alt 1: awk '{ print $1 }' $blast_out | sort | uniq
 	# alt 2: cut -d '    ' -f 1
 
@@ -201,7 +201,7 @@ do
 
 
 	# Write fasta file for next blast:
-	fasta_out="${outfile_base}"_e"${iter}"_nohits.fasta
+	fasta_out="${hits_base}"_e"${iter}"_nohits.fasta
 	echo "Sequences with no blast hit can be found in fasta file:"
 	echo "${fasta_out}"
 	echo
