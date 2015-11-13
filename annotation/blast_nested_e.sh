@@ -56,8 +56,8 @@ echo ~~~~~~~~~~~~~~~~~~~~ BLAST PARAMETERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ################################################################################
 
 # IDENTITY
-# percent identity suggestions: 97, 98, 99
-identity="95"
+# percent identity suggestions: 97, 98, 99 (lower is fine with nested e value)
+identity="0"
 echo "Identity value:" ${identity}
 
 # DATABASE
@@ -81,7 +81,7 @@ echo "Max high quality hits before culling lower quality:" "${blast_db}"
 # larger word sizes yield substantial speedups. Smaller words yield more hits.
 # default = 11; minimum = 7
 # RPK suggests 30.
-word_size="9"
+word_size="7"
 echo "Word size:" "${word_size}"
 
 # E VALUE
