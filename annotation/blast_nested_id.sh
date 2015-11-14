@@ -180,7 +180,9 @@ do
 	no_hits="${hits_base}"_i"${iter}".nohits
 
 	# grab the sequence IDs from the blast hits, remove duplicates, compare to the seqIDs in the input fasta file, write to new file
-	awk '{ print $1 }' "${hits}" | uniq | comm -31 - "${infile_seqids}" > "${no_hits}"
+	grep -f <(awk '{ print $1 }' "${hits}" | uniq ) "${infile_seqids}" -v > "${no_hits}"
+
+	# alt 0: (results in 'sequence leakage'(!) probably due to improper sorting before the comm command) awk '{ print $1 }' "${hits}" | uniq | comm -31 - "${infile_seqids}" > "${no_hits}"
 	# alt 1: awk '{ print $1 }' $blast_out | sort | uniq
 	# alt 2: cut -d '    ' -f 1
 

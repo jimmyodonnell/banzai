@@ -3,7 +3,7 @@
 # bash script requiring two arguments:
 # 1. path to fasta file to blast
 # 2. quoted and space separated e-values at which to perform nested blast.
-# e.g. : "0 4.430273e-52 3.077510e-48 2.137807e-44 1.485037e-40 1.031588e-36 7.165977e-33 4.977879e-29 3.457907e-25 2.402052e-21 1.668597e-17 1.159098e-13"
+# e.g. : "4.430273e-52 3.077510e-48 2.137807e-44 1.485037e-40 1.031588e-36 7.165977e-33 4.977879e-29 3.457907e-25 2.402052e-21 1.668597e-17 1.159098e-13"
 # note: is probably NOT impervious to duplicate or unordered values
 
 # usage:
@@ -19,8 +19,8 @@ start_time=$(date +%Y%m%d_%H%M)
 
 # QUERY
 # a fasta file, read as the first argument
-fasta_orig="${1}"
-# fasta_orig="/Users/jimmy.odonnell/Desktop/temp.fasta"
+# fasta_orig="${1}"
+fasta_orig="/Users/jimmy.odonnell/Desktop/temp.fasta"
 
 # check if input file exists:
 if [[ -s "${fasta_orig}" ]] ; then
@@ -95,7 +95,7 @@ if [[ -n "${2}" ]]; then
 	nested_evalues=($(printf '%s\n' "${arg_evalue_array[@]}" | sort -nr | uniq ))
 	echo "Nested e-values read from command line argument."
 else
-	nested_evalues=( 0 4.430273e-52 3.077510e-48 2.137807e-44 1.485037e-40 1.031588e-36 7.165977e-33 4.977879e-29 3.457907e-25 2.402052e-21 1.668597e-17 1.159098e-13 )
+	nested_evalues=( 4.430273e-52 3.077510e-48 2.137807e-44 1.485037e-40 1.031588e-36 7.165977e-33 4.977879e-29 3.457907e-25 2.402052e-21 1.668597e-17 1.159098e-13 )
 	echo "Nested e-values argument not found; setting to default."
 fi
 echo "E-Values:" "${nested_evalues[@]}"
@@ -180,7 +180,9 @@ do
 	no_hits="${hits_base}"_e"${iter}".nohits
 
 	# grab the sequence IDs from the blast hits, remove duplicates, compare to the seqIDs in the input fasta file, write to new file
-	awk '{ print $1 }' "${hits}" | uniq | comm -31 - "${infile_seqids}" > "${no_hits}"
+	grep -f <(awk '{ print $1 }' "${hits}" | uniq ) "${infile_seqids}" -v > "${no_hits}"
+
+	# alt 0: (results in 'sequence leakage'(!) probably due to improper sorting before the comm command) awk '{ print $1 }' "${hits}" | uniq | comm -31 - "${infile_seqids}" > "${no_hits}"
 	# alt 1: awk '{ print $1 }' $blast_out | sort | uniq
 	# alt 2: cut -d '    ' -f 1
 
