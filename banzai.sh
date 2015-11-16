@@ -582,7 +582,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		exit
 	fi
 
-	# Remove reverse-complement the sequences in which the RC of primer 1 was found on the right side
+	# Reverse-complement the sequences in which the RC of primer 1 was found on the right side
 	seqtk seq -r "${CONCAT_DIR}"/6_primerR1_removed.fasta > "${CONCAT_DIR}"/6_primerR1_removedRC.fasta
 
 	# paste together the contents of the files that primers were removed from.
