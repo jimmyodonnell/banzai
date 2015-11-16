@@ -19,8 +19,8 @@ start_time=$(date +%Y%m%d_%H%M)
 
 # QUERY
 # a fasta file, read as the first argument
-# fasta_orig="${1}"
-fasta_orig="/Users/jimmy.odonnell/Desktop/temp.fasta"
+fasta_orig="${1}"
+# fasta_orig="/Users/jimmy.odonnell/Desktop/temp.fasta"
 
 # check if input file exists:
 if [[ -s "${fasta_orig}" ]] ; then
