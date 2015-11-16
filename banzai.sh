@@ -282,7 +282,8 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		# check pear output:
 		if [[ ! -s "${MERGED_READS}" ]] ; then
 		    echo 'ERROR: No reads were merged.'
-		    echo 'Maybe the script should exit, but this could be a library-specific problem.'
+		    echo 'Aborting analysis of this library, but will move on to next one.'
+				break
 		fi
 
 
