@@ -385,7 +385,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	echo $(date +%H:%M) "Demultiplexing: removing tags and adding to sequence ID in library" "${CURRENT_LIB##*/}""..."
 	for TAG_SEQ in $TAGS; do
-	(	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+	(	TAG_DIR="${DEMULTIPLEXED_DIR}"/tag_"${TAG_SEQ}"
 		mkdir "${TAG_DIR}"
 		demult_file_L="${TAG_DIR}"/1_tagL_removed.fasta
 	  demult_file_R="${TAG_DIR}"/2_notags.fasta
