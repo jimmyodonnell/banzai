@@ -31,6 +31,8 @@ Aside from the standard command line utilities (awk, sed, grep, etc) that are al
 * **[MEGAN](http://ab.inf.uni-tuebingen.de/software/megan5/)**: taxonomic assignment
 * **[R](https://www.r-project.org/)**: ecological analyses. Requires the packages **vegan** and **gtools**
 
+Follow the [Vagrant-VirtualBox instructions](doc/vagrant_install.md) to automatically install your own virtual machine that includes all of these dependencies.
+
 ### Recommended ###
 * Compressing and decompressing files can be slow because standard, built-in utilities (gzip) do not run in parallel. Installing the parallel compression tool **[pigz](http://zlib.net/pigz/)** can yield substantial speedups. Banzai will check for pigz and use it if available.
 

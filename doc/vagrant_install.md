@@ -6,8 +6,8 @@ First, install [Vagrant](https://www.vagrantup.com/) and and [VirtualBox](Virtua
 off your home directory such as `Vagrants/banzaivm`, open a command prompt window, cd to that 
 folder, and enter these commands:
 
-    curl "https://raw.githubusercontent.com/MBARIMike/banzai/master/Vagrantfile.sh" -o Vagrantfile
-    curl "https://raw.githubusercontent.com/MBARIMike/banzai/master/provision.sh" -o provision.sh
+    curl "https://raw.githubusercontent.com/jimmyodonnell/banzai/master/Vagrantfile.sh" -o Vagrantfile
+    curl "https://raw.githubusercontent.com/jimmyodonnell/banzai/master/provision.sh" -o provision.sh
     vagrant up --provider virtualbox
 
 The `vagrant up` command takes about an hour to build and install all the required software
