@@ -614,22 +614,36 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	fi
 
 
-	# Exclude singleton sequences (if NF > 2), count the number of sequences per duplicate (print NF-1), sort them by the number of sequences per duplicate (sort -nr), and precede with a name ("DUP_X", where X is the line number)
-	echo $(date +%H:%M) "Counting duplicates per identical sequence and excluding singletons... (awk)"
-	no_singletons="${DEREP_INPUT%/*}"/nosingle.txt
+	##############################################################################
+	# COUNT SEQUENCES, REMOVE SINGLETONS
+	##############################################################################
+	# count the number of sequences per duplicate (print NF-1), sort them by the number of sequences per duplicate (sort -nr), and precede with a name ("DUP_X", where X is the line number), excluding singleton sequences (if NF > 2) if specified
+	echo $(date +%H:%M) "Counting duplicates per identical sequence and excluding singletons if specified... (awk)"
 
-	awk -F';' '{
-		if (NF > 2)
-			print NF-1 ";" $0
-		}' "${derep_output}" | \
-	sort -nr | \
-	awk -F';' '{
-		print ">DUP_" NR ";" $0
-	}' > "${no_singletons}"
+	dup_counts="${DEREP_INPUT%/*}"/dup_counts.txt
+
+	if [ "$remove_singletons" = "YES" ]; then
+		awk -F';' '{
+			if (NF > 2)
+				print NF-1 ";" $0
+			}' "${derep_output}" | \
+		sort -nr | \
+		awk -F';' '{
+			print ">DUP_" NR ";" $0
+		}' > "${dup_counts}"
+	else
+		awk -F';' '{
+				print NF-1 ";" $0
+			}' "${derep_output}" | \
+		sort -nr | \
+		awk -F';' '{
+			print ">DUP_" NR ";" $0
+		}' > "${dup_counts}"
+	fi
 
 	# check output
-	if [[ ! -s "${no_singletons}" ]] ; then
-	    echo 'There was a problem generating the nosingletons file. It is empty or absent.'
+	if [[ ! -s "${dup_counts}" ]] ; then
+	    echo 'There was a problem generating the dup_counts file. It is empty or absent.'
 	    echo 'This will cause problems counting sequences for dereplication.'
 	fi
 
@@ -668,7 +682,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 			(
 
 			# write an output file called *.dup, start by printing the lib/tag being processed, then print a count the occurrences of the current lib/tag on each line of the input file
-			awk 'BEGIN {print "'$sample'" ; FS ="'${sample}'" } { print NF -1 }' "${no_singletons}" > "${temp_dir}"/"${sample}".dup
+			awk 'BEGIN {print "'$sample'" ; FS ="'${sample}'" } { print NF -1 }' "${dup_counts}" > "${temp_dir}"/"${sample}".dup
 
 			) &
 
@@ -680,7 +694,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# write a file of names of each of the duplicates:
 	dupnames="${temp_dir}"/dupnames
-	awk -F';' 'BEGIN {print "sample"} {print $1}' "$no_singletons" | sed 's/>//' > "${dupnames}"
+	awk -F';' 'BEGIN {print "sample"} {print $1}' "$dup_counts" | sed 's/>//' > "${dupnames}"
 
 	# first, count the number of duplicate files:
 	n_files=$(find "${temp_dir}" -type f -name '*.dup*' | wc -l)
@@ -722,7 +736,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# Write fasta file in order to blast sequences
 	echo $(date +%H:%M) "Writing fasta file of duplicate sequences"
-	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${no_singletons}" > "${duplicate_fasta}"
+	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${dup_counts}" > "${duplicate_fasta}"
 
 	# check if duplicate fasta and duplicate table exist. (Might need to check size)
 	if [[ ! -s "${duplicate_fasta}" ]] ; then
@@ -909,13 +923,13 @@ else
 		# REMOVE SINGLETONS
 		# usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
 		# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
-		awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".derep | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle.txt
+		awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".derep | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/dup_counts.txt
 
 		# count the duplicates
-		awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT%/*}"/nosingle.txt > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup
+		awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT%/*}"/dup_counts.txt > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup
 
 		# Write fasta file in order to blast sequences
-		awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/no_duplicates.fasta
+		awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/dup_counts.txt > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 		# CLUSTER SEQUENCES
 		if [ "$CLUSTER_OTUS" = "NO" ]; then
@@ -923,7 +937,7 @@ else
 		else
 			CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
 			UPARSE_OUT="${DEREP_INPUT%/*}"/OTU_uparse.txt
-			usearch -cluster_otus "${DEREP_INPUT%/*}"/nosingle.txt -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -uparseout "${UPARSE_OUT}"
+			usearch -cluster_otus "${DEREP_INPUT%/*}"/dup_counts.txt -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -uparseout "${UPARSE_OUT}"
 			BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
 		fi
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# TODO don't remove singletons
+# TODO move chimera removal to duplicate stage
 
 # TODO It appears that the Minimum and Maximum assembly lengths, and the Minimum Overlap lengths being calculated in the banzai.sh script are causing the problem.
 

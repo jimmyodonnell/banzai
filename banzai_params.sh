@@ -5,7 +5,7 @@
 # INPUT
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="/Users/jimmy.odonnell/Desktop/Kelly_Lab_Big/Illumina_Data_Raw/20150717/libraries/kelly_lab_sub"
+PARENT_DIR="/Users/jimmy.odonnell/test_data"
 
 # Where is the sequencing metadata file? (SEE FORMATTING GUIDELINES IN README!)
 SEQUENCING_METADATA="/Users/jimmy.odonnell/Desktop/Kelly_Lab_Big/Illumina_Data_Raw/20150717/libraries/kelly_lab/SEQUENCING_POOL_20150618.csv"
@@ -132,6 +132,13 @@ PRIMER_MISMATCH_PROPORTION="0.10"
 
 ColumnName_SampleName="sample_name"
 ColumnName_SampleType="sample_type"
+
+################################################################################
+# SINGLETONS
+################################################################################
+# exclude sequences that are found only once? (at the duplicate level)
+remove_singletons="NO"  # [YES|NO]
+
 
 ################################################################################
 # CLUSTER OTUs
