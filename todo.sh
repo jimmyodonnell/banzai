@@ -1,5 +1,24 @@
 #!/usr/bin/env bash
 
+# TODO don't remove singletons
+
+# TODO It appears that the Minimum and Maximum assembly lengths, and the Minimum Overlap lengths being calculated in the banzai.sh script are causing the problem.
+
+# These parameters are calculated from the fragment length and the Read length of the sequence in the fastq file, which is 251.
+# Banzai is calculating:
+ # Minimum Overlap=176;
+ # Minimum assembly length=100;
+ # Maximum assembly length=200.
+ # I'm using the 150 fragment length that you suggested.
+#
+# PEAR Minimum Overlap default is 10; Minimum assembly length default is 50; Maximum assembly length default is 0 which disables the restriction.
+
+# @kyamahara: Minimum assembly length = length_fragement - 50;  Maximum assembly length = length_fragment + 50;
+#
+# OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
+# MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
+# Where LENGTH_READ = 251
+
 # TODO add sequence table? (this would be a huge file)
 possible columns:
 original seqid (from sequencer)
