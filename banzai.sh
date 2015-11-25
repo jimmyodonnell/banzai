@@ -243,19 +243,24 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	# MERGE PAIRED-END READS AND QUALITY FILTER (PEAR)
 	##############################################################################
 
-	##############################################################################
-	# CALCULATE EXPECTED AND MINIMUM OVERLAP OF PAIRED END SEQUENCES
-	##############################################################################
 	LENGTH_READ=$( head -n 100000 "${READ1}" | awk '{print length($0);}' | sort -nr | uniq | head -n 1 )
-	OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
-	MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
 
-	##############################################################################
-	# CALCULATE MAXIMUM AND MINIMUM LENGTH OF MERGED READS
-	##############################################################################
-	ASSMAX=$(( $LENGTH_FRAG + 50 ))
-	ASSMIN=$(( $LENGTH_FRAG - 50 ))
-
+	if [ "${calculate_merge_length}" = "YES" ]; then
+		##############################################################################
+		# CALCULATE EXPECTED AND MINIMUM OVERLAP OF PAIRED END SEQUENCES
+		##############################################################################
+		OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
+		MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
+		##############################################################################
+		# CALCULATE MAXIMUM AND MINIMUM LENGTH OF MERGED READS
+		##############################################################################
+		ASSMAX=$(( $LENGTH_FRAG + 50 ))
+		ASSMIN=$(( $LENGTH_FRAG - 50 ))
+	else
+		MINOVERLAP="${minimum_overlap}"
+		ASSMAX="${assembled_max}"
+		ASSMIN="${assembled_min}"
+	fi
 
 	if [ "$ALREADY_PEARED" = "YES" ]; then
 		MERGED_READS="$PEAR_OUTPUT"
@@ -291,7 +296,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	fi
 
 	################################################################################
-	# EXPECTED ERROR FILTERING (usearch)
+	# EXPECTED ERROR FILTERING (vsearch)
 	################################################################################
 	# FILTER READS (This is the last step that uses quality scores, so convert to fasta)
 	if [ "${Perform_Expected_Error_Filter}" = "YES" ]; then
@@ -757,6 +762,17 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 
 
+##############################################################################
+# CHECK FOR CHIMERAS
+##############################################################################
+if [[ "${remove_chimeras}" = "YES" ]] ; then
+	echo $(date +%H:%M) 'Looking for chimeras in duplicate fasta file using vsearch'
+	source "${SCRIPT_DIR}"/chimera_check.sh "${duplicate_fasta}"
+	clustering_input="${chimera_free_fasta}"
+else
+	clustering_input="${duplicate_fasta}"
+fi
+
 
 
 
@@ -767,7 +783,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# Note that identical (duplicate) sequences were consolidated earlier;
 	# This step outputs a file (*.uc) that lists, for every sequence, which sequence it clusters with
 	if [ "$CLUSTER_OTUS" = "NO" ]; then
-		BLAST_INPUT="${duplicate_fasta}"
+		BLAST_INPUT="${clustering_input}"
 	else
 		echo $(date +%H:%M) "Clustering OTUs..."
 
@@ -776,7 +792,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		    "swarm" )
 
 		        echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
-		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${duplicate_fasta}"
+		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
 
 		    ;;
 
@@ -786,14 +802,14 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		        # source "${SCRIPT_DIR}"/OTU_clustering/cluster_vsearch.sh "${duplicate_fasta}"
 						echo "Sorry, OTU clustering with vsearch has not been implemented yet."
 						echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
-		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${duplicate_fasta}"
+		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
 
 		    ;;
 
 		    "usearch" )
 
 		        echo $(date +%H:%M) 'Clustering sequences into OTUs using usearch'
-		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_usearch.sh "${duplicate_fasta}"
+		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_usearch.sh "${clustering_input}"
 
 		    ;;
 
@@ -802,7 +818,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		        echo "${cluster_method}" 'is an invalid clustering method.'
 		        echo 'Must be one of swarm, vsearch, usearch, or none.'
 		        echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
-		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${duplicate_fasta}"
+		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
 
 		    ;;
 
@@ -834,17 +850,6 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		    exit
 		fi
 
-	fi
-
-	##############################################################################
-	# CHECK FOR CHIMERAS
-	##############################################################################
-	if [[ "${remove_chimeras}" = "YES" ]] ; then
-		echo $(date +%H:%M) 'Looking for chimeras in OTU fasta file using vsearch'
-		source "${SCRIPT_DIR}"/chimera_check.sh "${OTU_fasta}"
-		BLAST_INPUT="${chimera_free_fasta}"
-	else
-		BLAST_INPUT="${OTU_fasta}"
 	fi
 
 	################################################################################

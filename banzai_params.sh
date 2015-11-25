@@ -53,6 +53,15 @@ LIBRARY_COLUMN_NAME="library"
 # Quality_Threshold=3, r=3 (PEAR only considers r=2), UNCALLEDMAX=0
 # TRIMMIN= 0.75 * LENGTH_READ # this is hard-coded in the script banzai.sh
 
+# do you want banzai to automatically calculate the expected assembled sequence lengths and overlap based on read length and fragment size?
+calculate_merge_length="NO" # [ YES | NO]
+
+# if "NO", provide the following values for PEAR:
+minimum_overlap="10" # [10]
+assembled_max="10000" # [1000]
+assembled_min="50" # [50]
+# note that as of 20151124, the PEAR default for assembly max (0) doesn't merge any reads.
+
 # --quality-threshold
 Quality_Threshold=15
 
