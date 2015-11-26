@@ -146,7 +146,7 @@ ColumnName_SampleType="sample_type"
 # SINGLETONS
 ################################################################################
 # exclude sequences that are found only once? (at the duplicate level)
-remove_singletons="NO"  # [YES|NO]
+remove_singletons="YES"  # [YES|NO]
 
 
 ################################################################################
