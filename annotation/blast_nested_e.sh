@@ -6,8 +6,35 @@
 # e.g. : "4.430273e-52 3.077510e-48 2.137807e-44 1.485037e-40 1.031588e-36 7.165977e-33 4.977879e-29 3.457907e-25 2.402052e-21 1.668597e-17 1.159098e-13"
 # note: is probably NOT impervious to duplicate or unordered values
 
-# usage:
+# Standard usage:
 # bash "/path/to/blast_script.sh" "/path/to/input/query.fasta" "0 4.430273e-52 3.077510e-48 2.137807e-44 1.485037e-40 1.031588e-36 7.165977e-33 4.977879e-29 3.457907e-25 2.402052e-21 1.668597e-17 1.159098e-13"
+
+# Optional upload to drive:
+# Optional third argument: the ID (long string) of the Google Drive folder to which you'd like to upload results.
+# EG: 0B_rFWkh8Szupd1J6US16aW1SMDQ
+# EG: 0B_rFWkh8SzupWFNrNDVKVHZNRE0 (temp)
+if [ "${3}" ] ; then
+	gdrive_parent="${3}"
+	echo "Google Drive parent directory ID read"
+	if hash "drive" 2>/dev/null; then
+	# if command -v "${i}" >/dev/null 2>&1; then
+		echo 'Found Google Drive command line script in' "drive" 'in' $( which "drive" )
+		use_googledrive="YES"
+
+	else
+		echo 'Google Drive parent directory ID given, but executable not found'
+		echo 'Google Drive command line executable available here:'
+		echo 'https://github.com/prasmussen/gdrive'
+		echo 'Must be called "drive" and be stored in a directory in PATH'
+	fi
+
+else
+	echo "No Google Drive parent directory ID given"
+fi
+
+
+
+
 
 # Suggestions below are based on tests run by Ryan Kelly and Jimmy O'Donnell
 
@@ -92,7 +119,9 @@ if [[ -n "${2}" ]]; then
 	# read the argument into an array
 	arg_evalue_array=( $(echo "${2}") )
 	# sort the array by decreasing numeric value and grab only uniq values
-	nested_evalues=($(printf '%s\n' "${arg_evalue_array[@]}" | sort -nr | uniq ))
+	# nested_evalues=($(printf '%s\n' "${arg_evalue_array[@]}" | sort -nr | uniq ))
+	# don't sort - e values are in exponential notation, which causes problems
+	nested_evalues=($(printf '%s\n' "${arg_evalue_array[@]}" ))
 	echo "Nested e-values read from command line argument."
 else
 	nested_evalues=( 4.430273e-52 3.077510e-48 2.137807e-44 1.485037e-40 1.031588e-36 7.165977e-33 4.977879e-29 3.457907e-25 2.402052e-21 1.668597e-17 1.159098e-13 )
@@ -126,7 +155,7 @@ do
 	if [ "${iter}" == "${nested_evalues[0]}" ]; then
 		fasta_iter="${fasta_orig}"
 	else
-		fasta_iter="${fasta_out}"
+		fasta_iter="${nohits_fasta}"
 	fi
 
 	# count the number of input sequences
@@ -155,6 +184,7 @@ do
 	echo "blast will query file:" "($N_seq sequence(s))"
 	echo "${fasta_iter}"
 	echo $(date +%H:%M) "blastn is running at" $iter" e-value..."
+	time1=$(date -u +"%s")
 
 	blastn \
 		-db "${blast_db}" \
@@ -170,6 +200,10 @@ do
 
 
 	echo $(date +%H:%M) "blastn finished at "${iter}" e-value."
+	time2=$(date -u +"%s")
+	diff=$(($time2-$time1))
+	echo "blast search took $(($diff / 3600)) hours, $((($diff / 60) % 60)) minutes and $(($diff % 60)) seconds."
+
 	echo "Blast results in file:"
 	echo "${hits}"
 	echo
@@ -186,6 +220,10 @@ do
 	# alt 1: awk '{ print $1 }' $blast_out | sort | uniq
 	# alt 2: cut -d '    ' -f 1
 
+	if [ "${use_googledrive}" = "YES" ]; then
+		drive upload --file "${hits}" --parent "${gdrive_parent}"
+	fi
+
 	if [[ -s "${no_hits}" ]]; then
 		N_nohits=$( wc -l "${no_hits}" | awk '{ print $1 }' )
 		echo "${N_nohits}" "Sequences had no hit in database. Sequence IDs with no blast hit can be found in file:"
@@ -198,18 +236,27 @@ do
 	fi
 
 
-	# Write fasta file for next blast:
-	fasta_out="${hits_base}"_e"${iter}"_nohits.fasta
-	echo "Sequences with no blast hit can be found in fasta file:"
-	echo "${fasta_out}"
-	echo
-	# touch $fasta_out
 
-	grep -f "${no_hits}" "${fasta_iter}" -A 1 | sed '/^--$/d' > "${fasta_out}"
+	# Write fasta file for next blast:
+	nohits_fasta="${hits_base}"_e"${iter}"_nohits.fasta
+	echo "Sequences with no blast hit can be found in fasta file:"
+	echo "${nohits_fasta}"
+	echo
+	# touch $nohits_fasta
+
+	grep -f "${no_hits}" "${fasta_iter}" -A 1 | sed '/^--$/d' > "${nohits_fasta}"
+	if [ "${use_googledrive}" = "YES" ]; then
+		drive upload --file "${nohits_fasta}" --parent "${gdrive_parent}"
+	fi
 
 	# rm "${infile_seqids}"
 
 done
 
 echo $(date +%H:%M) "Nested e-value blast completed."
+
+if [ "${use_googledrive}" = "YES" ]; then
+	drive upload --file "${LOGFILE}" --parent "${gdrive_parent}"
+fi
+
 # exit
