@@ -20,6 +20,10 @@ if [ "${3}" ] ; then
 	# if command -v "${i}" >/dev/null 2>&1; then
 		echo 'Found Google Drive command line script in' "drive" 'in' $( which "drive" )
 		use_googledrive="YES"
+		echo 'This confirms the blast job began on '"$(date)"'.
+		Results will be uploaded to this directory as they are produced.
+		The quality of the results may be enhanced by leaving out some cookies and milk for the programming elf who wrote this script, while it runs and you sleep.' | \
+		drive upload --stdin --title 'blast_initiated.txt' --parent "${gdrive_parent}"
 
 	else
 		echo 'Google Drive parent directory ID given, but executable not found'
