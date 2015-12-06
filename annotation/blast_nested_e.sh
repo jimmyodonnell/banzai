@@ -106,7 +106,7 @@ echo "Maximum matches per sequence:" "${num_matches}"
 # "If the query range of a hit is enveloped by that of at least this many higher-scoring hits, delete the hit"
 # suggestion changed from 5 to 20 (20150805) because the lower (and default) number can produce odd results when there are several species with similar high scores.
 culling_limit="100"
-echo "Max high quality hits before culling lower quality:" "${blast_db}"
+echo "Max high quality hits before culling lower quality:" "${culling_limit}"
 
 # WORD SIZE
 # larger word sizes yield substantial speedups. Smaller words yield more hits.
