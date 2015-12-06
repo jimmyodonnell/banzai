@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-# TODO move chimera removal to duplicate stage
+# TODO clean up blast results parsing.
+
+# TODO add automatic output of blast methods.
+
+# TODO consider concatenating all tabular blast hit files into single file
 
 # TODO It appears that the Minimum and Maximum assembly lengths, and the Minimum Overlap lengths being calculated in the banzai.sh script are causing the problem.
 

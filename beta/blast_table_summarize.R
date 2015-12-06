@@ -1,0 +1,230 @@
+# install.packages("taxize")
+
+# todo: replace do.call(rbind, ...) with data.table::rbindlist(...)
+# from http://stackoverflow.com/questions/14972998/how-to-avoid-renaming-of-rows-when-using-rbind-inside-do-call
+library(taxize)
+
+
+blast_results <- read.table("/Users/threeprime/Documents/GoogleDrive/Kelly_Lab/Projects/Lemonade/Data/blast_20151125_1530/blast_results_all.txt", sep = "\t", stringsAsFactors = FALSE)
+
+# table columns order: output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle"
+
+query_col=1
+evalue_col=11
+bitscore_col=12
+title_col=13
+gi_col=2
+
+
+plot(
+	x = blast_results[, evalue_col], 
+	y = blast_results[, bitscore_col], 
+	# log = "x", 
+	xlab = "evalue", 
+	ylab = "bitscore", 
+	pch = 21, 
+	col = "black", 
+	bg = rgb(red = 0, green = 0, blue = 0, alpha = 0.1)
+	)
+
+dev.off()
+
+
+
+query_seq <- unique(blast_results[ , query_col ])
+# or if using factor this might work levels(blast_results[ , query_col ])
+
+# what is the lowest evalue or highest bitscore per query sequence
+best_evalue <- lapply(split(blast_results[ , evalue_col ], blast_results[,query_col]), min)
+best_bitscore <- lapply(split(blast_results[ , bitscore_col ], blast_results[,query_col]), max)
+
+
+max(blast_results[,evalue_col])
+
+
+best_tax <- function(x){
+  best_matches <- which(x[ , bitscore_col] == max(x[ , bitscore_col]))
+  return(x[best_matches , title_col])
+}
+
+best_gi <- function(x, gi_col = 2){
+  best_matches <- which(x[ , bitscore_col] == max(x[ , bitscore_col]))
+  return(x[best_matches , gi_col])
+}
+
+stitles <- lapply(
+              split(
+                  blast_results, 
+                  blast_results[ , query_col] 
+                ), 
+              best_tax
+              )
+
+
+#
+
+splitter <- function(x){
+  Reduce(paste, strsplit(x, split = " ")[[1]][1:2])
+}
+splitter(stitles[[2]])
+
+
+Reduce(paste, strsplit(x, split = " ")[[1]][1:2])
+
+# THIS WORKS!!!
+
+do.call(rbind, lapply(stitles[[2]], function(x) Reduce(paste, strsplit(x, split = " ")[[1]][1:2])))
+# THIS WORKS!!!
+
+lapply(stitles[[2]], splitter)
+
+
+unique(as.vector(do.call(rbind, lapply(stitles[[2]], function(x) Reduce(paste, strsplit(x, split = " ")[[1]][1:2])))))
+table(as.vector(do.call(rbind, lapply(stitles[[2]], function(x) Reduce(paste, strsplit(x, split = " ")[[1]][1:2])))))
+
+# Holy shit, finally.
+taxa_hits <- lapply(
+  stitles,
+  function(x){
+    as.vector(
+      do.call(
+        rbind, 
+        lapply(
+          x, function(x){
+              Reduce(paste, strsplit(x, split = " ")[[1]][1:2])
+            }
+          )
+        )
+    )
+  }
+)
+
+taxa_unique <- sapply(taxa_hits, unique)
+sapply(taxa_hits, table)
+
+
+# Put this on hold until PICKUP
+
+#############################################
+# as one function
+tax_list <- function(x){
+  best_matches <- which(x[ , bitscore_col] == max(x[ , bitscore_col]))
+  titles_sub <- x[best_matches , title_col]
+  
+}
+##############################################
+
+
+
+
+
+# PICKUP
+classification("Quietula y-cauda", db = "itis")
+
+
+
+# TAXIZE
+########
+taxa_unique
+
+# this requires a network connection, and could take a while
+tax_hier_ncbi <- list()
+for(i in 1:length(taxa_unique)){
+  tax_hier_ncbi[[i]] <- classification(taxa_unique[[i]], db = "ncbi")
+}
+
+save(tax_hier_ncbi, file = "tax_hier_ncbi_primerbias20151205.RData")
+
+tax_hier_collapser <- function(x)
+{
+  consol <- do.call(rbind, x)
+  return(unique(consol[duplicated(consol), ]))
+}
+# 2,4,5,7,8
+tax_hier_collapser(tax_hier_ncbi[[1]])
+tax_hier_ncbi[[9]]
+
+# collapse (intersect taxonomic hierarc)
+tax_hier_intersect <- list()
+for(i in 1:length(tax_hier_ncbi)){
+  tax_hier_intersect[[i]] <- Reduce(intersect, 
+         sapply(tax_hier_ncbi[[i]][!is.na(tax_hier_ncbi[[i]])], "[", 1, simplify = TRUE)
+  )
+}
+names(tax_hier_intersect) <- names(taxa_unique)
+# STILL a problem with 9! (because of "uncultered organism)
+tax_hier_intersect
+
+######## THIS IS IT
+best_hit <- sapply(tax_hier_intersect, function(x) x[length(x)])
+######## THIS IS IT
+names(best_hit)
+identical(names(best_evalue), names(best_hit))
+
+FINAL_TABLE <-   cbind(query = names(best_hit), best_hit, best_evalue, best_bitscore)
+rownames(FINAL_TABLE) <- NULL
+write.csv(
+  x = FINAL_TABLE, 
+  file = "blast_hit_summary.csv", 
+  row.names = FALSE
+  )
+#
+#
+#
+#
+#
+
+
+Reduce(intersect, sapply(tax_hier_ncbi[[15]], "[", 1, simplify = TRUE))
+
+sapply(tax_hier_ncbi[[15]], length)
+
+which.min(sapply(tax_hier_ncbi[[15]], length))
+tax_hier_ncbi[[15]][!is.na(tax_hier_ncbi[[15]])]
+
+lapply(tax_hier_ncbi, is.na)
+
+
+# probably better to get ids first:
+uids <- get_uid(c("Chironomus riparius", "Chaetopteryx"))
+
+
+# GRAVEYARD
+classification("Amphiprion", db = "itis")
+specieslist <- c("Abies procera","Pinus contorta")
+highertax_itis <- classification(specieslist, db = 'itis')
+highertax_ncbi <- classification(specieslist, db = 'ncbi')
+highertax_ncbi
+
+clowns <- c("Amphiprion sandaracinos","Premnas biaculeatus", "Cymatogaster aggregata")
+clownclass <- classification(clowns, db = "itis")
+clown_consol <- do.call(rbind, clownclass)
+rownames(clown_consol) <- NULL
+
+
+unique(clown_consol[duplicated(clown_consol), ])
+
+duplicated(clown_consol)
+merge(
+  clownclass[[1]],
+  clownclass[[2]], 
+  by = "name"
+)
+do.call(merge, clownclass)
+
+Reduce(merge, clownclass)
+
+
+
+Reduce(intersect, clownclass)
+Reduce(intersect, 
+       sapply(clownclass, "[", 1, simplify = TRUE)
+       )
+clownclass
+
+lapply(highertax_ncbi, "[", c("name", "rank"))
+
+consolidated <- do.call(rbind, highertax_ncbi)
+
+consolidated[duplicated(consolidated), ]
+
