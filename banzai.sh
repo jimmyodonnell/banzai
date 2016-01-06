@@ -221,7 +221,7 @@ LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v TAGCOL=$TAG_COL 'NR>1 { print "li
 
 # create a file to store tag efficiency data
 TAG_COUNT="${ANALYSIS_DIR}"/tag_count.txt
-echo "library   tag   left_tagged   right_tagged" >> "${TAG_COUNT}"
+echo "library tag left_tagged right_tagged" >> "${TAG_COUNT}"
 
 ################################################################################
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
