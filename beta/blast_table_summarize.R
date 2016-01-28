@@ -29,7 +29,16 @@ plot(
 
 dev.off()
 
+# get gi numbers
+gi_all <- do.call(c, lapply(strsplit(blast_results[,gi_col], split = "|", fixed = TRUE), "[", 2))
+gi_unique <- as.numeric(unique(gi_all))
 
+# get taxid from gi number
+my_taxid <- genbank2uid(id = gi_unique[1])[1]
+my_taxid <- genbank2uid(id = gi_unique[300])[1]
+
+# get taxon name from a taxon id
+classification(x = my_taxid, db = "ncbi")
 
 query_seq <- unique(blast_results[ , query_col ])
 # or if using factor this might work levels(blast_results[ , query_col ])
