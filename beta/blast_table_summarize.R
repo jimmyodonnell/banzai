@@ -4,8 +4,12 @@
 # from http://stackoverflow.com/questions/14972998/how-to-avoid-renaming-of-rows-when-using-rbind-inside-do-call
 library(taxize)
 
-
-blast_results <- read.table("/Users/threeprime/Documents/GoogleDrive/Kelly_Lab/Projects/Lemonade/Data/blast_20151125_1530/blast_results_all.txt", sep = "\t", stringsAsFactors = FALSE)
+blast_results_file_path  <- "/Users/threeprime/Documents/GoogleDrive/Kelly_Lab/Projects/Lemonade/Data/blast_20151125_1530/blast_results_all.txt"
+blast_results <- read.table(
+	file = blast_results_file_path, 
+	sep = "\t", 
+	stringsAsFactors = FALSE
+	)
 
 # table columns order: output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle"
 
