@@ -8,7 +8,9 @@ blast_results_file_path  <- "/Users/threeprime/Documents/GoogleDrive/Kelly_Lab/P
 blast_results <- read.table(
 	file = blast_results_file_path, 
 	sep = "\t", 
-	stringsAsFactors = FALSE
+	stringsAsFactors = FALSE, 
+	quote = NULL, 
+	comment = ''
 	)
 
 # table columns order: output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle"
