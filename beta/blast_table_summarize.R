@@ -37,14 +37,60 @@ dev.off()
 
 # get gi numbers
 gi_all <- do.call(c, lapply(strsplit(blast_results[,gi_col], split = "|", fixed = TRUE), "[", 2))
-gi_unique <- as.numeric(unique(gi_all))
+blast_results <- cbind(blast_results, gi_all)
+gi_unique <- as.character(unique(gi_all))
 
-# get taxid from gi number
-my_taxid <- genbank2uid(id = gi_unique[1])[1]
-my_taxid <- genbank2uid(id = gi_unique[300])[1]
+# get taxid from gi number. This could be avoided by having the taxid given back by blastn
+taxids <- vector(mode = "character")
+for(i in 1:length(gi_unique)){
+	taxids[i] <- genbank2uid(id = gi_unique[i])[1]
+}
+gi_taxid <- data.frame(
+	gi = gi_unique, 
+	taxid = taxids, 
+	stringsAsFactors = FALSE
+	)
+	
+# get taxonomic hierarchy from taxon ids
+taxid_uniq <- unique(taxids)
+classifications <- classification(x = taxid_uniq, db = "ncbi")
 
-# get taxon name from a taxon id
-classification(x = my_taxid, db = "ncbi")
+# what is the group that is common to all results?
+names_only <- lapply(classifications, "[[", 1)
+common_ancestor <- Reduce(intersect, names_only)
+
+
+Reduce(intersect, names_only[c("239049", "219410")])
+
+taxids_to_collapse <- c("239049", "219410")
+
+Reduce(intersect, names_only[taxids_to_collapse])
+
+blast_results
+
+blast_results[1,"gi_all"]
+
+
+blast_results[1:5,1:5]
+
+
+blast_queries <- split(blast_results, blast_results[, query_col])
+
+besthits <- function(x){
+	x[x[, evalue_col] == min(x[, evalue_col]),]
+}
+
+##############################################################################################
+# Holy macaroni, that's it! Come back and clean this up!
+least_common_ancestor <- list()
+for(i in 1:length(blast_queries)){
+	besthit_gis <- as.character(besthits(blast_queries[[i]])[,"gi_all"])
+	besthit_taxids <- unique(gi_taxid[match(besthit_gis, gi_taxid[,"gi"]),"taxid"])
+	least_common_ancestor[[i]] <- Reduce(intersect, names_only[besthit_taxids])
+}
+# Holy macaroni, that's it! Come back and clean this up!
+##############################################################################################
+
 
 query_seq <- unique(blast_results[ , query_col ])
 # or if using factor this might work levels(blast_results[ , query_col ])
