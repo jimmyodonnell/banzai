@@ -40,6 +40,7 @@ gi_all <- do.call(c, lapply(strsplit(blast_results[,gi_col], split = "|", fixed 
 blast_results <- cbind(blast_results, gi_all)
 gi_unique <- as.character(unique(gi_all))
 
+time_start <- Sys.time()
 # get taxid from gi number. This could be avoided by having the taxid given back by blastn
 taxids <- vector(mode = "character")
 for(i in 1:length(gi_unique)){
@@ -61,18 +62,8 @@ common_ancestor <- Reduce(intersect, names_only)
 
 
 Reduce(intersect, names_only[c("239049", "219410")])
-
 taxids_to_collapse <- c("239049", "219410")
-
 Reduce(intersect, names_only[taxids_to_collapse])
-
-blast_results
-
-blast_results[1,"gi_all"]
-
-
-blast_results[1:5,1:5]
-
 
 blast_queries <- split(blast_results, blast_results[, query_col])
 
@@ -90,7 +81,7 @@ for(i in 1:length(blast_queries)){
 }
 # Holy macaroni, that's it! Come back and clean this up!
 ##############################################################################################
-
+time_end <- Sys.time()
 
 query_seq <- unique(blast_results[ , query_col ])
 # or if using factor this might work levels(blast_results[ , query_col ])
