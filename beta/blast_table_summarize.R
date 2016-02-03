@@ -42,13 +42,13 @@ gi_taxid <- data.frame(
 	)
 	
 
-write.table(
-	x = gi_taxid, 
-	file = "gi_taxid_20160202.txt", 
-	quote = FALSE, 
-	row.names = FALSE
-)
-gi_taxid <- read.table(file = "gi_taxid_20160202.txt", header = TRUE)
+# write.table(
+	# x = gi_taxid, 
+	# file = "gi_taxid_20160202.txt", 
+	# quote = FALSE, 
+	# row.names = FALSE
+# )
+# gi_taxid <- read.table(file = "gi_taxid_20160202.txt", header = TRUE, colClasses = "character")
 
 # put taxon ids onto blast results
 taxid_all <- gi_taxid$taxid[match(gi_all, gi_taxid$gi)]
