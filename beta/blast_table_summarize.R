@@ -20,24 +20,11 @@ evalue_col=11
 bitscore_col=12
 title_col=13
 gi_col=2
-
-
-plot(
-	x = blast_results[, evalue_col], 
-	y = blast_results[, bitscore_col], 
-	# log = "x", 
-	xlab = "evalue", 
-	ylab = "bitscore", 
-	pch = 21, 
-	col = "black", 
-	bg = rgb(red = 0, green = 0, blue = 0, alpha = 0.1)
-	)
-
-dev.off()
+taxid_col="taxid_all" # change this to a column number if it was returned in the blast output
 
 # get gi numbers
 gi_all <- do.call(c, lapply(strsplit(blast_results[,gi_col], split = "|", fixed = TRUE), "[", 2))
-blast_results <- cbind(blast_results, gi_all)
+blast_results <- cbind.data.frame(blast_results, gi_all, stringsAsFactors = FALSE)
 gi_unique <- as.character(unique(gi_all))
 
 time_start <- Sys.time()
@@ -46,26 +33,45 @@ taxids <- vector(mode = "character")
 for(i in 1:length(gi_unique)){
 	taxids[i] <- genbank2uid(id = gi_unique[i])[1]
 }
+
+
 gi_taxid <- data.frame(
 	gi = gi_unique, 
 	taxid = taxids, 
 	stringsAsFactors = FALSE
 	)
 	
+
+write.table(
+	x = gi_taxid, 
+	file = "gi_taxid_20160202.txt", 
+	quote = FALSE, 
+	row.names = FALSE
+)
+
+# put taxon ids onto blast results
+taxid_all <- gi_taxid$taxid[match(gi_all, gi_taxid$gi)]
+blast_results <- cbind.data.frame(blast_results, taxid_all, stringsAsFactors = FALSE)
+
+
 # get taxonomic hierarchy from taxon ids
 taxid_uniq <- unique(taxids)
 classifications <- classification(x = taxid_uniq, db = "ncbi")
+save(classifications, file = "classifications20160202.RData")
+
+# extract the names only (exclude rank name, e.g. "Genus")
+names_only <- lapply(classifications, "[[", 1)
 
 # what is the group that is common to all results?
-names_only <- lapply(classifications, "[[", 1)
 common_ancestor <- Reduce(intersect, names_only)
 
-
-Reduce(intersect, names_only[c("239049", "219410")])
-taxids_to_collapse <- c("239049", "219410")
-Reduce(intersect, names_only[taxids_to_collapse])
+# Reduce(intersect, names_only[c("239049", "219410")])
+# taxids_to_collapse <- c("239049", "219410")
+# Reduce(intersect, names_only[taxids_to_collapse])
 
 blast_queries <- split(blast_results, blast_results[, query_col])
+
+identical(unique(blast_results[, query_col]), names(blast_queries))
 
 besthits <- function(x){
 	x[x[, evalue_col] == min(x[, evalue_col]),]
@@ -82,6 +88,58 @@ for(i in 1:length(blast_queries)){
 # Holy macaroni, that's it! Come back and clean this up!
 ##############################################################################################
 time_end <- Sys.time()
+# 1.771811 hours for length(least_common_ancestor) == 1601, mostly over network getting taxid
+
+# extract only the rows corresponding to the lowest e-value (best hit)
+blast_queries_best <- lapply(X = blast_queries, FUN = besthits)
+
+# assess the number of taxonomic ties per e-value
+blast_queries[[1]][ , "taxid_all"]
+
+taxid_per_query <- split(blast_results[ , taxid_col], blast_results[, query_col])
+taxid_per_query_best <- lapply(blast_queries_best, "[[", taxid_col)
+
+taxon_hit_index <- function(x)
+{
+	# this function takes a character vector of taxa (names or id numbers)
+	# and calculates the ratio of unique taxa per hit
+	# varies between 0 and 1, lower is better.
+	length(unique(x))/length(x)
+}
+
+taxon_hit_index(blast_queries[[1]][ , "taxid_all"])
+
+taxon_hit_all <- sapply(X = taxid_per_query, FUN = taxon_hit_index)
+taxon_hit_best <- sapply(X = taxid_per_query_best, FUN = taxon_hit_index)
+
+hit_index_evalue <- list(taxon_hit_all, taxon_hit_best)
+
+pdf(file = "tax_hit_index.pdf")
+boxplot(
+	x = hit_index_evalue, 
+	ylab = "N taxa / N hits", 
+	names = c("all e-values", "only best e-value")
+)
+stripchart(
+	x = hit_index_evalue, 
+	vertical = TRUE, 
+	add = TRUE, 
+	method = "jitter",  
+	jitter = 0.2, 
+	pch = 19, 
+	col = hsv(h = 0, s = 1, v = 1, alpha = 0.2), 
+	cex = 0.8
+)
+dev.off()
+for(i in 1:length(hit_index_evalue)){
+	points(
+		x = jitter(rep(i, length(hit_index_evalue[[i]])), factor = 7), 
+		y = hit_index_evalue[[i]], 
+		pch = 19, 
+		col = hsv(h = 0, s = 0, v = 0, alpha = 0.5), 
+		cex = 0.8
+	)
+}
 
 query_seq <- unique(blast_results[ , query_col ])
 # or if using factor this might work levels(blast_results[ , query_col ])
@@ -279,4 +337,19 @@ lapply(highertax_ncbi, "[", c("name", "rank"))
 consolidated <- do.call(rbind, highertax_ncbi)
 
 consolidated[duplicated(consolidated), ]
+
+
+
+# OTHER PLOTS
+# plot bitscore against evalue
+plot(
+	x = blast_results[, evalue_col], 
+	y = blast_results[, bitscore_col], 
+	# log = "x", 
+	xlab = "evalue", 
+	ylab = "bitscore", 
+	pch = 21, 
+	col = "black", 
+	bg = rgb(red = 0, green = 0, blue = 0, alpha = 0.1)
+	)
 
