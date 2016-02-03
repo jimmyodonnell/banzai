@@ -48,6 +48,7 @@ write.table(
 	quote = FALSE, 
 	row.names = FALSE
 )
+gi_taxid <- read.table(file = "gi_taxid_20160202.txt", header = TRUE)
 
 # put taxon ids onto blast results
 taxid_all <- gi_taxid$taxid[match(gi_all, gi_taxid$gi)]
