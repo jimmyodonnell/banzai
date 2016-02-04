@@ -54,6 +54,11 @@ gi_taxid <- data.frame(
 taxid_all <- gi_taxid$taxid[match(gi_all, gi_taxid$gi)]
 blast_results <- cbind.data.frame(blast_results, taxid_all, stringsAsFactors = FALSE)
 
+# hits for which the taxon id was unresolved (i.e. "NA") will be problematic, so remove them
+blast_results_taxid_NA <- blast_results[is.na(taxid_all),]
+blast_results <- blast_results[!is.na(taxid_all),]
+
+blast_queries <- split(blast_results, blast_results[, query_col])
 
 LCA <- function(taxid_vec, class_list)
 {
@@ -90,7 +95,6 @@ common_ancestor <- Reduce(intersect, names_only)
 # taxids_to_collapse <- c("239049", "219410")
 # Reduce(intersect, names_only[taxids_to_collapse])
 
-blast_queries <- split(blast_results, blast_results[, query_col])
 
 identical(unique(blast_results[, query_col]), names(blast_queries))
 
