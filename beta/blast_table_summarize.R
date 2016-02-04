@@ -74,8 +74,9 @@ hit_summary <- function(x, class_list)
 	query_taxonomy <- data.frame(
 		query_seq = unique(x[ , query_col]), 
 		Nhits = nrow(x), 
-		beste = beste, 
 		N_taxid_all = length(unique(x[ , taxid_col])), 
+		beste = beste, 
+		Nhits_beste = sum(beste_rows), 
 		N_taxid_beste = length(unique(x[beste_rows , taxid_col])), 
 		LCA_name_all = LCA_all[, "name"], 
 		LCA_rank_all = LCA_all[, "rank"], 
