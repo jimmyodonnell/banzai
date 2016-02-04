@@ -64,6 +64,9 @@ LCA <- function(taxid_vec, class_list)
 		taxid_vec <- as.character(taxid_vec)
 	}
 	relevant_class <- class_list[taxid_vec]
+	# remove unclassified sequences
+	classified_sequences <- sapply(relevant_class, function(x) x[1,1] != "unclassified sequences")
+	relevant_class <- relevant_class[classified_sequences]
 	LCA_row <- length(Reduce(intersect, lapply(relevant_class, "[[", 1)))
 	LCA <- relevant_class[[1]][LCA_row,]
 	return(LCA)
