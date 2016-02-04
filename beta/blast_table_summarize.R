@@ -44,6 +44,33 @@ LCA <- function(taxid_vec, class_list)
 # LCA(c("6551", "941636"), classifications)
 # LCA(names(classifications[1:4]), classifications)
 
+hit_summary <- function(x, class_list)
+{
+	# this function takes a dataframe, presumably the tabular output of blastn
+	# calculates the best (lowest) e-value,
+	# and returns a dataframe with a single row resolving taxonomic ties
+	beste <- min(x[ , evalue_col])
+	beste_rows <- x[ , evalue_col] == beste
+	LCA_all <- LCA(x[ , taxid_col], class_list)
+	LCA_beste <- LCA(x[beste_rows , taxid_col], class_list)
+	
+	query_taxonomy <- data.frame(
+		query_seq = unique(x[ , query_col]), 
+		Nhits = nrow(x), 
+		beste = beste, 
+		N_taxid_all = length(unique(x[ , taxid_col])), 
+		N_taxid_beste = length(unique(x[beste_rows , taxid_col])), 
+		LCA_name_all = LCA_all[, "name"], 
+		LCA_rank_all = LCA_all[, "rank"], 
+		LCA_id_all = LCA_all[, "id"], 
+		LCA_name_beste = LCA_beste[, "name"], 
+		LCA_rank_beste = LCA_beste[, "rank"], 
+		LCA_id_beste = LCA_beste[, "id"]
+	)
+	return(query_taxonomy)
+}
+# hit_summary(blast_queries[[1]], classifications)
+
 
 # get gi numbers
 gi_all <- do.call(c, lapply(strsplit(blast_results[,gi_col], split = "|", fixed = TRUE), "[", 2))
