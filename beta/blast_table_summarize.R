@@ -122,7 +122,7 @@ hit_summaries <- lapply(blast_queries, hit_summary, class_list = classifications
 # alt: library(data.table); rbindlist(hit_summaries)
 names(hit_summaries) <- NULL
 query_hit_LCA <- do.call(rbind, hit_summaries)
-write.table(x = query_hit_LCA, file = "query_hit_LCA.txt", quote = FALSE, row.names = FALSE)
+write.csv(x = query_hit_LCA, file = "query_hit_LCA.txt", quote = TRUE, row.names = FALSE)
 
 # extract the names only (exclude rank name, e.g. "Genus")
 names_only <- lapply(classifications, "[[", 1)
