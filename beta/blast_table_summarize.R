@@ -22,6 +22,29 @@ title_col=13
 gi_col=2
 taxid_col="taxid_all" # change this to a column number if it was returned in the blast output
 
+#----------------------------------------------------------------------------------------
+# Define some functions
+#----------------------------------------------------------------------------------------
+LCA <- function(taxid_vec, class_list)
+{
+	# This function takes a (character) vector of NCBI taxids, 
+	# and a list of classification hierarchies (from taxize)
+	# outputs the name, rank, and taxid of the (taxonomic) 
+	if(class(taxid_vec) != "character"){
+		taxid_vec <- as.character(taxid_vec)
+	}
+	relevant_class <- class_list[taxid_vec]
+	# remove unclassified sequences
+	classified_sequences <- sapply(relevant_class, function(x) x[1,1] != "unclassified sequences")
+	relevant_class <- relevant_class[classified_sequences]
+	LCA_row <- length(Reduce(intersect, lapply(relevant_class, "[[", 1)))
+	LCA <- relevant_class[[1]][LCA_row,]
+	return(LCA)
+}
+# LCA(c("6551", "941636"), classifications)
+# LCA(names(classifications[1:4]), classifications)
+
+
 # get gi numbers
 gi_all <- do.call(c, lapply(strsplit(blast_results[,gi_col], split = "|", fixed = TRUE), "[", 2))
 blast_results <- cbind.data.frame(blast_results, gi_all, stringsAsFactors = FALSE)
@@ -60,24 +83,6 @@ blast_results <- blast_results[!is.na(taxid_all),]
 
 blast_queries <- split(blast_results, blast_results[, query_col])
 
-LCA <- function(taxid_vec, class_list)
-{
-	# This function takes a (character) vector of NCBI taxids, 
-	# and a list of classification hierarchies (from taxize)
-	# outputs the name, rank, and taxid of the (taxonomic) 
-	if(class(taxid_vec) != "character"){
-		taxid_vec <- as.character(taxid_vec)
-	}
-	relevant_class <- class_list[taxid_vec]
-	# remove unclassified sequences
-	classified_sequences <- sapply(relevant_class, function(x) x[1,1] != "unclassified sequences")
-	relevant_class <- relevant_class[classified_sequences]
-	LCA_row <- length(Reduce(intersect, lapply(relevant_class, "[[", 1)))
-	LCA <- relevant_class[[1]][LCA_row,]
-	return(LCA)
-}
-# LCA(c("6551", "941636"), classifications)
-# LCA(names(classifications[1:4]), classifications)
 
 
 # get taxonomic hierarchy from taxon ids
