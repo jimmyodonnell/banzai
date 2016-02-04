@@ -55,8 +55,25 @@ taxid_all <- gi_taxid$taxid[match(gi_all, gi_taxid$gi)]
 blast_results <- cbind.data.frame(blast_results, taxid_all, stringsAsFactors = FALSE)
 
 
+LCA <- function(taxid_vec, class_list)
+{
+	# This function takes a (character) vector of NCBI taxids, 
+	# and a list of classification hierarchies (from taxize)
+	# outputs the name, rank, and taxid of the (taxonomic) 
+	if(class(taxid_vec) != "character"){
+		taxid_vec <- as.character(taxid_vec)
+	}
+	relevant_class <- class_list[taxid_vec]
+	LCA_row <- length(Reduce(intersect, lapply(relevant_class, "[[", 1)))
+	LCA <- relevant_class[[1]][LCA_row,]
+	return(LCA)
+}
+# LCA(c("6551", "941636"), classifications)
+# LCA(names(classifications[1:4]), classifications)
+
+
 # get taxonomic hierarchy from taxon ids
-taxid_uniq <- unique(taxids)
+taxid_uniq <- unique(gi_taxid$taxid)
 classifications <- classification(x = taxid_uniq, db = "ncbi")
 save(classifications, file = "classifications20160202.RData")
 
