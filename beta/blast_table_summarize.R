@@ -13,14 +13,31 @@ blast_results <- read.table(
 	comment = ''
 	)
 
-# table columns order: output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle"
-
+# set up the column names by hand...
 query_col=1
 evalue_col=11
 bitscore_col=12
 title_col=13
 gi_col=2
 taxid_col="taxid_all" # change this to a column number if it was returned in the blast output
+
+# ...or automatically
+# table columns order: 
+output_format <- "6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle"
+
+if( strsplit(output_format, " ")[[1]][1] != 6 ){
+	stop("the output format string must begin with a 6 (indicating blast tabular output)")
+}
+output_columns <- strsplit(output_format, " ")[[1]][-1] # [-1] removes the first value (integer) used to tell blastn which output (should always be 6)
+query_col <- which(output_columns == "qseqid")
+evalue_col <- which(output_columns == "evalue")
+bitscore_col <- which(output_columns == "bitscore")
+title_col <- which(output_columns == "stitle")
+gi_col <- which(output_columns == "sallseqid")
+taxid_col <- which(output_columns == "staxids")
+if( length(taxid_col) == 0 ){
+	taxid_col <- "taxid_all"
+}
 
 #----------------------------------------------------------------------------------------
 # Define some functions
