@@ -147,9 +147,9 @@ cat <<EOT > .vimrc
 :set shiftwidth=4
 EOT
 
-echo Cloning Banzai repo from https://github.com/MBARIMike/banzai...
+echo Cloning Banzai repo from https://github.com/jimmyodonnell/banzai...
 mkdir dev && cd dev
-git clone https://github.com/MBARIMike/banzai banzai
+git clone https://github.com/jimmyodonnell/banzai banzai
 
 echo Giving user $USER ownership of everything in /home/$USER
 chown -R $USER /home/$USER
