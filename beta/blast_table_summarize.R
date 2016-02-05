@@ -171,18 +171,20 @@ unique(query_hit_LCA[ query_hit_LCA[,"LCA_rank_all"] == "no rank", "LCA_name_all
 
 ranknames <- getranknames()
 unique_ranks <- sort(as.numeric(unique(ranknames[,"rankid"])))
-all_ranks <- c(tolower(ranknames[match(as.character(unique_ranks), ranknames[,"rankid"]),"rankname"]), "no rank")
+all_ranks <- tolower(ranknames[match(as.character(unique_ranks), ranknames[,"rankid"]),"rankname"]) # c(, "no rank")
+all_ranks_full <- c(rbind(all_ranks, paste("below-", all_ranks, sep = "")))
 
-# TODO add the "below-" categories
-rank_counts <- table(query_hit_LCA[,"LCA_rank_all"])[all_ranks]
+rank_counts <- table(query_hit_LCA[,"LCA_rank_all"])[all_ranks_full]
 rank_counts <- rank_counts[!is.na(rank_counts)]
+total_queries <- sum(rank_counts)
+rank_counts_prop <- rank_counts/total_queries
 
 par(mar = c(4, 9, 1, 1))
 barplot(
-table(query_hit_LCA[,"LCA_rank_all"]), 
+rank_counts_prop, 
 horiz = TRUE, 
 las = 1, 
-xlab = "number of queries"
+xlab = paste("proportion of", total_queries, "queries")
 )
 
 # extract the names only (exclude rank name, e.g. "Genus")
