@@ -213,9 +213,9 @@ boxplot(
 dev.off()
 
 
-
-
-
+#****************************************************************************************
+# Everything below this is a mess and needs to be cleaned up 
+#****************************************************************************************
 besthits <- function(x){
 	x[x[, evalue_col] == min(x[, evalue_col]),]
 }
