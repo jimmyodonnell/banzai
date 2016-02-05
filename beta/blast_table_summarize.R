@@ -399,73 +399,17 @@ best_hit <- sapply(tax_hier_intersect, function(x) x[length(x)])
 names(best_hit)
 identical(names(best_evalue), names(best_hit))
 
-FINAL_TABLE <-   cbind(query = names(best_hit), best_hit, best_evalue, best_bitscore)
-rownames(FINAL_TABLE) <- NULL
-write.csv(
-  x = FINAL_TABLE, 
-  file = "blast_hit_summary.csv", 
-  row.names = FALSE
-  )
-#
-#
-#
-#
-#
 
-
-Reduce(intersect, sapply(tax_hier_ncbi[[15]], "[", 1, simplify = TRUE))
-
-sapply(tax_hier_ncbi[[15]], length)
-
-which.min(sapply(tax_hier_ncbi[[15]], length))
-tax_hier_ncbi[[15]][!is.na(tax_hier_ncbi[[15]])]
-
-lapply(tax_hier_ncbi, is.na)
-
-
-# probably better to get ids first:
-uids <- get_uid(c("Chironomus riparius", "Chaetopteryx"))
 
 
 # GRAVEYARD
-classification("Amphiprion", db = "itis")
-specieslist <- c("Abies procera","Pinus contorta")
-highertax_itis <- classification(specieslist, db = 'itis')
-highertax_ncbi <- classification(specieslist, db = 'ncbi')
-highertax_ncbi
-
-clowns <- c("Amphiprion sandaracinos","Premnas biaculeatus", "Cymatogaster aggregata")
-clownclass <- classification(clowns, db = "itis")
-clown_consol <- do.call(rbind, clownclass)
-rownames(clown_consol) <- NULL
-
-
-unique(clown_consol[duplicated(clown_consol), ])
-
-duplicated(clown_consol)
-merge(
-  clownclass[[1]],
-  clownclass[[2]], 
-  by = "name"
-)
-do.call(merge, clownclass)
-
-Reduce(merge, clownclass)
-
-
-
-Reduce(intersect, clownclass)
-Reduce(intersect, 
-       sapply(clownclass, "[", 1, simplify = TRUE)
-       )
-clownclass
-
-lapply(highertax_ncbi, "[", c("name", "rank"))
-
-consolidated <- do.call(rbind, highertax_ncbi)
-
-consolidated[duplicated(consolidated), ]
-
+# FINAL_TABLE <-   cbind(query = names(best_hit), best_hit, best_evalue, best_bitscore)
+# rownames(FINAL_TABLE) <- NULL
+# write.csv(
+  # x = FINAL_TABLE, 
+  # file = "blast_hit_summary.csv", 
+  # row.names = FALSE
+  # )
 
 
 # OTHER PLOTS
