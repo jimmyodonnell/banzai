@@ -1,9 +1,9 @@
 # install.packages("taxize")
 
-# todo: replace do.call(rbind, ...) with data.table::rbindlist(...)
-# from http://stackoverflow.com/questions/14972998/how-to-avoid-renaming-of-rows-when-using-rbind-inside-do-call
+# TODO allow collapse at specified rank (e.g. family) in function LCA
 library(taxize)
 
+# TODO take command line argument
 blast_results_file_path  <- "/Users/threeprime/Documents/GoogleDrive/Kelly_Lab/Projects/Lemonade/Data/blast_20151125_1530/blast_results_all.txt"
 blast_results <- read.table(
 	file = blast_results_file_path, 
@@ -13,6 +13,9 @@ blast_results <- read.table(
 	comment = ''
 	)
 
+# TODO parse "size=" abundance data
+
+# TODO remove this option
 # set up the column names by hand...
 query_col=1
 evalue_col=11
@@ -100,7 +103,9 @@ hit_summary <- function(x, class_list)
 # hit_summary(blast_queries[[1]], classifications)
 
 
-# get gi numbers
+#----------------------------------------------------------------------------------------
+# Extract GI numbers
+#----------------------------------------------------------------------------------------
 gi_all <- do.call(c, lapply(strsplit(blast_results[,gi_col], split = "|", fixed = TRUE), "[", 2))
 blast_results <- cbind.data.frame(blast_results, gi_all, stringsAsFactors = FALSE)
 gi_unique <- as.character(unique(gi_all))
@@ -108,6 +113,9 @@ gi_unique <- as.character(unique(gi_all))
 time_start <- Sys.time()
 # 1.771811 hours for length(least_common_ancestor) == 1601, mostly over network getting taxid
 # get taxid from gi number. This could be avoided by having the taxid given back by blastn, or doing this in python (15 minutes)
+#----------------------------------------------------------------------------------------
+# Get taxon ID of unique gi numbers
+#----------------------------------------------------------------------------------------
 taxids <- vector(mode = "character")
 for(i in 1:length(gi_unique)){
 	taxids[i] <- genbank2uid(id = gi_unique[i])[1]
@@ -141,12 +149,17 @@ blast_queries <- split(blast_results, blast_results[, query_col])
 
 
 
-# get taxonomic hierarchy from taxon ids
+#----------------------------------------------------------------------------------------
+# Get taxonomic hierarchy from taxon ids
+#----------------------------------------------------------------------------------------
 taxid_uniq <- unique(gi_taxid$taxid)
 classifications <- classification(x = taxid_uniq, db = "ncbi")
 save(classifications, file = "classifications20160202.RData")
 
 
+#----------------------------------------------------------------------------------------
+# make dataframe of hit summaries for each query sequence
+#----------------------------------------------------------------------------------------
 hit_summaries <- lapply(blast_queries, hit_summary, class_list = classifications)
 # alt: library(data.table); rbindlist(hit_summaries)
 names(hit_summaries) <- NULL
@@ -160,12 +173,13 @@ ranknames <- getranknames()
 unique_ranks <- sort(as.numeric(unique(ranknames[,"rankid"])))
 all_ranks <- c(tolower(ranknames[match(as.character(unique_ranks), ranknames[,"rankid"]),"rankname"]), "no rank")
 
+# TODO add the "below-" categories
 rank_counts <- table(query_hit_LCA[,"LCA_rank_all"])[all_ranks]
 rank_counts <- rank_counts[!is.na(rank_counts)]
 
-par(mar = c(4, 6, 1, 1))
+par(mar = c(4, 9, 1, 1))
 barplot(
-rank_counts, 
+table(query_hit_LCA[,"LCA_rank_all"]), 
 horiz = TRUE, 
 las = 1, 
 xlab = "number of queries"
