@@ -56,6 +56,9 @@ LCA <- function(taxid_vec, class_list)
 	relevant_class <- relevant_class[classified_sequences]
 	LCA_row <- length(Reduce(intersect, lapply(relevant_class, "[[", 1)))
 	LCA <- relevant_class[[1]][LCA_row,]
+	# if(LCA[1,"rank"] == "no rank"){
+		# LCA[1,"rank"] <- as.character(LCA_row)
+	# }
 	return(LCA)
 }
 # LCA(c("6551", "941636"), classifications)
@@ -141,10 +144,29 @@ hit_summaries <- lapply(blast_queries, hit_summary, class_list = classifications
 names(hit_summaries) <- NULL
 query_hit_LCA <- do.call(rbind, hit_summaries)
 write.csv(x = query_hit_LCA, file = "query_hit_LCA.txt", quote = TRUE, row.names = FALSE)
+head(query_hit_LCA)
+
+unique(query_hit_LCA[ query_hit_LCA[,"LCA_rank_all"] == "no rank", "LCA_name_all"])
+
+ranknames <- getranknames()
+unique_ranks <- sort(as.numeric(unique(ranknames[,"rankid"])))
+all_ranks <- c(tolower(ranknames[match(as.character(unique_ranks), ranknames[,"rankid"]),"rankname"]), "no rank")
+
+rank_counts <- table(query_hit_LCA[,"LCA_rank_all"])[all_ranks]
+rank_counts <- rank_counts[!is.na(rank_counts)]
+
+par(mar = c(4, 6, 1, 1))
+barplot(
+rank_counts, 
+horiz = TRUE, 
+las = 1, 
+xlab = "number of queries"
+)
 
 # extract the names only (exclude rank name, e.g. "Genus")
 names_only <- lapply(classifications, "[[", 1)
-
+taxon_ranks <- as.character(unique(do.call(rbind, lapply(classifications, "[", 2))))
+taxon_ranks[[2]]
 # what is the group that is common to all results?
 common_ancestor <- Reduce(intersect, names_only)
 
