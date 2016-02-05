@@ -164,16 +164,22 @@ hit_summaries <- lapply(blast_queries, hit_summary, class_list = classifications
 # alt: library(data.table); rbindlist(hit_summaries)
 names(hit_summaries) <- NULL
 query_hit_LCA <- do.call(rbind, hit_summaries)
-write.csv(x = query_hit_LCA, file = "query_hit_LCA.csv", quote = TRUE, row.names = FALSE)
 head(query_hit_LCA)
+write.csv(x = query_hit_LCA, file = "query_hit_LCA.csv", quote = TRUE, row.names = FALSE)
 
-unique(query_hit_LCA[ query_hit_LCA[,"LCA_rank_all"] == "no rank", "LCA_name_all"])
 
+#----------------------------------------------------------------------------------------
+# Get names of taxonomic ranks (e.g. "kingdom", "subphylum", etc)
+#----------------------------------------------------------------------------------------
 ranknames <- getranknames()
 unique_ranks <- sort(as.numeric(unique(ranknames[,"rankid"])))
 all_ranks <- tolower(ranknames[match(as.character(unique_ranks), ranknames[,"rankid"]),"rankname"]) # c(, "no rank")
 all_ranks_full <- c(rbind(all_ranks, paste("below-", all_ranks, sep = "")))
 
+
+#----------------------------------------------------------------------------------------
+# group hits by the best (lowest) taxonomic level
+#----------------------------------------------------------------------------------------
 rank_counts <- table(query_hit_LCA[,"LCA_rank_all"])[all_ranks_full]
 rank_counts <- rank_counts[!is.na(rank_counts)]
 total_queries <- sum(rank_counts)
@@ -185,6 +191,21 @@ rank_counts_prop,
 horiz = TRUE, 
 las = 1, 
 xlab = paste("proportion of", total_queries, "queries")
+)
+
+
+#----------------------------------------------------------------------------------------
+# group evalues by best taxonomic level
+#----------------------------------------------------------------------------------------
+beste_by_rank <- split(query_hit_LCA[,"beste"], query_hit_LCA[, "LCA_rank_all"])[all_ranks_full]
+beste_by_rank_ordered <- beste_by_rank[sapply(beste_by_rank, function(x) !is.null(x))]
+beste_by_rank_log <- lapply(beste_by_rank_ordered, log)
+par(mar = c(4, 9, 1, 1))
+boxplot(
+	beste_by_rank_log, 
+	horizontal = TRUE, 
+	las = 1, 
+	xlab = "e-value of best hit"
 )
 
 # extract the names only (exclude rank name, e.g. "Genus")
