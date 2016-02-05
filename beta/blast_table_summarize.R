@@ -106,7 +106,8 @@ blast_results <- cbind.data.frame(blast_results, gi_all, stringsAsFactors = FALS
 gi_unique <- as.character(unique(gi_all))
 
 time_start <- Sys.time()
-# get taxid from gi number. This could be avoided by having the taxid given back by blastn
+# 1.771811 hours for length(least_common_ancestor) == 1601, mostly over network getting taxid
+# get taxid from gi number. This could be avoided by having the taxid given back by blastn, or doing this in python (15 minutes)
 taxids <- vector(mode = "character")
 for(i in 1:length(gi_unique)){
 	taxids[i] <- genbank2uid(id = gi_unique[i])[1]
@@ -150,7 +151,7 @@ hit_summaries <- lapply(blast_queries, hit_summary, class_list = classifications
 # alt: library(data.table); rbindlist(hit_summaries)
 names(hit_summaries) <- NULL
 query_hit_LCA <- do.call(rbind, hit_summaries)
-write.csv(x = query_hit_LCA, file = "query_hit_LCA.txt", quote = TRUE, row.names = FALSE)
+write.csv(x = query_hit_LCA, file = "query_hit_LCA.csv", quote = TRUE, row.names = FALSE)
 head(query_hit_LCA)
 
 unique(query_hit_LCA[ query_hit_LCA[,"LCA_rank_all"] == "no rank", "LCA_name_all"])
