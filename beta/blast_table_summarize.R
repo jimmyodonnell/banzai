@@ -185,14 +185,15 @@ rank_counts <- rank_counts[!is.na(rank_counts)]
 total_queries <- sum(rank_counts)
 rank_counts_prop <- rank_counts/total_queries
 
+pdf(file = "hits_by_best_tax.pdf")
 par(mar = c(4, 9, 1, 1))
 barplot(
-rank_counts_prop, 
-horiz = TRUE, 
-las = 1, 
-xlab = paste("proportion of", total_queries, "queries")
+	rank_counts_prop, 
+	horiz = TRUE, 
+	las = 1, 
+	xlab = paste("proportion of", total_queries, "queries")
 )
-
+dev.off()
 
 #----------------------------------------------------------------------------------------
 # group evalues by best taxonomic level
@@ -200,27 +201,20 @@ xlab = paste("proportion of", total_queries, "queries")
 beste_by_rank <- split(query_hit_LCA[,"beste"], query_hit_LCA[, "LCA_rank_all"])[all_ranks_full]
 beste_by_rank_ordered <- beste_by_rank[sapply(beste_by_rank, function(x) !is.null(x))]
 beste_by_rank_log <- lapply(beste_by_rank_ordered, log)
+
+pdf(file = "evalue_by_best_tax.pdf")
 par(mar = c(4, 9, 1, 1))
 boxplot(
 	beste_by_rank_log, 
 	horizontal = TRUE, 
 	las = 1, 
-	xlab = "e-value of best hit"
+	xlab = "log(e-value) of best hit"
 )
-
-# extract the names only (exclude rank name, e.g. "Genus")
-names_only <- lapply(classifications, "[[", 1)
-taxon_ranks <- as.character(unique(do.call(rbind, lapply(classifications, "[", 2))))
-taxon_ranks[[2]]
-# what is the group that is common to all results?
-common_ancestor <- Reduce(intersect, names_only)
-
-# Reduce(intersect, names_only[c("239049", "219410")])
-# taxids_to_collapse <- c("239049", "219410")
-# Reduce(intersect, names_only[taxids_to_collapse])
+dev.off()
 
 
-identical(unique(blast_results[, query_col]), names(blast_queries))
+
+
 
 besthits <- function(x){
 	x[x[, evalue_col] == min(x[, evalue_col]),]
@@ -423,7 +417,16 @@ identical(names(best_evalue), names(best_hit))
 
 
 
+#----------------------------------------------------------------------------------------
 # GRAVEYARD
+#----------------------------------------------------------------------------------------
+# extract the names only (exclude rank name, e.g. "Genus")
+names_only <- lapply(classifications, "[[", 1)
+taxon_ranks <- as.character(unique(do.call(rbind, lapply(classifications, "[", 2))))
+taxon_ranks[[2]]
+# what is the group that is common to all results?
+common_ancestor <- Reduce(intersect, names_only)
+
 # FINAL_TABLE <-   cbind(query = names(best_hit), best_hit, best_evalue, best_bitscore)
 # rownames(FINAL_TABLE) <- NULL
 # write.csv(
