@@ -42,11 +42,18 @@ if( length(taxid_col) == 0 ){
 #----------------------------------------------------------------------------------------
 # Define some functions
 #----------------------------------------------------------------------------------------
+next_best_taxon <- function(x){
+	paste("below-",
+		tail(x[,"rank"][!duplicated(x[,"rank"])], n = 1
+		), sep = "")
+}
+lapply(class_norank, next_best_taxon)
+
 LCA <- function(taxid_vec, class_list)
 {
 	# This function takes a (character) vector of NCBI taxids, 
 	# and a list of classification hierarchies (from taxize)
-	# outputs the name, rank, and taxid of the (taxonomic) 
+	# outputs the name, rank, and taxid of the (taxonomic) lowest common ancestor
 	if(class(taxid_vec) != "character"){
 		taxid_vec <- as.character(taxid_vec)
 	}
@@ -56,9 +63,9 @@ LCA <- function(taxid_vec, class_list)
 	relevant_class <- relevant_class[classified_sequences]
 	LCA_row <- length(Reduce(intersect, lapply(relevant_class, "[[", 1)))
 	LCA <- relevant_class[[1]][LCA_row,]
-	# if(LCA[1,"rank"] == "no rank"){
-		# LCA[1,"rank"] <- as.character(LCA_row)
-	# }
+	if(LCA[1,"rank"] == "no rank"){
+		LCA[1,"rank"] <- next_best_taxon(relevant_class[[1]][1:LCA_row,]) # as.character(LCA_row)
+	}
 	return(LCA)
 }
 # LCA(c("6551", "941636"), classifications)
