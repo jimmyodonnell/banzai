@@ -62,6 +62,7 @@ LCA <- function(taxid_vec, class_list)
 	}
 	relevant_class <- class_list[taxid_vec]
 	# remove unclassified sequences
+	# NOTE THIS IN THE METHODS "We ignored hits belonging to 'unclassified sequences'"
 	classified_sequences <- sapply(relevant_class, function(x) x[1,1] != "unclassified sequences")
 	relevant_class <- relevant_class[classified_sequences]
 	LCA_row <- length(Reduce(intersect, lapply(relevant_class, "[[", 1)))
