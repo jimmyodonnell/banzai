@@ -13,7 +13,6 @@ blast_results <- read.table(
 	comment = ''
 	)
 
-# TODO parse "size=" abundance data
 
 # TODO remove this option
 # set up the column names by hand...
@@ -168,6 +167,27 @@ query_hit_LCA <- do.call(rbind, hit_summaries)
 head(query_hit_LCA)
 write.csv(x = query_hit_LCA, file = "query_hit_LCA.csv", quote = TRUE, row.names = FALSE)
 
+# parse "size=" abundance data
+# copy this to main blast_results?
+# TODO clean up plotting
+abundance_prefix <- ";size="
+if(grepl(abundance_prefix, query_hit_LCA[1, "query_seq"], fixed = TRUE)){
+	query_abundance <- as.numeric(sapply(strsplit(as.character(query_hit_LCA[, "query_seq"]), split = abundance_prefix), "[[", 2))
+	query_hit_LCA <- cbind.data.frame(query_hit_LCA, query_abundance)
+}
+counts_by_taxa <- sapply(split(query_hit_LCA[,"query_abundance"], query_hit_LCA[,"LCA_name_all"]), sum)
+top50 <- sort(counts_by_taxa, decreasing = TRUE)[1:50]
+pdf(file = "top50_abundant_taxa.pdf")
+par(mar = c(4, 12, 1, 1))
+barplot(
+	top50, 
+	horiz = TRUE, 
+	las = 1, 
+	xlab = "number of reads"
+)
+# axis(2, at = seq_along(top50), labels = names(top50), cex.axis = 0.5, las = 1)
+
+dev.off()
 
 #----------------------------------------------------------------------------------------
 # Get names of taxonomic ranks (e.g. "kingdom", "subphylum", etc)
