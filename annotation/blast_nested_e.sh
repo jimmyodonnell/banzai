@@ -9,21 +9,27 @@
 # Standard usage:
 # bash "/path/to/blast_script.sh" "/path/to/input/query.fasta" "0 4.430273e-52 3.077510e-48 2.137807e-44 1.485037e-40 1.031588e-36 7.165977e-33 4.977879e-29 3.457907e-25 2.402052e-21 1.668597e-17 1.159098e-13"
 
+# Automatically detect the time and set it to make a unique filename
+start_time=$(date +%Y%m%d_%H%M)
+dir_name=blast_"${start_time}"
+
 # Optional upload to drive:
 # Optional third argument: the ID (long string) of the Google Drive folder to which you'd like to upload results.
 # EG: 0B_rFWkh8Szupd1J6US16aW1SMDQ
 # EG: 0B_rFWkh8SzupWFNrNDVKVHZNRE0 (temp)
 if [ "${3}" ] ; then
 	gdrive_parent="${3}"
+	# create a subdirectory for the output of this run, and grab its google drive ID
+	results_dirID_gdrive=$(drive folder --title "${dir_name}" --parent "${gdrive_parent}" | awk 'NR==1 { print $2 } ')
 	echo "Google Drive parent directory ID read"
 	if hash "drive" 2>/dev/null; then
 	# if command -v "${i}" >/dev/null 2>&1; then
-		echo 'Found Google Drive command line script in' "drive" 'in' $( which "drive" )
+		echo 'Found Google Drive command line program in' "drive" 'in' $( which "drive" )
 		use_googledrive="YES"
 		echo 'This confirms the blast job began on '"$(date)"'.
 		Results will be uploaded to this directory as they are produced.
 		The quality of the results may be enhanced by leaving out some cookies and milk for the programming elf who wrote this script, while it runs and you sleep.' | \
-		drive upload --stdin --title 'blast_initiated.txt' --parent "${gdrive_parent}"
+		drive upload --stdin --title 'blast_initiated.txt' --parent "${results_dirID_gdrive}"
 
 	else
 		echo 'Google Drive parent directory ID given, but executable not found'
@@ -43,8 +49,6 @@ fi
 # Suggestions below are based on tests run by Ryan Kelly and Jimmy O'Donnell
 
 
-# Automatically detect the time and set it to make a unique filename
-start_time=$(date +%Y%m%d_%H%M)
 
 # echo $(date +%H:%M) "Running nested BLAST script..."
 
@@ -128,7 +132,7 @@ if [[ -n "${2}" ]]; then
 	nested_evalues=($(printf '%s\n' "${arg_evalue_array[@]}" ))
 	echo "Nested e-values read from command line argument."
 else
-	nested_evalues=( 4.430273e-52 3.077510e-48 2.137807e-44 1.485037e-40 1.031588e-36 7.165977e-33 4.977879e-29 3.457907e-25 2.402052e-21 1.668597e-17 1.159098e-13 )
+	nested_evalues=( 5e-52 5e-48 5e-44 5e-40 5e-36 5e-33 5e-29 5e-25 5e-21 5e-17 5e-13 )
 	echo "Nested e-values argument not found; setting to default."
 fi
 echo "E-Values:" "${nested_evalues[@]}"
@@ -225,7 +229,7 @@ do
 	# alt 2: cut -d '    ' -f 1
 
 	if [ "${use_googledrive}" = "YES" ]; then
-		drive upload --file "${hits}" --parent "${gdrive_parent}"
+		drive upload --file "${hits}" --parent "${results_dirID_gdrive}"
 	fi
 
 	if [[ -s "${no_hits}" ]]; then
@@ -250,7 +254,7 @@ do
 
 	grep -f "${no_hits}" "${fasta_iter}" -A 1 | sed '/^--$/d' > "${nohits_fasta}"
 	if [ "${use_googledrive}" = "YES" ]; then
-		drive upload --file "${nohits_fasta}" --parent "${gdrive_parent}"
+		drive upload --file "${nohits_fasta}" --parent "${results_dirID_gdrive}"
 	fi
 
 	# rm "${infile_seqids}"
@@ -260,7 +264,7 @@ done
 echo $(date +%H:%M) "Nested e-value blast completed."
 
 if [ "${use_googledrive}" = "YES" ]; then
-	drive upload --file "${LOGFILE}" --parent "${gdrive_parent}"
+	drive upload --file "${LOGFILE}" --parent "${results_dirID_gdrive}"
 fi
 
 # exit
