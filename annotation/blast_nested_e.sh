@@ -147,7 +147,7 @@ echo "Number of threads:" "${n_cores}"
 # "6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle" # ***readable by MEGAN***
 # "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" # default from http://www.ncbi.nlm.nih.gov/books/NBK279675/:
 # "7 qseqid sseqid pident staxids sscinames scomnames sblastnames"
-output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle"
+output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids stitle"
 echo "Output format:" "${output_format}"
 
 ################################################################################
