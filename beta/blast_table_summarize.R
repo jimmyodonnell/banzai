@@ -107,6 +107,9 @@ hit_summary <- function(x, class_list)
 #----------------------------------------------------------------------------------------
 # Extract GI numbers
 #----------------------------------------------------------------------------------------
+# There can be multiple gi numbers associated with a single sequence; for now just grab the first.
+# I don't know exactly why this is, but more info can be found here: 
+# http://www.ncbi.nlm.nih.gov/genbank/sequenceids/
 gi_all <- do.call(c, lapply(strsplit(blast_results[,gi_col], split = "|", fixed = TRUE), "[", 2))
 blast_results <- cbind.data.frame(blast_results, gi_all, stringsAsFactors = FALSE)
 gi_unique <- as.character(unique(gi_all))
