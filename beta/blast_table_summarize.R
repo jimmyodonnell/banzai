@@ -25,7 +25,7 @@ taxid_col="taxid_all" # change this to a column number if it was returned in the
 
 # ...or automatically
 # table columns order: 
-output_format <- "6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle"
+output_format <- "6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids stitle"
 
 if( strsplit(output_format, " ")[[1]][1] != 6 ){
 	stop("the output format string must begin with a 6 (indicating blast tabular output)")
