@@ -238,14 +238,12 @@ rownames(beste_table) <- NULL
 # gi_taxid <- read.table(file = "gi_taxid_20160202.txt", header = TRUE, colClasses = "character")
 
 
-
-
 #----------------------------------------------------------------------------------------
 # Get taxonomic hierarchy from taxon ids
 #----------------------------------------------------------------------------------------
 taxid_uniq <- unique(gi_taxid$taxid)
 classifications <- classification(x = taxid_uniq, db = "ncbi")
-save(classifications, file = "classifications20160202.RData")
+# save(classifications, file = "classifications20160202.RData")
 
 
 #----------------------------------------------------------------------------------------
@@ -256,19 +254,40 @@ hit_summaries <- lapply(blast_queries, hit_summary, class_list = classifications
 names(hit_summaries) <- NULL
 query_hit_LCA <- do.call(rbind, hit_summaries)
 head(query_hit_LCA)
-write.csv(x = query_hit_LCA, file = "query_hit_LCA.csv", quote = TRUE, row.names = FALSE)
+
+taxid_by_qid_all <- split(blast_results[,taxid_col], blast_results[,query_col])
+taxid_by_qid_beste <- split(beste_table[,taxid_col], beste_table[,query_col])
+
+class_all <-sapply(taxid_by_qid_all, lowest_common, class_list = classifications, low_rank = 'class')
+order_all <- sapply(taxid_by_qid_all, lowest_common, class_list = classifications, low_rank = 'order')
+family_all <- sapply(taxid_by_qid_all, lowest_common, class_list = classifications, low_rank = 'family')
+
+class_beste <-sapply(taxid_by_qid_beste, lowest_common, class_list = classifications, low_rank = 'class')
+order_beste <- sapply(taxid_by_qid_beste, lowest_common, class_list = classifications, low_rank = 'order')
+family_beste <- sapply(taxid_by_qid_beste, lowest_common, class_list = classifications, low_rank = 'family')
+
+query_hit_LCA <- cbind.data.frame(
+	query_hit_LCA, class_all, order_all, family_all, class_beste, order_beste, family_beste, 
+	stringsAsFactors = FALSE
+	)
 
 # parse "size=" abundance data
 # copy this to main blast_results?
-# TODO clean up plotting
 abundance_prefix <- ";size="
 if(grepl(abundance_prefix, query_hit_LCA[1, "query_seq"], fixed = TRUE)){
 	query_abundance <- as.numeric(sapply(strsplit(as.character(query_hit_LCA[, "query_seq"]), split = abundance_prefix), "[[", 2))
 	query_hit_LCA <- cbind.data.frame(query_hit_LCA, query_abundance)
 }
-counts_by_taxa <- sapply(split(query_hit_LCA[,"query_abundance"], query_hit_LCA[,"LCA_name_all"]), sum)
+
+counts_by_taxa <- sapply(split(query_hit_LCA[,"query_abundance"], query_hit_LCA[,"LCA_name_beste"]), sum)
 top50 <- sort(counts_by_taxa, decreasing = TRUE)[1:50]
-pdf(file = "top50_abundant_taxa.pdf")
+top50 <- top50[!is.na(top50)]
+write.csv(x = query_hit_LCA, file = "query_hit_LCA.csv", quote = TRUE, row.names = FALSE)
+
+
+
+# TODO clean up plotting
+pdf(file = "most_abundant_taxa.pdf")
 par(mar = c(4, 12, 1, 1))
 barplot(
 	top50, 
@@ -292,6 +311,7 @@ all_ranks_full <- c(rbind(all_ranks, paste("below-", all_ranks, sep = "")))
 #----------------------------------------------------------------------------------------
 # group hits by the best (lowest) taxonomic level
 #----------------------------------------------------------------------------------------
+# TODO calculate on size annotation
 rank_counts <- table(query_hit_LCA[,"LCA_rank_all"])[all_ranks_full]
 rank_counts <- rank_counts[!is.na(rank_counts)]
 total_queries <- sum(rank_counts)
