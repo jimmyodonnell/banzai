@@ -21,25 +21,24 @@ evalue_col=11
 bitscore_col=12
 title_col=13
 gi_col=2
-taxid_col="taxid_all" # change this to a column number if it was returned in the blast output
+# taxid_col="taxid1_all" # change this to a column number if it was returned in the blast output
 
 # ...or automatically
 # table columns order: 
 output_format <- "6 qseqid sallseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids stitle"
+# TODO just apply these as column names to the dataframe
 
 if( strsplit(output_format, " ")[[1]][1] != 6 ){
 	stop("the output format string must begin with a 6 (indicating blast tabular output)")
 }
 output_columns <- strsplit(output_format, " ")[[1]][-1] # [-1] removes the first value (integer) used to tell blastn which output (should always be 6)
+colnames(blast_results) <- output_columns
 query_col <- which(output_columns == "qseqid")
 evalue_col <- which(output_columns == "evalue")
 bitscore_col <- which(output_columns == "bitscore")
 title_col <- which(output_columns == "stitle")
 gi_col <- which(output_columns == "sallseqid")
-taxid_col <- which(output_columns == "staxids")
-if( length(taxid_col) == 0 ){
-	taxid_col <- "taxid_all"
-}
+taxid_col <- which(output_columns == "staxids") # if this doesn't exist we will create it
 
 #----------------------------------------------------------------------------------------
 # Define some functions
@@ -75,6 +74,8 @@ LCA <- function(taxid_vec, class_list)
 # LCA(c("6551", "941636"), classifications)
 # LCA(names(classifications[1:4]), classifications)
 
+
+
 hit_summary <- function(x, class_list)
 {
 	# this function takes a dataframe, presumably the tabular output of blastn
@@ -103,35 +104,130 @@ hit_summary <- function(x, class_list)
 }
 # hit_summary(blast_queries[[1]], classifications)
 
+# Functions now in taxize:
+lowest_common <- function(...){
+  UseMethod("lowest_common")
+}
+
+lowest_common.default <- function(ids, db = NULL, class_list = NULL, ...) {
+  if(!is.list(class_list)){
+    class_list <- classification(ids, db = db, ...)
+  }
+  lc_helper(ids, class_list, ...)
+}
+
+lowest_common.uid <- function(ids, class_list = NULL, ...) {
+  if(!is.list(class_list)){
+    class_list <- classification(ids, db = "uid",  ...)
+  }
+  lc_helper(ids, class_list, ...)
+}
+
+lowest_common.tsn <- function(ids, class_list = NULL, ...) {
+  if(!is.list(class_list)){
+    class_list <- classification(ids, db = "itis", ...)
+  }
+  lc_helper(ids, class_list, ...)
+}
+
+lowest_common.gbifid <- function(ids, class_list = NULL, ...) {
+  if(!is.list(class_list)){
+    class_list <- classification(ids, db = "gbif", ...)
+  }
+  lc_helper(ids, class_list, ...)
+}
+
+lc_helper <- function(ids, class_list, low_rank = NULL) {
+  idsc <- class_list[ids]
+  cseq <- vapply(idsc, function(x) x[1, 1] != "unclassified sequences", logical(1))
+  idsc <- idsc[cseq]
+  if(is.null(low_rank)){
+    x_row <- length(Reduce(intersect, lapply(idsc, "[[", 1)))
+    x <- idsc[[1]][x_row, ]
+    if (x[1, "rank"] == "no rank") {
+      x[1, "rank"] <- next_best_taxon(idsc[[1]][1:x_row, ])
+    }
+    return(x)
+  } else {
+    # could test, warn/error that supplied rank is valid
+    low_rank_names <- as.character(unique(unlist(lapply(idsc, function(x) x$name[which(x$rank == low_rank)]))))
+    if(length(low_rank_names) == 1){
+      return(low_rank_names)
+    } else {
+      return(NA)
+    }
+  }
+}
+
 
 #----------------------------------------------------------------------------------------
 # Extract GI numbers
 #----------------------------------------------------------------------------------------
-# There can be multiple gi numbers associated with a single sequence; for now just grab the first.
+# There can be multiple gi numbers associated with a single hit; for now just grab the first.
 # I don't know exactly why this is, but more info can be found here: 
 # http://www.ncbi.nlm.nih.gov/genbank/sequenceids/
-gi_all <- do.call(c, lapply(strsplit(blast_results[,gi_col], split = "|", fixed = TRUE), "[", 2))
-blast_results <- cbind.data.frame(blast_results, gi_all, stringsAsFactors = FALSE)
-gi_unique <- as.character(unique(gi_all))
+gi1_all <- do.call(c, lapply(strsplit(blast_results[,gi_col], split = "|", fixed = TRUE), "[", 2))
+blast_results <- cbind.data.frame(blast_results, gi1_all, stringsAsFactors = FALSE)
+gi_unique <- as.character(unique(gi1_all))
+
+
 
 time_start <- Sys.time()
-# 1.771811 hours for length(least_common_ancestor) == 1601, mostly over network getting taxid
-# get taxid from gi number. This could be avoided by having the taxid given back by blastn, or doing this in python (15 minutes)
 #----------------------------------------------------------------------------------------
 # Get taxon ID of unique gi numbers
 #----------------------------------------------------------------------------------------
-taxids <- vector(mode = "character")
-for(i in 1:length(gi_unique)){
-	taxids[i] <- genbank2uid(id = gi_unique[i])[1]
+# check for the 'staxids' column in the blast table
+# if it isn't there, get it from NCBI using taxize::genbank2uid
+# 1.771811 hours for length(least_common_ancestor) == 1601, mostly over network getting taxid
+# This could be avoided by having the taxid given back by blastn, or doing this in python (15 minutes)
+if( length(taxid_col) == 0 ){
+	taxids <- vector(mode = "character")
+	for(i in 1:length(gi_unique)){
+		taxids[i] <- genbank2uid(id = gi_unique[i])[1]
+	}
+	
+	gi_taxid <- data.frame(
+		gi = gi_unique, 
+		taxid = taxids, 
+		stringsAsFactors = FALSE
+	)
+	# put taxon ids onto blast results
+	taxid1_all <- gi_taxid$taxid[match(gi1_all, gi_taxid$gi)]
+	blast_results <- cbind.data.frame(blast_results, taxid1_all, stringsAsFactors = FALSE)
+
+
+} else {
+	# There can be multiple taxid numbers associated with a single hit; for now just grab the first.
+	taxid1_all <- do.call(c, lapply(strsplit(blast_results[,taxid_col], split = ";", fixed = TRUE), "[", 1)) # range check 71735:71749
+	blast_results <- cbind.data.frame(blast_results, taxid1_all, stringsAsFactors = FALSE)
+	gi_taxid <- data.frame(
+		gi = gi_unique, 
+		taxid = blast_results[,"taxid1_all"][match(gi_unique, blast_results[,"gi1_all"])],
+		stringsAsFactors = FALSE
+	)
+
 }
 
+taxid_col <- "taxid1_all"
 
-gi_taxid <- data.frame(
-	gi = gi_unique, 
-	taxid = taxids, 
-	stringsAsFactors = FALSE
-	)
+# hits for which the taxon id was unresolved (i.e. "NA") will be problematic, so remove them
+blast_results_taxid_NA <- blast_results[is.na(blast_results[, taxid_col]),]
+blast_results <- blast_results[!is.na(blast_results[, taxid_col]),]
+
+blast_queries <- split(blast_results, blast_results[, query_col])
+
 	
+beste_table <- do.call(
+		rbind, 
+		lapply(
+			X = blast_queries,
+			FUN = function(x)
+			{
+				x[x[ , evalue_col] == min(x[ , evalue_col]),]
+			}
+		)
+	)
+rownames(beste_table) <- NULL
 
 # write.table(
 	# x = gi_taxid, 
@@ -141,15 +237,6 @@ gi_taxid <- data.frame(
 # )
 # gi_taxid <- read.table(file = "gi_taxid_20160202.txt", header = TRUE, colClasses = "character")
 
-# put taxon ids onto blast results
-taxid_all <- gi_taxid$taxid[match(gi_all, gi_taxid$gi)]
-blast_results <- cbind.data.frame(blast_results, taxid_all, stringsAsFactors = FALSE)
-
-# hits for which the taxon id was unresolved (i.e. "NA") will be problematic, so remove them
-blast_results_taxid_NA <- blast_results[is.na(taxid_all),]
-blast_results <- blast_results[!is.na(taxid_all),]
-
-blast_queries <- split(blast_results, blast_results[, query_col])
 
 
 
@@ -249,7 +336,7 @@ besthits <- function(x){
 # Holy macaroni, that's it! Come back and clean this up!
 least_common_ancestor <- list()
 for(i in 1:length(blast_queries)){
-	besthit_gis <- as.character(besthits(blast_queries[[i]])[,"gi_all"])
+	besthit_gis <- as.character(besthits(blast_queries[[i]])[,"gi1_all"])
 	besthit_taxids <- unique(gi_taxid[match(besthit_gis, gi_taxid[,"gi"]),"taxid"])
 	least_common_ancestor[[i]] <- Reduce(intersect, names_only[besthit_taxids])
 }
@@ -262,7 +349,7 @@ time_end <- Sys.time()
 blast_queries_best <- lapply(X = blast_queries, FUN = besthits)
 
 # assess the number of taxonomic ties per e-value
-blast_queries[[1]][ , "taxid_all"]
+blast_queries[[1]][ , taxid_col]
 
 taxid_per_query <- split(blast_results[ , taxid_col], blast_results[, query_col])
 taxid_per_query_best <- lapply(blast_queries_best, "[[", taxid_col)
@@ -275,7 +362,7 @@ taxon_hit_index <- function(x)
 	length(unique(x))/length(x)
 }
 
-taxon_hit_index(blast_queries[[1]][ , "taxid_all"])
+taxon_hit_index(blast_queries[[1]][ , taxid_col])
 
 taxon_hit_all <- sapply(X = taxid_per_query, FUN = taxon_hit_index)
 taxon_hit_best <- sapply(X = taxid_per_query_best, FUN = taxon_hit_index)
