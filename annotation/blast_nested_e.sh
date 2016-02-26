@@ -50,7 +50,7 @@ fi
 
 
 
-# echo $(date +%H:%M) "Running nested BLAST script..."
+# echo $(date) "Running nested BLAST script..."
 
 # QUERY
 # a fasta file, read as the first argument
@@ -191,7 +191,7 @@ do
 	echo "${iter}" "${iter}" "${iter}" "${iter}" "${iter}" "${iter}" "${iter}"
 	echo "blast will query file:" "($N_seq sequence(s))"
 	echo "${fasta_iter}"
-	echo $(date +%H:%M) "blastn is running at" $iter" e-value..."
+	echo $(date) "blastn is running at" $iter" e-value..."
 	time1=$(date -u +"%s")
 
 	blastn \
@@ -207,7 +207,7 @@ do
 		-num_threads "${n_cores}"
 
 
-	echo $(date +%H:%M) "blastn finished at "${iter}" e-value."
+	echo $(date) "blastn finished at "${iter}" e-value."
 	time2=$(date -u +"%s")
 	diff=$(($time2-$time1))
 	echo "blast search took $(($diff / 3600)) hours, $((($diff / 60) % 60)) minutes and $(($diff % 60)) seconds."
@@ -261,7 +261,7 @@ do
 
 done
 
-echo $(date +%H:%M) "Nested e-value blast completed."
+echo $(date) "Nested e-value blast completed."
 
 if [ "${use_googledrive}" = "YES" ]; then
 	drive upload --file "${LOGFILE}" --parent "${results_dirID_gdrive}"
