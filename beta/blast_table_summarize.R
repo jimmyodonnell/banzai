@@ -4,7 +4,7 @@
 library(taxize)
 
 # TODO take command line argument
-blast_results_file_path  <- "/Users/threeprime/Documents/GoogleDrive/Kelly_Lab/Projects/Lemonade/Data/blast_20151125_1530/blast_results_all.txt"
+# blast_results_file_path  <- "/Users/threeprime/Documents/GoogleDrive/Kelly_Lab/Projects/Lemonade/Data/blast_20151125_1530/blast_results_all.txt"
 blast_results <- read.table(
 	file = blast_results_file_path, 
 	sep = "\t", 
@@ -39,6 +39,10 @@ bitscore_col <- which(output_columns == "bitscore")
 title_col <- which(output_columns == "stitle")
 gi_col <- which(output_columns == "sallseqid")
 taxid_col <- which(output_columns == "staxids") # if this doesn't exist we will create it
+
+# This is required to parse sequence abundance/count data from sequence headers
+abundance_prefix <- ";size="
+
 
 #----------------------------------------------------------------------------------------
 # Define some functions
@@ -161,6 +165,51 @@ lc_helper <- function(ids, class_list, low_rank = NULL) {
 
 
 #----------------------------------------------------------------------------------------
+# Calculate hits per query
+#----------------------------------------------------------------------------------------
+# TODO this should work at any stage, but consider thinking about where to put it
+gi_list <- sapply(blast_results[,gi_col], function(x) strsplit(x, split = ";", fixed = TRUE))
+subhit_gi <- as.numeric(sapply(gi_list, length))
+hits_per_query <- sapply(split(subhit_gi, blast_results[,query_col]), sum)
+
+#----------------------------------------------------------------------------------------
+# Split subhits into hits
+#----------------------------------------------------------------------------------------
+# Sequences in NCBI (GenBank) that are completely identical will be returned as a single hit
+# These will each have unique GI numbers; they may or may not be from multiple taxa (thus multiple taxids)
+
+# IF TAXIDS NOT IN DATAFRAME, DO THIS:
+if( length(taxid_col) == 0 ){
+	multi_gi <- grep(pattern = ";", x = blast_results[, gi_col], fixed = TRUE)
+	if(length(multi_gi) > 0){
+		gi_list <- sapply(blast_results[,gi_col], function(x) strsplit(x, split = ";", fixed = TRUE))
+		subhit_gi <- as.numeric(sapply(gi_list, length))
+		blast_results <- blast_results[rep(1:nrow(blast_results), times = subhit_gi),]
+		blast_results[,gi_col] <- unlist(gi_list)
+	}
+
+# IF TAXIDS ARE IN THE DATAFRAME, IGNORE GI AND DO THIS:
+} else if( length(taxid_col) == 1 ){
+	multi_taxid <- grep(pattern = ";", x = blast_results[, taxid_col], fixed = TRUE)
+	if(length(multi_taxid) > 0){
+		taxid_list <- sapply(blast_results[,taxid_col], function(x) strsplit(x, split = ";", fixed = TRUE))
+		subhit_taxid <- as.numeric(sapply(taxid_list, length))
+		blast_results <- blast_results[rep(1:nrow(blast_results), times = subhit_taxid),]
+		blast_results[,taxid_col] <- unlist(taxid_list)
+	}
+} else {
+	warn('hmm... something seems fishy. Check the "staxids" column')
+}
+
+
+# N_subhits <- cbind(
+# subhit_gi = as.numeric(sapply(sapply(blast_results[,gi_col], function(x) strsplit(x, split = ";", fixed = TRUE)), length)),
+# subhit_taxid = as.numeric(sapply(sapply(blast_results[,taxid_col], function(x) strsplit(x, split = ";", fixed = TRUE)), length))
+# )
+
+
+
+#----------------------------------------------------------------------------------------
 # Extract GI numbers
 #----------------------------------------------------------------------------------------
 # There can be multiple gi numbers associated with a single hit; for now just grab the first.
@@ -198,17 +247,17 @@ if( length(taxid_col) == 0 ){
 
 } else {
 	# There can be multiple taxid numbers associated with a single hit; for now just grab the first.
-	taxid1_all <- do.call(c, lapply(strsplit(blast_results[,taxid_col], split = ";", fixed = TRUE), "[", 1)) # range check 71735:71749
-	blast_results <- cbind.data.frame(blast_results, taxid1_all, stringsAsFactors = FALSE)
-	gi_taxid <- data.frame(
-		gi = gi_unique, 
-		taxid = blast_results[,"taxid1_all"][match(gi_unique, blast_results[,"gi1_all"])],
-		stringsAsFactors = FALSE
-	)
+	# taxid1_all <- do.call(c, lapply(strsplit(blast_results[,taxid_col], split = ";", fixed = TRUE), "[", 1)) # range check 71735:71749
+	# blast_results <- cbind.data.frame(blast_results, taxid1_all, stringsAsFactors = FALSE)
+	# gi_taxid <- data.frame(
+		# gi = gi_unique, 
+		# taxid = blast_results[,"taxid1_all"][match(gi_unique, blast_results[,"gi1_all"])],
+		# stringsAsFactors = FALSE
+	# )
 
 }
 
-taxid_col <- "taxid1_all"
+# taxid_col <- "taxid1_all"
 
 # hits for which the taxon id was unresolved (i.e. "NA") will be problematic, so remove them
 blast_results_taxid_NA <- blast_results[is.na(blast_results[, taxid_col]),]
@@ -241,7 +290,12 @@ rownames(beste_table) <- NULL
 #----------------------------------------------------------------------------------------
 # Get taxonomic hierarchy from taxon ids
 #----------------------------------------------------------------------------------------
-taxid_uniq <- unique(gi_taxid$taxid)
+# requires network connection; could take some time
+if( length(taxid_col) == 0 ){
+	taxid_uniq <- unique(gi_taxid$taxid)
+} else{
+	taxid_uniq <- unique(blast_results[,taxid_col])
+}
 classifications <- classification(x = taxid_uniq, db = "ncbi")
 # save(classifications, file = "classifications20160202.RData")
 
@@ -273,7 +327,6 @@ query_hit_LCA <- cbind.data.frame(
 
 # parse "size=" abundance data
 # copy this to main blast_results?
-abundance_prefix <- ";size="
 if(grepl(abundance_prefix, query_hit_LCA[1, "query_seq"], fixed = TRUE)){
 	query_abundance <- as.numeric(sapply(strsplit(as.character(query_hit_LCA[, "query_seq"]), split = abundance_prefix), "[[", 2))
 	query_hit_LCA <- cbind.data.frame(query_hit_LCA, query_abundance)
@@ -312,10 +365,10 @@ all_ranks_full <- c(rbind(all_ranks, paste("below-", all_ranks, sep = "")))
 # group hits by the best (lowest) taxonomic level
 #----------------------------------------------------------------------------------------
 # TODO calculate on size annotation
-rank_counts <- table(query_hit_LCA[,"LCA_rank_all"])[all_ranks_full]
+rank_counts <- table(rep(query_hit_LCA[,"LCA_rank_all"], times = query_abundance))[all_ranks_full]
 rank_counts <- rank_counts[!is.na(rank_counts)]
-total_queries <- sum(rank_counts)
-rank_counts_prop <- rank_counts/total_queries
+total_sequences <- sum(rank_counts)
+rank_counts_prop <- rank_counts/total_sequences
 
 pdf(file = "hits_by_best_tax.pdf")
 par(mar = c(4, 9, 1, 1))
@@ -323,7 +376,7 @@ barplot(
 	rank_counts_prop, 
 	horiz = TRUE, 
 	las = 1, 
-	xlab = paste("proportion of", total_queries, "queries")
+	xlab = paste("proportion of", total_sequences, "sequences")
 )
 dev.off()
 
