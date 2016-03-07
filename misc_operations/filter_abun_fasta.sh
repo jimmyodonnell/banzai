@@ -16,10 +16,12 @@ if [ ! -e "${infile}" ]; then
   exit 1
 fi
 
-outfile=${infile%.*}_filt_abun.fasta
-
 # assign argument 2 to a variable
 min_abun="${2}"
+
+outfile=${infile%.*}_filt_abun.fasta
+# outfile_toofew=${infile%.*}_filt_abun_toofew.fasta
+
 
 # check if min_abun is indeed an integer
 case $min_abun in
@@ -35,13 +37,19 @@ case $min_abun in
 
 esac
 
+# TODO print sequences with too few occurances to separate file
+# see: http://stackoverflow.com/questions/13077631/is-it-possible-to-print-different-lines-to-different-output-files-using-awk
 awk -v min="${min_abun}" '\
   BEGIN {
-    RS = ">" ; ORS = "" ; FS = ";|="
+    FS = ";size="
   } \
-  $3 >= min { \
-    print ">"$0 \
+  { if( $2 >= min )\
+    { print;getline;print } \
   }' "${infile}" > "${outfile}"
 
-echo "Sequences occurring more than ""${min_abun}"" times written to file:"
+echo
+echo "Sequences occurring ""${min_abun}"" or more times written to file:"
 echo "${outfile}"
+# echo
+# echo "Sequences occurring fewer than ""${min_abun}"" times written to file:"
+# echo "${outfile_toofew}"
