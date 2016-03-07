@@ -1,0 +1,15 @@
+sed "-es/^>\(.*\)/>\1;barcode=SamA;" < R1.1K.fastq > SamA.fastq
+
+# add barcode at beginning of line:
+sed 's|^@|@barcodelabel=NoBarcode;|' < R1.1K.fastq > SamA.fastq
+
+# add barcode mid line:
+sed 's|^@\(.*\)|\1;barcodelabel=NoBarcode;|' < R1.1K.fastq > SamA.fastq
+
+
+
+^@\(.*\)
+
+"-es/
+^>\(.*\)/
+>\1;barcode=SamA;"

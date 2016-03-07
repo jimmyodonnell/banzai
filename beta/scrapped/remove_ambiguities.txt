@@ -1,0 +1,6 @@
+# REMOVE THE FOLLOWING ONCE WE ALL HAVE CUTADAPT >1.7 UP AND RUNNING
+# Take ambiguities out of primers. The sed command says "turn any character that's not A, T, C, or G, and replace it with N.
+PRIMER1_NON=$( echo $PRIMER1 | sed "s/[^ATCG]/N/g" )
+PRIMER2_NON=$( echo $PRIMER2 | sed "s/[^ATCG]/N/g" )
+PRIMER1RC_NON=$( echo $PRIMER1RC | sed "s/[^ATCG]/N/g" )
+PRIMER2RC_NON=$( echo $PRIMER2RC | sed "s/[^ATCG]/N/g" )

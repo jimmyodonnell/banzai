@@ -1,27 +1,16 @@
 #!/usr/bin/env bash
 
 # Pipeline for analysis of MULTIPLEXED Illumina data, a la Jimmy
-# TODO add library size variable
-# TODO eliminate looking for 'R1' and 'R2' in read names (just use first and second file in order)
-# TODO An attempt to cause the script to exit if any of the commands returns a non-zero status (i.e. FAILS).
-# TODO fix dereplication scripts
-# TODO make LIBRARY_DIRECTORIES an array by wrapping it in ()
-# TODO ALTERNATE READ LENGTH
-# TODO if LIBRARY_DIRECTORIES is an array, its length is "${#LIBRARY_DIRECTORIES[@]}"
-# TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
-# TODO LIBS_ARRAY is never used
-# TODO wrap primer removal '( ) &' to force into background and allow parallel processing
-# TODO add file test to end of each step and abort if necessary
-# if [[ -s $FILE ]] ; then
-# 	echo "$FILE has data."
-# else
-# 	echo "$FILE is empty."
-# fi ;
 
-# set -e is not the right solution because it will cause the script to exit immediately (without cleaning up after itself or notifying the user) if there is a problem with the megan file or the R script.
-# Instead, I should probably build in checks of the input files (sequencing metadata)
+echo
+echo
+echo -e '\t' "\x20\xf0\x9f\x8f\x84" " "  "\xc2\xa1" BANZAI !
+echo
+echo
+
+
 ################################################################################
-# RAW DATA, ANALYSIS PARAMETERS, AND GENERAL SETTINGS
+# CHECK FOR RAW DATA
 ################################################################################
 
 # Define a variable called START_TIME
@@ -34,15 +23,59 @@ SCRIPT_DIR="$(dirname "$0")"
 param_file="${1}"
 source "${param_file}"
 
-# make an analysis directory with starting time timestamp
-ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
-mkdir "${ANALYSIS_DIR}"
+# check if param file exists:
+if [[ -s "${param_file}" ]] ; then
+	echo "Reading analysis parameters from:"
+	echo "${param_file}"
+else
+	echo
+	echo 'ERROR! Could not find analysis parameter file. You specified the file path:'
+	echo
+	echo "${param_file}"
+	echo
+	echo 'That file is empty or does not exist. Aborting script.'
+	exit
+fi
 
-# Write a log file of output from this script (everything that prints to terminal)
-LOGFILE="${ANALYSIS_DIR}"/logfile.txt
-exec > >(tee "${LOGFILE}") 2>&1
 
-echo "Analysis started at ""${START_TIME}" " and is located in ""${ANALYSIS_DIR}"
+# check if sequencing metadata exists
+if [[ -s "${SEQUENCING_METADATA}" ]] ; then
+	echo "Reading sequencing metadata from:"
+	echo "${SEQUENCING_METADATA}"
+else
+	echo
+	echo 'ERROR! Could not find sequencing metadata file. You specified the file path:'
+	echo
+	echo "${SEQUENCING_METADATA}"
+	echo
+	echo 'That file is empty or does not exist. Aborting script.'
+	exit
+fi
+
+################################################################################
+# CHECK FOR DEPENDENCIES
+################################################################################
+dependencies=($( echo pear cutadapt vsearch swarm seqtk python blastn R ))
+echo 'Checking for dependencies:' "${dependencies[@]}"
+for i in "${dependencies[@]}"; do
+	if hash "${i}" 2>/dev/null; then
+	# if command -v "${i}" >/dev/null 2>&1; then
+		echo 'Found program' "${i}" 'in' $( which "${i}" )
+	else
+		echo 'ERROR: A program on which this script depends was not found:' "${i}"
+		echo 'Aborting script.'
+		exit
+	fi
+done
+
+# Specify compression utility
+if hash pigz 2>/dev/null; then
+	ZIPPER="pigz"
+	echo "pigz installation found"
+else
+	ZIPPER="gzip"
+	echo "pigz installation not found; using gzip"
+fi
 
 # Detect number of cores on machine; set variable
 n_cores=$(getconf _NPROCESSORS_ONLN)
@@ -53,8 +86,15 @@ else
 	echo "Multiple cores not detected."
 fi
 
+# make an analysis directory with starting time timestamp
+ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
+mkdir "${ANALYSIS_DIR}"
 
+# Write a log file of output from this script (everything that prints to terminal)
+LOGFILE="${ANALYSIS_DIR}"/logfile.txt
+exec > >(tee "${LOGFILE}") 2>&1
 
+echo "Analysis started at ""${START_TIME}" " and is located in ""${ANALYSIS_DIR}"
 
 # Copy these files into that directory as a verifiable log you can refer back to.
 cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
@@ -65,33 +105,41 @@ cp "${param_file}" "${ANALYSIS_DIR}"/analysis_parameters.txt
 ################################################################################
 # LOAD MULTIPLEX TAGS
 ################################################################################
-if [ "${READ_TAGS_FROM_SEQUENCING_METADATA}" = "YES" ]; then
-	TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == TAG_COL_NAME) print i; exit}' $SEQUENCING_METADATA)
-	TAGS=$(awk -F',' -v TAGCOL=$TAG_COL 'NR>1 {print $TAGCOL}' $SEQUENCING_METADATA | sort | uniq)
-	N_index_sequences=$(echo $TAGS | awk '{print NF}')
+TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == TAG_COL_NAME) print i; exit}' $SEQUENCING_METADATA)
+TAGS=$(awk -F',' -v TAGCOL=$TAG_COL 'NR>1 {print $TAGCOL}' $SEQUENCING_METADATA | sort | uniq)
+N_index_sequences=$(echo $TAGS | awk '{print NF}')
+
+# check if number of tags is greater than one:
+if [[ "${N_index_sequences}" -gt 1 ]]; then
 	echo "Multiplex tags read from sequencing metadata (""${N_index_sequences}"") total"
 else
-	TAGS=$(tr '\n' ' ' < "${TAG_FILE}" )
-	N_index_sequences=$(echo $TAGS | awk '{print NF}')
-	echo "Multiplex tags read from tag file (""${N_index_sequences}"") total"
+  echo
+  echo 'ERROR:' "${N_index_sequences}" 'index sequences found. There should probably be more than 1.'
+  echo
+  echo 'Aborting script.'
+	exit
 fi
-# make tag sequences into an array
+
 declare -a TAGS_ARRAY=($TAGS)
 
 
 ################################################################################
 # Read in primers and create reverse complements.
 ################################################################################
-if [ "${READ_PRIMERS_FROM_SEQUENCING_METADATA}" = "YES" ]; then
-	PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$PRIMER_1_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER1_COL) print i; exit}' $SEQUENCING_METADATA)
-	PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$PRIMER_2_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER2_COL) print i; exit}' $SEQUENCING_METADATA)
-	PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM 'NR==2 {print $PRIMER1_COL}' $SEQUENCING_METADATA)
-	PRIMER2=$(awk -F',' -v PRIMER2_COL=$PRIMER2_COLNUM 'NR==2 {print $PRIMER2_COL}' $SEQUENCING_METADATA)
-	echo "Primers read from sequencing metadata:" "${PRIMER1}" "${PRIMER2}"
+PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$PRIMER_1_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER1_COL) print i; exit}' $SEQUENCING_METADATA)
+PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$PRIMER_2_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER2_COL) print i; exit}' $SEQUENCING_METADATA)
+PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM 'NR==2 {print $PRIMER1_COL}' $SEQUENCING_METADATA)
+PRIMER2=$(awk -F',' -v PRIMER2_COL=$PRIMER2_COLNUM 'NR==2 {print $PRIMER2_COL}' $SEQUENCING_METADATA)
+echo "Primers read from sequencing metadata:" "${PRIMER1}" "${PRIMER2}"
+
+if [[ -n "${PRIMER1}" && -n "${PRIMER2}" ]]; then
+  echo 'Primers read from metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
+  echo 'Primer sequences:' "${PRIMER1}" "${PRIMER2}"
 else
-	PRIMER1=$( awk 'NR==2' "${PRIMER_FILE}" )
-	PRIMER2=$( awk 'NR==4' "${PRIMER_FILE}" )
-	echo "Primers read from primer file."
+  echo 'ERROR:' 'At least one primer is not valid'
+  echo 'Looked in metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
+  echo 'Aborting script'
+  exit
 fi
 
 # make primer array
@@ -112,16 +160,6 @@ EXTRA_SEQ=${TAGS_ARRAY[0]}${TAGS_ARRAY[0]}$PRIMER1$PRIMER2
 LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
 LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
-################################################################################
-# Specify compression utility
-################################################################################
-if hash pigz 2>/dev/null; then
-	ZIPPER="pigz"
-	echo "pigz installation found"
-else
-	ZIPPER="gzip"
-	echo "pigz installation not found; using gzip"
-fi
 
 ################################################################################
 # Find raw sequence files
@@ -132,10 +170,11 @@ fi
 LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique )
 
 # PEAR v0.9.6 does not correctly merge .gz files.
-# Look through fils and decompress if necessary.
+# Look through files and decompress if necessary.
 raw_files=($( find "${PARENT_DIR}" -name '*.fastq*' ))
 for myfile in "${raw_files[@]}"; do
 	if [[ "${myfile}" =~ \.gz$ ]]; then
+		echo $(date +%H:%M) "decompressing "${myfile}""
 		"${ZIPPER}" -d "${myfile}"
 	fi
 done
@@ -182,7 +221,7 @@ LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v TAGCOL=$TAG_COL 'NR>1 { print "li
 
 # create a file to store tag efficiency data
 TAG_COUNT="${ANALYSIS_DIR}"/tag_count.txt
-echo "library   tag   left_tagged   right_tagged" >> "${TAG_COUNT}"
+echo "library tag left_tagged right_tagged" >> "${TAG_COUNT}"
 
 ################################################################################
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
@@ -204,19 +243,24 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	# MERGE PAIRED-END READS AND QUALITY FILTER (PEAR)
 	##############################################################################
 
-	##############################################################################
-	# CALCULATE EXPECTED AND MINIMUM OVERLAP OF PAIRED END SEQUENCES
-	##############################################################################
 	LENGTH_READ=$( head -n 100000 "${READ1}" | awk '{print length($0);}' | sort -nr | uniq | head -n 1 )
-	OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
-	MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
 
-	##############################################################################
-	# CALCULATE MAXIMUM AND MINIMUM LENGTH OF MERGED READS
-	##############################################################################
-	ASSMAX=$(( $LENGTH_FRAG + 50 ))
-	ASSMIN=$(( $LENGTH_FRAG - 50 ))
-
+	if [ "${calculate_merge_length}" = "YES" ]; then
+		##############################################################################
+		# CALCULATE EXPECTED AND MINIMUM OVERLAP OF PAIRED END SEQUENCES
+		##############################################################################
+		OVERLAP_EXPECTED=$(($LENGTH_FRAG - (2 * ($LENGTH_FRAG - $LENGTH_READ) ) ))
+		MINOVERLAP=$(( $OVERLAP_EXPECTED / 2 ))
+		##############################################################################
+		# CALCULATE MAXIMUM AND MINIMUM LENGTH OF MERGED READS
+		##############################################################################
+		ASSMAX=$(( $LENGTH_FRAG + 50 ))
+		ASSMIN=$(( $LENGTH_FRAG - 50 ))
+	else
+		MINOVERLAP="${minimum_overlap}"
+		ASSMAX="${assembled_max}"
+		ASSMIN="${assembled_min}"
+	fi
 
 	if [ "$ALREADY_PEARED" = "YES" ]; then
 		MERGED_READS="$PEAR_OUTPUT"
@@ -240,52 +284,29 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			-s $SCORING \
 			-j $n_cores
 
+		# check pear output:
+		if [[ ! -s "${MERGED_READS}" ]] ; then
+		    echo 'ERROR: No reads were merged.'
+		    echo 'Aborting analysis of this library, but will move on to next one.'
+				continue
+		fi
+
+
 
 	fi
 
 	################################################################################
-	# EXPECTED ERROR FILTERING (usearch)
+	# EXPECTED ERROR FILTERING (vsearch)
 	################################################################################
 	# FILTER READS (This is the last step that uses quality scores, so convert to fasta)
 	if [ "${Perform_Expected_Error_Filter}" = "YES" ]; then
-		if [ "${ALREADY_FILTERED}" = "YES" ]; then
-			echo "Using existing filtered reads in file $FILTERED_OUTPUT"
-		else
-			FILTERED_OUTPUT="${LIB_OUTPUT_DIR}"/2_filtered.fasta
-		# The 32bit version of usearch will not accept an input file greater than 4GB. The 64bit usearch is $900. Thus, for now:
-			echo $(date +%H:%M) "Decompressing merged reads..."
-			"${ZIPPER}" -d "${MERGED_READS}".gz
-
-			echo "Calculating merged file size..."
-			INFILE_SIZE=$(stat "${MERGED_READS}" | awk '{ print $8 }')
-			if [ ${INFILE_SIZE} -gt 4000000000 ]; then
-			# Must first check the number of reads. If odd, file must be split so as not to split the middle read's sequence from its quality score.
-				echo $(date +%H:%M) "Splitting large input file for quality filtering..."
-				LINES_MERGED=$(wc -l < "${MERGED_READS}")
-				READS_MERGED=$(( LINES_MERGED / 4 ))
-				HALF_LINES=$((LINES_MERGED / 2))
-				if [ $((READS_MERGED%2)) -eq 0 ]; then
-					head -n ${HALF_LINES} "${MERGED_READS}" > "${MERGED_READS%.*}"_A.fastq
-					tail -n ${HALF_LINES} "${MERGED_READS}" > "${MERGED_READS%.*}"_B.fastq
-				else
-					head -n $(( HALF_LINES + 2 )) "${MERGED_READS}" > "${MERGED_READS%.*}"_A.fastq
-					tail -n $(( HALF_LINES - 2 )) "${MERGED_READS}" > "${MERGED_READS%.*}"_B.fastq
-				fi
-				echo  $(date +%H:%M) "usearch is performing quality control on merged reads..."
-				usearch -fastq_filter "${MERGED_READS%.*}"_A.fastq -fastq_maxee "${Max_Expected_Errors}" -fastaout "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta
-				usearch -fastq_filter "${MERGED_READS%.*}"_B.fastq -fastq_maxee "${Max_Expected_Errors}" -fastaout "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta
-				cat "${LIB_OUTPUT_DIR}"/2_filtered_A.fasta "${LIB_OUTPUT_DIR}"/2_filtered_B.fasta > "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
-			else
-				echo  $(date +%H:%M) "usearch is performing quality control on merged reads..."
-				usearch -fastq_filter "${MERGED_READS}" -fastq_maxee "${Max_Expected_Errors}" -fastaout "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
-			fi
-
-			# Remove annoying usearch linebreaks at 80 characters
-			echo  $(date +%H:%M) "removing fasta linebreaks..."
-			awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${FILTERED_OUTPUT%.*}"_linebreaks.fasta > "${FILTERED_OUTPUT}"
-			# remove file with linebreaks
-			rm "${FILTERED_OUTPUT%.*}"_linebreaks.fasta
-		fi
+		echo $(date +%H:%M) "Filtering merged reads..."
+		FILTERED_OUTPUT="${LIB_OUTPUT_DIR}"/2_filtered.fasta
+		vsearch \
+			--fastq_filter "${MERGED_READS}" \
+			--fastq_maxee "${Max_Expected_Errors}" \
+			--fastaout "${FILTERED_OUTPUT}" \
+			--fasta_width 0
 	else
 		# Convert merged reads fastq to fasta
 		echo  $(date +%H:%M) "converting fastq to fasta..."
@@ -369,7 +390,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	echo $(date +%H:%M) "Demultiplexing: removing tags and adding to sequence ID in library" "${CURRENT_LIB##*/}""..."
 	for TAG_SEQ in $TAGS; do
-	(	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+	(	TAG_DIR="${DEMULTIPLEXED_DIR}"/tag_"${TAG_SEQ}"
 		mkdir "${TAG_DIR}"
 		demult_file_L="${TAG_DIR}"/1_tagL_removed.fasta
 	  demult_file_R="${TAG_DIR}"/2_notags.fasta
@@ -387,7 +408,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 			if (a && a !~ /'"$TAG_RC"'.{3}$/)
 				print a "tag_""'"$TAG_SEQ"'";
 			print
-		} {a = $0}' "${TAG_DIR}"/1_tagL_removed.fasta > "${demult_file_R}"
+		} {a = $0}' "${demult_file_L}" > "${demult_file_R}"
 
 		echo "${CURRENT_LIB##*/}" "${TAG_SEQ}" $(wc -l "${demult_file_L}" | \
 			awk '{ print ($1/2) }') $(wc -l "${demult_file_R}" | \
@@ -491,53 +512,146 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# done
 	# wait
 
-	cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_primerL1_removed.fasta
-	cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_primerL2_removed.fasta
+	# remove primer 1 from left side of sequences
+	primerL1_removed="${CONCAT_DIR}"/5_primerL1_removed.fasta
+	( cutadapt \
+		-g ^"${PRIMER1}" \
+		-e "${PRIMER_MISMATCH_PROPORTION}" \
+		-m "${LENGTH_ROI_HALF}" \
+		--discard-untrimmed \
+		"${CONCAT_FILE}" > "${primerL1_removed}" ) &
+
+	# remove primer 2 from left side of sequences
+	primerL2_removed="${CONCAT_DIR}"/5_primerL2_removed.fasta
+	( cutadapt \
+		-g ^"${PRIMER2}" \
+		-e "${PRIMER_MISMATCH_PROPORTION}" \
+		-m "${LENGTH_ROI_HALF}" \
+		--discard-untrimmed \
+		"${CONCAT_FILE}" > "${primerL2_removed}" ) &
+
+	wait
 
 	# compress left primer removal input
 	echo $(date +%H:%M) "Compressing left primer removal input..."
 	"${ZIPPER}" "${CONCAT_DIR}"/1_demult_concat.fasta
 	echo $(date +%H:%M) "Left primer removal input compressed."
 
+	# check for cutadapt/primer removal success.
+	if [[ ! -s "${primerL1_removed}" ]]; then
+	  echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
+		echo "${primerL1_removed}"
+	  echo 'Aborting script'
+	  exit
+	fi
+	# check for cutadapt/primer removal success.
+	if [[ ! -s "${primerL2_removed}" ]]; then
+	  echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
+		echo "${primerL2_removed}"
+	  echo 'Aborting script'
+	  exit
+	fi
 
-	# TODO wrap in '( ) &' to force into background and allow parallel processing
-	# i.e.
-	# for primer in "${primersRC_arr[@]}"; do ------------------------------------------------------------------------------------->  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! file references will be an issue!
-	# 	( cutadapt -a ^"${primer}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_L"${primer}"_removed.fasta ) &
-	# done
-	# wait
+	# Remove the reverse complement of primer 1 from the right side of sequences
+	primerR1_removed="${CONCAT_DIR}"/6_primerR1_removed.fasta
+	( cutadapt \
+		-a "${PRIMER2RC}"$ \
+		-e "${PRIMER_MISMATCH_PROPORTION}" \
+		-m "${LENGTH_ROI_HALF}" \
+		--discard-untrimmed \
+		"${primerL1_removed}" > "${primerR1_removed}" ) &
 
-	# Remove the primer on the other end of the reads by reverse-complementing the files and then trimming PRIMER1 and PRIMER2 from the left side.
-	# NOTE cutadapt1.7 will account for anchoring these to the end of the read with $
-	# seqtk seq -r "${CONCAT_DIR}"/5_primerL1_removed.fasta | cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${CONCAT_DIR}"/6_primerR1_removed.fasta
-	cutadapt -a "${PRIMER2RC}"$ -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/5_primerL1_removed.fasta > "${CONCAT_DIR}"/6_primerR1_removed.fasta
-	# seqtk seq -r "${CONCAT_DIR}"/5_primerL2_removed.fasta | cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed - > "${CONCAT_DIR}"/6_primerR2_removed.fasta
-	cutadapt -a "${PRIMER1RC}"$ -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_DIR}"/5_primerL2_removed.fasta > "${CONCAT_DIR}"/6_primerR2_removed.fasta
+	# Remove the reverse complement of primer 2 from the right side of sequences
+	primerR2_removed="${CONCAT_DIR}"/6_primerR2_removed.fasta
+	( cutadapt \
+		-a "${PRIMER1RC}"$ \
+		-e "${PRIMER_MISMATCH_PROPORTION}" \
+		-m "${LENGTH_ROI_HALF}" \
+		--discard-untrimmed \
+		"${primerL2_removed}" > "${primerR2_removed}" ) &
+
+	wait
+
+	# check for cutadapt/primer removal success.
+	if [[ ! -s "${primerR1_removed}" ]]; then
+		echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
+		echo "${primerR1_removed}"
+		echo 'Aborting script'
+		exit
+	fi
+	# check for cutadapt/primer removal success.
+	if [[ ! -s "${primerR2_removed}" ]]; then
+		echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
+		echo "${primerR2_removed}"
+		echo 'Aborting script'
+		exit
+	fi
+
+	# Reverse-complement the sequences in which the RC of primer 1 was found on the right side
 	seqtk seq -r "${CONCAT_DIR}"/6_primerR1_removed.fasta > "${CONCAT_DIR}"/6_primerR1_removedRC.fasta
 
+	# paste together the contents of the files that primers were removed from.
 	DEREP_INPUT="${CONCAT_DIR}"/7_no_primers.fasta
 
 	cat "${CONCAT_DIR}"/6_primerR1_removedRC.fasta "${CONCAT_DIR}"/6_primerR2_removed.fasta > "${DEREP_INPUT}"
+
+	# check that it worked (derep input / no primers)
+	if [[ ! -s "${DEREP_INPUT}" ]] ; then
+	    echo 'ERROR: Input file for dereplication is empty or absent.'
+	    echo 'This will cause problems for all remaining steps, so script will exit.'
+	    exit
+	fi
+
+
 
 	################################################################################
 	# CONSOLIDATE IDENTICAL SEQUENCES (DEREPLICATION)
 	################################################################################
 	echo $(date +%H:%M) "Identifying identical sequences... (python)"
+	derep_output="${DEREP_INPUT}".derep
 	python "$SCRIPT_DIR/dereplication/dereplicate_fasta.py" "${DEREP_INPUT}"
-	# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${DEREP_INPUT%/*}"/2_derep.uc -output "${DEREP_INPUT%/*}"/2_derep.fasta
 
-	# Exclude singleton sequences (if NF > 2), count the number of sequences per duplicate (print NF-1), sort them by the number of sequences per duplicate (sort -nr), and precede with a name ("DUP_X", where X is the line number)
-	echo $(date +%H:%M) "Counting duplicates per identical sequence and excluding singletons... (awk)"
-	no_singletons="${DEREP_INPUT%/*}"/nosingle.txt
+	# check for derep output
+	if [[ ! -s "${derep_output}" ]] ; then
+	    echo 'ERROR: python dereplication output is empty or absent.'
+	    echo 'This will cause problems for all remaining steps, so script will exit.'
+	    exit
+	fi
 
-	awk -F';' '{
-		if (NF > 2)
-			print NF-1 ";" $0
-		}' "${DEREP_INPUT}".derep | \
-	sort -nr | \
-	awk -F';' '{
-		print ">DUP_" NR ";" $0
-	}' > "${no_singletons}"
+
+	##############################################################################
+	# COUNT SEQUENCES, REMOVE SINGLETONS
+	##############################################################################
+	# count the number of sequences per duplicate (print NF-1), sort them by the number of sequences per duplicate (sort -nr), and precede with a name ("DUP_X", where X is the line number), excluding singleton sequences (if NF > 2) if specified
+	echo $(date +%H:%M) "Counting duplicates per identical sequence and excluding singletons if specified... (awk)"
+
+	dup_counts="${DEREP_INPUT%/*}"/dup_counts.txt
+
+	if [ "$remove_singletons" = "YES" ]; then
+		awk -F';' '{
+			if (NF > 2)
+				print NF-1 ";" $0
+			}' "${derep_output}" | \
+		sort -nr | \
+		awk -F';' '{
+			print ">DUP_" NR ";" $0
+		}' > "${dup_counts}"
+	else
+		awk -F';' '{
+				print NF-1 ";" $0
+			}' "${derep_output}" | \
+		sort -nr | \
+		awk -F';' '{
+			print ">DUP_" NR ";" $0
+		}' > "${dup_counts}"
+	fi
+
+	# check output
+	if [[ ! -s "${dup_counts}" ]] ; then
+	    echo 'There was a problem generating the dup_counts file. It is empty or absent.'
+	    echo 'This will cause problems counting sequences for dereplication.'
+	fi
+
 
 
 	# COUNT OCCURRENCES PER SAMPLE (LIBRARY + TAG) PER DUPLICATE
@@ -573,7 +687,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 			(
 
 			# write an output file called *.dup, start by printing the lib/tag being processed, then print a count the occurrences of the current lib/tag on each line of the input file
-			awk 'BEGIN {print "'$sample'" ; FS ="'${sample}'" } { print NF -1 }' "${no_singletons}" > "${temp_dir}"/"${sample}".dup
+			awk 'BEGIN {print "'$sample'" ; FS ="'${sample}'" } { print NF -1 }' "${dup_counts}" > "${temp_dir}"/"${sample}".dup
 
 			) &
 
@@ -585,7 +699,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# write a file of names of each of the duplicates:
 	dupnames="${temp_dir}"/dupnames
-	awk -F';' 'BEGIN {print "sample"} {print $1}' "$no_singletons" | sed 's/>//' > "${dupnames}"
+	awk -F';' 'BEGIN {print "sample"} {print $1}' "$dup_counts" | sed 's/>//' > "${dupnames}"
 
 	# first, count the number of duplicate files:
 	n_files=$(find "${temp_dir}" -type f -name '*.dup*' | wc -l)
@@ -627,12 +741,37 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# Write fasta file in order to blast sequences
 	echo $(date +%H:%M) "Writing fasta file of duplicate sequences"
-	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${no_singletons}" > "${duplicate_fasta}"
+	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${dup_counts}" > "${duplicate_fasta}"
+
+	# check if duplicate fasta and duplicate table exist. (Might need to check size)
+	if [[ ! -s "${duplicate_fasta}" ]] ; then
+	    echo 'There was a problem generating the duplicate fasta file. It is empty or absent.'
+	    echo 'The remainder of the script, including OTU clustering, depends on this file.'
+	    echo 'Aborting script.'
+	    exit
+	fi
+	if [[ ! -s "${duplicate_table}" ]] ; then
+	    echo 'There was a problem generating the duplicate table. It is empty or absent.'
+	    echo 'Aborting script.'
+	    exit
+	fi
+
 ################################################################################
 
 
 
 
+
+##############################################################################
+# CHECK FOR CHIMERAS
+##############################################################################
+if [[ "${remove_chimeras}" = "YES" ]] ; then
+	echo $(date +%H:%M) 'Looking for chimeras in duplicate fasta file using vsearch'
+	source "${SCRIPT_DIR}"/chimera_check.sh "${duplicate_fasta}"
+	clustering_input="${chimera_free_fasta}"
+else
+	clustering_input="${duplicate_fasta}"
+fi
 
 
 
@@ -644,60 +783,80 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# Note that identical (duplicate) sequences were consolidated earlier;
 	# This step outputs a file (*.uc) that lists, for every sequence, which sequence it clusters with
 	if [ "$CLUSTER_OTUS" = "NO" ]; then
-		BLAST_INPUT="${duplicate_fasta}"
+		BLAST_INPUT="${clustering_input}"
 	else
 		echo $(date +%H:%M) "Clustering OTUs..."
-		# define output files (these will be in the same directory as the infile)
-		dir_out="${duplicate_fasta%/*}"/OTUs_usearch
-		mkdir "${dir_out}"
-		out_fasta="${dir_out}"/OTUs.fasta
-		out_fasta_linebreak="${dir_out}"/OTUs_linebreaks.fasta
-		# logfile="${dir_out}"/OTUs.log
-		out_uc="${dir_out}"/OTUs.uc
 
-		CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
-		# UPARSE_OUT="${DEREP_INPUT%/*}"/OTU_uparse.txt
-		# usearch -cluster_otus "${duplicate_fasta}" -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta -uparseout "${UPARSE_OUT}"
-		# execute usearch
-		usearch \
-			-cluster_otus "${duplicate_fasta}" \
-			-otu_radius_pct "${CLUSTER_RADIUS}" \
-			-sizein \
-			-sizeout \
-			-otus "${out_fasta_linebreak}" \
-			-uparseout "${out_uc}"
-			# -relabel OTU_ \
+		case "${cluster_method}" in
 
-		# remove the annoying line breaks
-		echo $(date +%H:%M) "Removing line breaks within fasta sequences generated by usearch (awk)..."
-		awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${out_fasta_linebreak}" > "${out_fasta}"
-		# usearch option -notmatched disappeared with version 8
-		# awk '/^>/{print (NR==1)?$0:"\n"$0;next}{printf "%s", $0}END{print ""}' "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta > "${DEREP_INPUT%/*}"/9_notmatched.fasta
+		    "swarm" )
 
-		# rm "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta # "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
+		        echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
+		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
 
-		################################################################################
-		# RESOLVE OTUS AND DUPLICATES
-		################################################################################
-		# Note that this drops sequences determined to be chimeras by usearch
-		DUPS_TO_OTUS="${dir_out}"/dups_to_otus.csv
-		awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1} else if ($4 == "match") { print $1 "," $7 } else if ($4 == "chimera") { print $1 "," "chimera"} }' "${out_uc}" > "${DUPS_TO_OTUS}"
+		    ;;
+
+		    "vsearch" )
+
+		        # echo $(date +%H:%M) 'Clustering sequences into OTUs using vsearch'
+		        # source "${SCRIPT_DIR}"/OTU_clustering/cluster_vsearch.sh "${duplicate_fasta}"
+						echo "Sorry, OTU clustering with vsearch has not been implemented yet."
+						echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
+		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
+
+		    ;;
+
+		    "usearch" )
+
+		        echo $(date +%H:%M) 'Clustering sequences into OTUs using usearch'
+		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_usearch.sh "${clustering_input}"
+
+		    ;;
+
+		    * )
+
+		        echo "${cluster_method}" 'is an invalid clustering method.'
+		        echo 'Must be one of swarm, vsearch, usearch, or none.'
+		        echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
+		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
+
+		    ;;
+
+		esac
+
+		# check that dup to otu map is greater than 12 bytes
+		minsize=12
+		size_dup_otu_map=$(wc -c <"${dup_otu_map}")
+		if [ $size_dup_otu_map -lt $minsize ]; then
+		    echo 'There was an error generating the dup-to-otu map.'
+		fi
+
 
 		# Assign the path for the OTU table
-		OTU_table="${dir_out}"/OTU_table.csv
+		# OTU_table="${dir_out}"/OTU_table.csv
 
-		# Convert duplicate table to OTU table using R script (arguments: duplicate table, dup to otu table, otu table path, concatenated directory (obsolete?))
-		Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${DUPS_TO_OTUS}" "${OTU_table}" "${CONCAT_DIR}"
+		# Convert duplicate table to OTU table using R script (arguments: (1) duplicate table, (2) dup to otu table, (3) otu table path
+		Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${dup_otu_map}" "${OTU_table}"
 
-		BLAST_INPUT="${out_fasta}"
+		# check if OTU table and OTU fasta exist (and/or are of size gt 1?)
+		if [[ ! -s "${OTU_fasta}" ]] ; then
+		    echo 'There was a problem generating the OTU fasta file. It is empty or absent.'
+		    echo 'Aborting script.'
+		    exit
+		fi
+		if [[ ! -s "${OTU_table}" ]] ; then
+		    echo 'There was a problem generating the OTU table. It is empty or absent.'
+		    echo 'Aborting script.'
+		    exit
+		fi
 
 	fi
-
 
 	################################################################################
 	# BLAST CLUSTERS
 	################################################################################
 	echo $(date +%H:%M) "BLASTing..."
+	blast_output="${DEREP_INPUT%/*}"/10_BLASTed.xml
 	blastn \
 		-query "${BLAST_INPUT}" \
 		-db "$BLAST_DB" \
@@ -706,8 +865,17 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		-word_size "${WORD_SIZE}" \
 		-evalue "${EVALUE}" \
 		-max_target_seqs "${MAXIMUM_MATCHES}" \
+		-culling_limit "${culling_limit}" \
 		-outfmt 5 \
-		-out "${DEREP_INPUT%/*}"/10_BLASTed.xml
+		-out "${blast_output}"
+
+	# check for blast output
+	if [[ ! -s "${blast_output}"  ]]; then
+		echo
+		echo 'BLAST failed: the output file is empty or absent.'
+	    echo 'File should be:' "${blast_output}"
+		echo
+	fi
 
 
 
@@ -760,13 +928,13 @@ else
 		# REMOVE SINGLETONS
 		# usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
 		# COUNT DUPLICATES PER READ, REMOVE SINGLETONS
-		awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".derep | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/nosingle.txt
+		awk -F';' '{ if (NF > 2) print NF-1 ";" $0 }' "${DEREP_INPUT}".derep | sort -nr | awk -F';' '{ print ">DUP_" NR ";" $0}' > ${DEREP_INPUT%/*}/dup_counts.txt
 
 		# count the duplicates
-		awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT%/*}"/nosingle.txt > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup
+		awk 'BEGIN { FS ="_tag_'${TAG_SEQ}'" } { print NF -1 }' "${DEREP_INPUT%/*}"/dup_counts.txt > ${DEREP_INPUT%/*}/"${TAG_SEQ}".dup
 
 		# Write fasta file in order to blast sequences
-		awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/no_duplicates.fasta
+		awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' ${DEREP_INPUT%/*}/dup_counts.txt > ${DEREP_INPUT%/*}/no_duplicates.fasta
 
 		# CLUSTER SEQUENCES
 		if [ "$CLUSTER_OTUS" = "NO" ]; then
@@ -774,7 +942,7 @@ else
 		else
 			CLUSTER_RADIUS="$(( 100 - ${CLUSTERING_PERCENT} ))"
 			UPARSE_OUT="${DEREP_INPUT%/*}"/OTU_uparse.txt
-			usearch -cluster_otus "${DEREP_INPUT%/*}"/nosingle.txt -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -uparseout "${UPARSE_OUT}"
+			usearch -cluster_otus "${DEREP_INPUT%/*}"/dup_counts.txt -otu_radius_pct "${CLUSTER_RADIUS}" -sizein -sizeout -otus "${TAG_DIR}"/9_OTUs.fasta -uparseout "${UPARSE_OUT}"
 			BLAST_INPUT="${TAG_DIR}"/9_OTUs.fasta
 		fi
 
@@ -796,10 +964,14 @@ fi
 
 for DIR in "$DIRECTORIES"; do
 
-		# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
-		# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
-		# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
+	# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
+	# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
+	# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
 
+		# check for blast output
+		if [[ -s "${blast_output}"  ]]; then
+
+		echo $(date +%H:%M) 'BLAST output found; proceeding to MEGAN.'
 		# Specify paths to megan-related files
 		BLAST_XML="${DIR}"/10_BLASTed.xml
 		MEGAN_COMMAND_FILE="${DIR}"/megan_commands.txt
@@ -841,6 +1013,13 @@ lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 		# Run the R script, passing the current tag directory as the directory to which R will "setwd()"
 		Rscript "$SCRIPT_DIR/megan_plotter.R" "${DIR}"
 
+	else
+		echo
+		echo 'BLAST failed: the output file is empty or absent.'
+		echo 'File should be:' "${blast_output}"
+		echo
+	fi
+
 done
 
 
@@ -848,15 +1027,22 @@ done
 # PRELIMINARY ANALYSES
 ################################################################################
 # Once you have a final CSV file of the number of occurences of each OTU in each sample, run some preliminary analyses in R
-
+# TODO rename preliminary to OTU analyses; move analysis script to OTU analysis directory
 OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
-echo $(date +%H:%M) "passing args to R..."
+echo $(date +%H:%M) "passing args to R for preliminary analysis..."
 Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_METADATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}" "${ColumnName_SampleName}" "${ColumnName_SampleType}"
 
 
-REMOTE_PDF="${OUTPUT_PDF_DIR}"/analysis_results_"${START_TIME}".pdf
-cp "${OUTPUT_PDF}" "${REMOTE_PDF}"
+# EMPTY PDFs are 3829 bytes
+minimumsize=4000
+size_PDF=$(wc -c <"${OUTPUT_PDF}")
+if [ "${size_PDF}" -lt "${minimumsize}" ]; then
+    echo 'There was a problem generating the PDF.'
+else
+	REMOTE_PDF="${OUTPUT_PDF_DIR}"/analysis_results_"${START_TIME}".pdf
+	cp "${OUTPUT_PDF}" "${REMOTE_PDF}"
+fi
 
 
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
@@ -870,6 +1056,15 @@ else
 fi
 
 FINISH_TIME=$(date +%Y%m%d_%H%M)
-curl -sS http://textbelt.com/text -d number=$PHONE_NUMBER -d message="Pipeline finished! Started $START_TIME Finished $FINISH_TIME"
 
-echo -e '\nAll finished!'
+echo 'Pipeline finished! Started at' $START_TIME 'and finished at' $FINISH_TIME | mail -s "banzai is finished" "${EMAIL_ADDRESS}"
+
+echo -e '\n'$(date +%H:%M)'\tAll finished! Why not treat yourself to a...\n'
+echo
+echo -e '\t~~~ MAI TAI ~~~'
+echo -e '\t2 oz\taged rum'
+echo -e '\t0.75 oz\tfresh squeezed lime juice'
+echo -e '\t0.5 oz\torgeat'
+echo -e '\t0.5 oz\ttriple sec'
+echo -e '\t0.25 oz\tsimple syrup'
+echo -e '\tShake, strain, and enjoy!' '\xf0\x9f\x8d\xb9\x0a''\n'

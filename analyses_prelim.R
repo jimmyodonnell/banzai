@@ -11,28 +11,61 @@
 # 7. (string) Name of the column of the metadata file containing sample types
 
 # If you want to run this interactively, just comment out the following line, un-comment the 8 lines after that, and make all of those the appropriate file paths/arguments (see numbers above).
+
 arguments<-commandArgs(TRUE)
-# arguments <- c(
-#   "/Users/threeprime/Desktop/debug.pdf",
-#   "/Users/threeprime/Desktop/Analysis_20150526_1525/all_lib/OTU_table.csv",
-#   "/Users/threeprime/temp_big/12sHopkins/sample_data/12S_tagged_run_metadata_20150525.csv",
-#   "library",
-#   "tag_sequence",
-#   "sample_name",
-#   "sample_type")
+arguments <- c(
+  "/Users/threeprime/Desktop/debug.pdf",
+  "/Users/threeprime/temp_big/20150717_nextseq/Analysis_20151019_1918/all_lib/OTUs_swarm/OTU_table.csv",
+  "/Users/threeprime/temp_big/20150717_nextseq/SEQUENCING_POOL_20150618.csv",
+  "library",
+  "tag_sequence",
+  "sample_name",
+  "sample_type")
+
+
+pdf_file			<- arguments[1]
+otu_file			<- arguments[2]
+metadata_file	<- arguments[3]
+col_library		<- arguments[4]
+col_tagseq		<- arguments[5]
+col_samplename	<- arguments[6]
+col_sampletype	<- arguments[7]
+
+
+
+# load required packages
+required_packages <- "vegan"
+
+for(package in required_packages){
+	if( package %in% installed.packages()){
+		print(paste("loading ", package))
+		library(package, character.only = TRUE)
+	} else {
+		print(paste(package, "is not installed; attempting to install it..."))
+		install.packages(package)
+		if( package %in% installed.packages()){
+			print(c("loading ", package))
+			library(package, character.only = TRUE)
+		} else {
+			stop(c("Couldn't find or load the R package ", package))
+		}
+	}
+}
+
 
 # initialize PDF
-pdf(file = arguments[1])
+pdf(file = pdf_file)
 
-# READ IN THE DATA
-DATA <- read.csv(arguments[2], row.names = 1)
+par_orig <- par()
+
+################################################################################
+# READ IN THE DATA (and do basic cleaning)
+
+# OTU TABLE
+DATA <- read.csv(otu_file, row.names = 1)
 
 # for clustered data, replace "DUP" with "OTU"
 # rownames(DATA) <- gsub("DUP", "OTU", rownames(DATA))
-
-# Read in spreadsheet from labwork, which contains columns of sample names and corresponding tag sequences
-# for original formatting see "/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20141113_time_series/sample_data.csv"
-SAMPLES <- read.csv(arguments[3])
 
 # transpose OTU data to the appropriate orientation (samples are rows, OTUs are columns)
 DATA <- t(as.matrix(DATA))
@@ -44,28 +77,146 @@ DATA <- DATA[,order(colSums(DATA), decreasing = TRUE)]
 # dim(DATA)
 
 
+# METADATA
+# Read in metadata spreadsheet from labwork, which contains columns of sample names and corresponding tag sequences
+# for original formatting see "/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20141113_time_series/sample_data.csv"
+metadata <- read.csv(metadata_file)
 
-# make a vector that will link the OTU file and the sequencing pool
-row_check <- paste(SAMPLES[,arguments[4]], "tag", SAMPLES[,arguments[5]], sep = "_")
-SAMPLES <- cbind(SAMPLES, row_check)
+# eliminate any columns that aren't going to be used
+metadata <- metadata[,c(col_library, col_tagseq, col_samplename, col_sampletype)]
 
-# link the SAMPLES file to the OTU file
-tag_to_sequencing_data <- match(rownames(DATA), SAMPLES$row_check)
-tag_to_samplename <- SAMPLES[tag_to_sequencing_data, arguments[6]]
+
+
+
+
+
+################################################################################
+################################################################################
+################################################################################
+# check that the two data files can be linked up
+
+# The rownames of the OTU table should ID/differentiate distinct samples from the sequencer
+# This information was glommed together from the metadata by banzai, so we should be able to go back and piece things back together
+
+# make a new column in the metadata that will link the OTU file and the sequencing pool
+# NOTE: The following line must directly correspond to the naming scheme used by banzai!
+# originally was a separate vector: sample_id <- paste("lib", metadata[,col_library], "tag", metadata[,col_tagseq], sep = "_")
+metadata <- cbind(
+				metadata, 
+				sample_id = paste(
+					"lib", 
+					metadata[,col_library], 
+					"tag", 
+					metadata[,col_tagseq], 
+					sep = "_"
+					)
+				)
+
+
+# Check for differences between the sample IDs in metadata and OTU table.
+if(length(setdiff(rownames(DATA), metadata$sample_id)) == 0 ){
+	print("The sample IDs in the metadata and OTU table match up -- great jorb!")
+} else {
+	print("The sample IDs in the metadata and OTU table do not match up.")
+	# Which has the 
+	maxboth <- max(length(rownames(DATA)), length(metadata$sample_id))
+	
+	# how many of the OTU table rownames are contained in the "sample_id" column
+	inboth <- sum(rownames(DATA) %in% metadata$sample_id)	
+}
+
+
+! 
+rownames(DATA) %in% metadata$sample_id
+metadata$sample_id %in% rownames(DATA)
+
+
+
+if( inboth == 0){
+	stop("Sample identifiers in metadata and OTU table do not correspond.")
+} else if(inboth == maxboth){
+	
+} else if(){
+	
+} else {
+	print("something else")
+}
+
+paste(nrow(DATA), "rows found in OTU table,", nrow(metadata), "rows found in metadata")
+nrow(DATA) 
+if(TRUE){
+	stop(nrow(DATA), " rows found in OTU table, ", nrow(metadata), " rows found in metadata, ")
+}
+print()
+
+length(metadata$sample_id)
+
+# link the metadata file to the OTU file
+tag_to_sequencing_data <- match(rownames(DATA), metadata$sample_id)
+tag_to_samplename <- metadata[tag_to_sequencing_data, arguments[6]]
+
+################################################################################
+################################################################################
+################################################################################
+
+
+
+
+
+
+
+
+
 
 # plot the number of reads per sample binned by sample origin (environmental samples and controls)
 data_by_sample <- split(rowSums(DATA), tag_to_samplename)
-stripchart(data_by_sample, las = 2, cex.axis = 0.8, pch = 1, vertical = TRUE, main = "Reads per sample")
-SD_reads <- c(median(rowSums(DATA)) - sd(rowSums(DATA)), median(rowSums(DATA)) + sd(rowSums(DATA)))
-polygon(x = c(0, length(data_by_sample)+1, length(data_by_sample)+1, 0), y = rep(SD_reads, each = 2), col = "#BEBEBE50", border = NA)
+stripchart(
+	data_by_sample, 
+	las = 2, 
+	# cex.axis = 0.4, 
+	pch = 1, 
+	vertical = TRUE, 
+	xaxt = "n", 
+	main = "Reads per sample"
+	)
+	
+axis(
+	side = 1, 
+	at = 1:length(data_by_sample), 
+	labels = names(data_by_sample), 
+	cex.axis = 0.4, 
+	las = 2
+	)
+
+SD_reads <- c(
+	median(rowSums(DATA)) - sd(rowSums(DATA)), 
+	median(rowSums(DATA)) + sd(rowSums(DATA))
+	)
+	
+polygon(
+	x = c(0, length(data_by_sample)+1, length(data_by_sample)+1, 0), 
+	y = rep(SD_reads, each = 2), 
+	col = "#BEBEBE50", 
+	border = NA
+	)
+	
 abline(h = median(rowSums(DATA)), lty = 2)
 
 # plot total sum of reads per dup/OTU across samples
-plot(colSums(DATA), pch = 20, cex = 0.5, main = "total reads per OTU")
+par() <- par_orig
+plot(
+	colSums(DATA), 
+	# log = "y", 
+	pch = 20, 
+	cex = 0.5, 
+	main = "Total reads per OTU across samples", 
+	xlab = "OTU rank", 
+	ylab = "Number of reads"
+	)
 
 # create matrix of tag sequence and library number
 TAG_LIB <- strsplit(rownames(DATA), "_")
-TAG_LIB <- do.call(rbind, TAG_LIB)[,c(3,1)]
+TAG_LIB <- do.call(rbind, TAG_LIB)[,c(4,2)]
 colnames(TAG_LIB) <- c("Tag", "Lib")
 
 # bind tag sequence and library number to OTU table; must be a dataframe to store numbers/text
@@ -73,24 +224,25 @@ DATA.df <- cbind(TAG_LIB, as.data.frame(DATA))
 
 
 # Order the OTU data the same as the sequencing pool sample data
-DATA.df <- DATA.df[match(interaction(SAMPLES[c("tag_sequence", "library")]), interaction(DATA.df[c("Tag", "Lib")])),]
+DATA.df <- DATA.df[
+					match(
+					interaction(metadata[c("tag_sequence", "library")]), 
+					interaction(DATA.df[c("Tag", "Lib")])),
+				]
 
-
-# rows after row 25 are garbage, delete them.
-# SAMPLES <- SAMPLES[1:25,]
 
 # make a vector of sample names in the right order (corresponding to the tag sequence from OTU table)
-# sample_name <- SAMPLES$sample_name[match(interaction(DATA.df[c("Tag", "Lib")]), interaction(SAMPLES[c("tag_sequence", "library")]))]
+# sample_name <- metadata$sample_name[match(interaction(DATA.df[c("Tag", "Lib")]), interaction(metadata[c("tag_sequence", "library")]))]
 # note I think it is safer to reorder the OTU data to match up with the sequencing pool first,
 # thus, just use
-# SAMPLES$sample_name
+# metadata$sample_name
 
 # for some reason there was an empty level, which caused problems down the road
 # sample_name <- droplevels(sample_name)
 
 # SAMPLE TYPE
 # Extract the data from the sequencing sample pool spreadsheet
-# SAMPLES$sample_type
+# metadata$sample_type
 # make a vector of sample types (environmental, tissue, filter blank)
 # first just make them all environmental
 # sample_type <- rep("environ", nrow(DATA.df))
@@ -99,7 +251,12 @@ DATA.df <- DATA.df[match(interaction(SAMPLES[c("tag_sequence", "library")]), int
 # sample_type[which(sample_name == "DIH20-20140709")] <- "filter_blank"
 
 # add those to the data frame and check it out
-DATA.df <- cbind(sample_name = SAMPLES[, arguments[6]], sample_type = SAMPLES[,arguments[7]], DATA.df)
+DATA.df <- cbind(
+	sample_name = metadata[, arguments[6]], 
+	sample_type = metadata[,arguments[7]], 
+	DATA.df
+	)
+	
 # DATA.df[,1:5]
 
 # Incorporate sample name into rownames of DATA (otu table stored as matrix)
@@ -115,14 +272,14 @@ DATA.df <- DATA.df[order(DATA.df$sample_name),]
 # legend("topleft", legend = , col = )
 
 
-# load vegan to do some community analyses
-library(vegan)
+# community analyses
 sample_shan <- as.numeric(diversity(DATA.df[,5:ncol(DATA.df)])); plot(sample_shan)
 sample_rich <- as.numeric(rowSums(DATA.df[,5:ncol(DATA.df)] > 0)); plot(sample_rich)
-sample_reads <- as.numeric(rowSums(DATA.df[,5:ncol(DATA.df)])); plot(sample_reads)
+sample_reads <- as.numeric(rowSums(DATA.df[,5:ncol(DATA.df)]))
+# plot(sample_reads) # no need to plot this; plotted above, but this is in order as above
 
 # PLOT RICHNESS AGAINST READS
-plot(sample_reads, sample_rich, xlab = "Reads per Sample", ylab = "Total Number of Clusters")
+plot(sample_reads, sample_rich, xlab = "Reads per Sample", ylab = "Total Number of OTUs")
 lm_rich_reads <- lm(sample_rich~sample_reads)
 # summary(lm_rich_reads) # MAKE THIS PRINT
 
