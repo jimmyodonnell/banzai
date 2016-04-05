@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
-my_dir="/Users/threeprime/Desktop/20150717/libraries/quality_reports"
+my_dir="${1}"
+
 outfile="${my_dir}"/fastqc_counts.txt
 
 
 my_files=$( find "${my_dir}" -type f -name '*.zip' )
 
 for i in $my_files; do
-	unzip $i -d "${my_dir}/temp"	
+	unzip $i -d "${my_dir}/temp"
 done
 
 temp_dir=$( find "${my_dir}/temp" -type d -maxdepth 1 )
