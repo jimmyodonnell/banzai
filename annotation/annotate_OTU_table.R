@@ -1,21 +1,36 @@
+#!/usr/bin/env Rscript
+
 # Annotate the OTU table using the output from MEGAN
 
-setwd("/Users/threeprime/Desktop")
+args <- commandArgs(TRUE)
+
+
+if(length(args) != 2 ){
+  stop("this script requires two arguments: \nthe paths to an OTU table and a meganout_mod.csv")
+}
 
 library(gtools)
 
-OTU_table <- read.csv("/Users/threeprime/temp_big_upload/Analysis_20150512_0457/all_lib/OTU_table.csv", row.names = 1)
+OTU_table <- read.csv(args[1], row.names = 1)
 
-megan_output <- read.csv("/Users/threeprime/temp_big_upload/Analysis_20150512_0457/all_lib/megan/mod/meganout_Phylum_mod.csv", header = FALSE, stringsAsFactors = FALSE)
+megan_output <- read.csv(args[2], header = FALSE, stringsAsFactors = FALSE)
 
-OTUs_not_in_megan <- paste(setdiff(rownames(OTU_table), megan_output[,1]), collapse = " ")
+if (length(grep("size=", megan_output[,2])) == 0 ) {
+  stop("the megan input does not contain expected fields")
+}
+if (ncol(megan_output) != 3 ) {
+  stop("the megan input does not contain three columns")
+}
 
-OTU_to_taxon <- megan_output[match(rownames(OTU_table), megan_output[,1]),3]
+# in which row of the MEGAN output does each OTU occur?
+OTU_in_megan <- match(rownames(OTU_table), megan_output[,1])
 
-OTU_to_taxon[which(is.na(OTU_to_taxon))] <- OTUs_not_in_megan #"NoHits"
+name_for_OTU <- megan_output[OTU_in_megan,3]
+
+name_for_OTU[is.na(name_for_OTU)] <- "Not annotated"
 
 # for each column (sample), sum the rows (taxa) that belong to the same OTU
-Taxon_table <- aggregate(OTU_table, list(OTU_to_taxon), FUN = sum)
+Taxon_table <- aggregate(OTU_table, list(name_for_OTU), FUN = sum)
 
 # Make the rownames the values stored in the new first colum
 rownames(Taxon_table) <- Taxon_table[,1]
@@ -23,9 +38,9 @@ rownames(Taxon_table) <- Taxon_table[,1]
 # remove that column
 Taxon_table <- Taxon_table[,-1]
 
-# sort by rowname
-OTU_table <- OTU_table[mixedsort(rownames(OTU_table)),]
+# sort by abundance
+Taxon_table <- Taxon_table[order(rowSums(Taxon_table), decreasing = TRUE),]
 
 # write output to CSV file
-write.csv(Taxon_table, "taxon_table_phylum.csv")
+write.csv(Taxon_table, "taxon_table.csv")
 
