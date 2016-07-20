@@ -211,7 +211,7 @@ fi
 if [ "$LIBS_FROM_DIRECTORIES" != "$LIBS" ]; then
 	echo "Warning: Library directories and library names in metadata are NOT the same. Something will probably go wrong later..."
 else
-	echo "Library directories and library names in metadata are the same - great jorb."
+	echo "Library directories and library names in metadata are the same - great job."
 fi
 
 
@@ -263,7 +263,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	fi
 
 	if [ "$ALREADY_PEARED" = "YES" ]; then
-		MERGED_READS="$PEAR_OUTPUT"
+		MERGED_READS="${PEAR_OUTPUT}/$(basename $LIB_OUTPUT_DIR)"/1_merged.assembled.fastq.gz #RPK edited 20160720
 		echo "Paired reads have already been merged."
 	else
 		echo $(date +%H:%M) "Merging reads in library" "${CURRENT_LIB##*/}""..."
@@ -310,7 +310,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	else
 		# Convert merged reads fastq to fasta
 		echo  $(date +%H:%M) "converting fastq to fasta..."
-		FILTERED_OUTPUT="${MERGED_READS%.*}".fasta
+				FILTERED_OUTPUT="${LIB_OUTPUT_DIR%.*}"/1_merged.assembled.fasta  #FILTERED_OUTPUT="${MERGED_READS%.*}".fasta  #edited by RPK 20160720
 		seqtk seq -A "${MERGED_READS}" > "${FILTERED_OUTPUT}"
 	fi
 
@@ -865,7 +865,7 @@ fi
 		-word_size "${WORD_SIZE}" \
 		-evalue "${EVALUE}" \
 		-max_target_seqs "${MAXIMUM_MATCHES}" \
-		-culling_limit "${culling_limit}" \
+		-culling_limit "${CULLING}" \
 		-outfmt 5 \
 		-out "${blast_output}"
 
@@ -990,12 +990,12 @@ lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
 		echo "collapse rank='$COLLAPSE_RANK1';" >> "${MEGAN_COMMAND_FILE}"
 		echo "update;" >> "${MEGAN_COMMAND_FILE}"
 		echo "select nodes=all;" >> "${MEGAN_COMMAND_FILE}"
-		echo "export what=DSV format=readname_taxonname separator=comma file=${DIR}/meganout_${COLLAPSE_RANK1}.csv;" >> "${MEGAN_COMMAND_FILE}"
+		echo "export what=CSV format=readname_taxonname separator=comma file=${DIR}/meganout_${COLLAPSE_RANK1}.csv;" >> "${MEGAN_COMMAND_FILE}"
 		if [ "$PERFORM_SECONDARY_MEGAN" = "YES" ]; then
 			echo "collapse rank='$COLLAPSE_RANK2';" >> "${MEGAN_COMMAND_FILE}"
 			echo "update;" >> "${MEGAN_COMMAND_FILE}"
 			echo "select nodes=all;" >> "${MEGAN_COMMAND_FILE}"
-			echo "export what=DSV format=readname_taxonname separator=comma file=${DIR}/meganout_${COLLAPSE_RANK2}.csv;" >> "${MEGAN_COMMAND_FILE}"
+			echo "export what=CSV format=readname_taxonname separator=comma file=${DIR}/meganout_${COLLAPSE_RANK2}.csv;" >> "${MEGAN_COMMAND_FILE}"
 		fi
 		echo "quit;" >> "${MEGAN_COMMAND_FILE}"
 
