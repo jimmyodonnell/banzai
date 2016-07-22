@@ -15,7 +15,7 @@ mkdir "${output_dir}"
 # use this if the fancy bells and whistles fail (thread counts and output directory)
 # find "${my_dir}" -type f -name "*.fastq*" | xargs fastqc
 
-find "${my_dir}" -type f -name "*.fastq" -o name "*.fastq.gz" | xargs \
+find "${my_dir}" -type f -name "*.fastq" -o -name "*.fastq.gz" | xargs \
 fastqc \
 --outdir "${output_dir}" \
 --threads "${n_cores}"
