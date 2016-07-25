@@ -346,8 +346,6 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	if [ "${RENAME_READS}" = "YES" ]; then
 		echo $(date +%Y-%m-%d\ %H:%M) "Renaming reads in library" "${CURRENT_LIB##*/}""..."
-		echo $(date +%Y-%m-%d\ %H:%M) "Reads renamed"
-		echo
 		# TODO remove whitespace from sequence labels?
 		# sed 's/ /_/'
 
@@ -369,7 +367,10 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 		FILTERED_OUTPUT="${FILTERED_RENAMED}"
 
-		# rm "${FILTERED_OUTPUT}"
+		echo $(date +%Y-%m-%d\ %H:%M) "Reads renamed"
+		echo
+
+	# rm "${FILTERED_OUTPUT}"
 
 	else
 		echo "Reads not renamed"
