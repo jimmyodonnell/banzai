@@ -27,6 +27,7 @@ source "${param_file}"
 if [[ -s "${param_file}" ]] ; then
 	echo "Reading analysis parameters from:"
 	echo "${param_file}"
+	echo
 else
 	echo
 	echo 'ERROR! Could not find analysis parameter file. You specified the file path:'
@@ -42,6 +43,7 @@ fi
 if [[ -s "${SEQUENCING_METADATA}" ]] ; then
 	echo "Reading sequencing metadata from:"
 	echo "${SEQUENCING_METADATA}"
+	echo
 else
 	echo
 	echo 'ERROR! Could not find sequencing metadata file. You specified the file path:'
@@ -72,18 +74,22 @@ done
 if hash pigz 2>/dev/null; then
 	ZIPPER="pigz"
 	echo "pigz installation found"
+	echo
 else
 	ZIPPER="gzip"
 	echo "pigz installation not found; using gzip"
+	echo
 fi
 
 # Detect number of cores on machine; set variable
 n_cores=$(getconf _NPROCESSORS_ONLN)
 if [ $n_cores -gt 1 ]; then
 	echo "$n_cores cores detected."
+	echo
 else
 	n_cores=1
 	echo "Multiple cores not detected."
+	echo
 fi
 
 # make an analysis directory with starting time timestamp
@@ -94,7 +100,10 @@ mkdir "${ANALYSIS_DIR}"
 LOGFILE="${ANALYSIS_DIR}"/logfile.txt
 exec > >(tee "${LOGFILE}") 2>&1
 
-echo "Analysis started at ""${START_TIME}" " and is located in ""${ANALYSIS_DIR}"
+echo $(date +%Y-%m-%d\ %H:%M) "Analysis started at ""${START_TIME}"
+echo "Output is located in:"
+echo "${ANALYSIS_DIR}"
+echo
 
 # Copy these files into that directory as a verifiable log you can refer back to.
 cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
@@ -111,7 +120,8 @@ N_index_sequences=$(echo $TAGS | awk '{print NF}')
 
 # check if number of tags is greater than one:
 if [[ "${N_index_sequences}" -gt 1 ]]; then
-	echo "Multiplex tags read from sequencing metadata (""${N_index_sequences}"") total"
+	echo "Multiplex tags read from sequencing metadata (""${N_index_sequences}"" total)"
+	echo
 else
   echo
   echo 'ERROR:' "${N_index_sequences}" 'index sequences found. There should probably be more than 1.'
@@ -130,11 +140,11 @@ PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$PRIMER_1_COLUMN_NAME '{for (i=1;i<=NF
 PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$PRIMER_2_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER2_COL) print i; exit}' $SEQUENCING_METADATA)
 PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM 'NR==2 {print $PRIMER1_COL}' $SEQUENCING_METADATA)
 PRIMER2=$(awk -F',' -v PRIMER2_COL=$PRIMER2_COLNUM 'NR==2 {print $PRIMER2_COL}' $SEQUENCING_METADATA)
-echo "Primers read from sequencing metadata:" "${PRIMER1}" "${PRIMER2}"
 
 if [[ -n "${PRIMER1}" && -n "${PRIMER2}" ]]; then
   echo 'Primers read from metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
   echo 'Primer sequences:' "${PRIMER1}" "${PRIMER2}"
+	echo
 else
   echo 'ERROR:' 'At least one primer is not valid'
   echo 'Looked in metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
@@ -174,7 +184,7 @@ LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n
 raw_files=($( find "${PARENT_DIR}" -name '*.fastq*' ))
 for myfile in "${raw_files[@]}"; do
 	if [[ "${myfile}" =~ \.gz$ ]]; then
-		echo $(date +%H:%M) "decompressing "${myfile}""
+		echo $(date +%Y-%m-%d\ %H:%M) "decompressing "${myfile}""
 		"${ZIPPER}" -d "${myfile}"
 	fi
 done
@@ -187,6 +197,7 @@ echo "${N_library_dir}"" library directories found:"
 # Show the libraries that were found:
 # TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
 for i in $LIBRARY_DIRECTORIES; do echo "${i##*/}" ; done
+echo
 
 # Assign it to a variable for comparison
 LIBS_FROM_DIRECTORIES=$(for i in $LIBRARY_DIRECTORIES; do echo "${i##*/}" ; done)
@@ -198,10 +209,12 @@ if [ "${READ_LIB_FROM_SEQUENCING_METADATA}" = "YES" ]; then
 	N_libs=$(echo $LIBS | awk '{print NF}')
 	echo "Library names read from sequencing metadata (""${N_libs}"") total"
 	echo "${LIBS}"
+	echo
 else
 	LIBS=$(tr '\n' ' ' < "${LIB_FILE}" )
 	N_libs=$(echo $LIBS | awk '{print NF}')
 	echo "Library names read from lib file (""${LIBS}"") total"
+	echo
 fi
 # make library names into an array
 # TODO LIBS_ARRAY is never used
@@ -210,8 +223,10 @@ fi
 # Check that library names are the same in the metadata and file system
 if [ "$LIBS_FROM_DIRECTORIES" != "$LIBS" ]; then
 	echo "Warning: Library directories and library names in metadata are NOT the same. Something will probably go wrong later..."
+	echo
 else
 	echo "Library directories and library names in metadata are the same - great jorb."
+	echo
 fi
 
 
@@ -265,8 +280,9 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	if [ "$ALREADY_PEARED" = "YES" ]; then
 		MERGED_READS="$PEAR_OUTPUT"
 		echo "Paired reads have already been merged."
+		echo
 	else
-		echo $(date +%H:%M) "Merging reads in library" "${CURRENT_LIB##*/}""..."
+		echo $(date +%Y-%m-%d\ %H:%M) "Merging reads in library" "${CURRENT_LIB##*/}""..."
 		MERGED_READS_PREFIX="${LIB_OUTPUT_DIR}"/1_merged
 		MERGED_READS="${LIB_OUTPUT_DIR}"/1_merged.assembled.fastq
 		pear \
@@ -291,6 +307,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 				continue
 		fi
 
+		echo
 
 
 	fi
@@ -300,31 +317,37 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	################################################################################
 	# FILTER READS (This is the last step that uses quality scores, so convert to fasta)
 	if [ "${Perform_Expected_Error_Filter}" = "YES" ]; then
-		echo $(date +%H:%M) "Filtering merged reads..."
+		echo $(date +%Y-%m-%d\ %H:%M) "Filtering merged reads..."
 		FILTERED_OUTPUT="${LIB_OUTPUT_DIR}"/2_filtered.fasta
 		vsearch \
 			--fastq_filter "${MERGED_READS}" \
 			--fastq_maxee "${Max_Expected_Errors}" \
 			--fastaout "${FILTERED_OUTPUT}" \
 			--fasta_width 0
+
+    echo
 	else
 		# Convert merged reads fastq to fasta
-		echo  $(date +%H:%M) "converting fastq to fasta..."
+		echo  $(date +%Y-%m-%d\ %H:%M) "converting fastq to fasta..."
 		FILTERED_OUTPUT="${MERGED_READS%.*}".fasta
 		seqtk seq -A "${MERGED_READS}" > "${FILTERED_OUTPUT}"
+		echo
 	fi
 
 	# Compress merged reads
-  echo $(date +%H:%M) "Compressing PEAR output..."
+  echo $(date +%Y-%m-%d\ %H:%M) "Compressing PEAR output..."
   find "${LIB_OUTPUT_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
-  echo $(date +%H:%M) "PEAR output compressed."
+  echo $(date +%Y-%m-%d\ %H:%M) "PEAR output compressed."
+	echo
 
 
 
 
 
 	if [ "${RENAME_READS}" = "YES" ]; then
-		echo $(date +%H:%M) "Renaming reads in library" "${CURRENT_LIB##*/}""..."
+		echo $(date +%Y-%m-%d\ %H:%M) "Renaming reads in library" "${CURRENT_LIB##*/}""..."
+		echo $(date +%Y-%m-%d\ %H:%M) "Reads renamed"
+		echo
 		# TODO remove whitespace from sequence labels?
 		# sed 's/ /_/'
 
@@ -350,6 +373,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	else
 		echo "Reads not renamed"
+		echo
 	fi
 
 
@@ -357,12 +381,13 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	# HOMOPOLYMERS (grep, awk)
 	################################################################################
 	if [ "${REMOVE_HOMOPOLYMERS}" = "YES" ]; then
-		echo $(date +%H:%M) "Removing homopolymers..."
+		echo $(date +%Y-%m-%d\ %H:%M) "Removing homopolymers..."
 		HomoLineNo="${CURRENT_LIB}"/homopolymer_line_numbers.txt
 		grep -E -i -B 1 -n "(A|T|C|G)\1{$HOMOPOLYMER_MAX,}" "${FILTERED_OUTPUT}" | \
 			cut -f1 -d: | \
 			cut -f1 -d- | \
 			sed '/^$/d' > "${HomoLineNo}"
+			echo
 		if [ -s "${HomoLineNo}" ]; then
 			DEMULTIPLEX_INPUT="${CURRENT_LIB}"/3_no_homopolymers.fasta
 			awk 'NR==FNR{l[$0];next;} !(FNR in l)' "${HomoLineNo}" "${FILTERED_OUTPUT}" > "${DEMULTIPLEX_INPUT}"
@@ -370,10 +395,12 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 		else
 			echo "No homopolymers found" > "${CURRENT_LIB}"/3_no_homopolymers.fasta
 			DEMULTIPLEX_INPUT="${FILTERED_OUTPUT}"
+			echo
 		fi
 	else
 		echo "Homopolymers not removed."
 		DEMULTIPLEX_INPUT="${FILTERED_OUTPUT}"
+		echo
 	fi
 
 	################################################################################
@@ -388,7 +415,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	# 20150522 changed {0,9} to {3} to eliminate flexibility (that could result in a read being assigned to >1 sample)
 	# awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
 
-	echo $(date +%H:%M) "Demultiplexing: removing tags and adding to sequence ID in library" "${CURRENT_LIB##*/}""..."
+	echo $(date +%Y-%m-%d\ %H:%M) "Demultiplexing: removing tags and adding to sequence ID in library" "${CURRENT_LIB##*/}""..."
 	for TAG_SEQ in $TAGS; do
 	(	TAG_DIR="${DEMULTIPLEXED_DIR}"/tag_"${TAG_SEQ}"
 		mkdir "${TAG_DIR}"
@@ -418,7 +445,9 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	wait
 
-	# echo $(date +%H:%M) "Demultiplexing: removing right tag and adding tag sequence to sequence ID in library" "${CURRENT_LIB##*/}""..."
+	echo
+
+	# echo $(date +%Y-%m-%d\ %H:%M) "Demultiplexing: removing right tag and adding tag sequence to sequence ID in library" "${CURRENT_LIB##*/}""..."
 	# for TAG_SEQ in $TAGS; do
 	# (	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 	# 	demult_file_R="${TAG_DIR}"/2_notags.fasta
@@ -458,7 +487,7 @@ fi
 if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# TODO MOVE THE VARIABLE ASSIGNMENT TO TOP; MOVE MKDIR TO TOP OF CONCAT IF LOOP
-	echo $(date +%H:%M) "Concatenating fasta files..."
+	echo $(date +%Y-%m-%d\ %H:%M) "Concatenating fasta files..."
 	CONCAT_DIR="$ANALYSIS_DIR"/all_lib
 	mkdir "${CONCAT_DIR}"
 	CONCAT_FILE="${CONCAT_DIR}"/1_demult_concat.fasta
@@ -472,11 +501,12 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 			cat "${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/2_notags.fasta >> "${CONCAT_FILE}"
 		done
 
-		echo $(date +%H:%M) "Compressing fasta files..."
+		echo $(date +%Y-%m-%d\ %H:%M) "Compressing fasta files..."
 		find "${LIB_OUTPUT_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
-		echo $(date +%H:%M) "fasta files compressed."
+		echo $(date +%Y-%m-%d\ %H:%M) "fasta files compressed."
 
 	done
+	echo
 
 	################################################################################
 	# Count the occurrences of '_tag_' + the 6 characters following it in the concatenated file
@@ -485,10 +515,12 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# an attempt at making this robust to underscores
 	# grep -E -o '_lib_.+?(?=_tag)_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
 
-	echo $(date +%H:%M) "Counting reads associated with each sample index (primer tag)..."
+	echo $(date +%Y-%m-%d\ %H:%M) "Counting reads associated with each sample index (primer tag)..."
 	grep -E -o '_lib_[^_]*_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
 
-	echo $(date +%H:%M) "Summary of sequences belonging to each sample index found in ""${CONCAT_DIR}""/1_demult_concat.fasta.tags"
+	echo $(date +%Y-%m-%d\ %H:%M) "Counts of reads associated with each sample index found in:"
+	echo "${CONCAT_DIR}""/1_demult_concat.fasta.tags"
+	echo
 	################################################################################
 
 
@@ -497,13 +529,14 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	################################################################################
 	# PRIMER REMOVAL
 	################################################################################
-	# (moot for concatenated file): echo $(date +%H:%M) "Removing primers in library" "${CURRENT_LIB##*/}""..."
+	# (moot for concatenated file): echo $(date +%Y-%m-%d\ %H:%M) "Removing primers in library" "${CURRENT_LIB##*/}""..."
 	# Remove PRIMER1 and PRIMER2 from the BEGINNING of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
 
 	# count lines in primer removal input
-	echo $(date +%H:%M) "Counting sequences in primer removal input..."
+	echo $(date +%Y-%m-%d\ %H:%M) "Counting sequences in primer removal input..."
 	seq_N_demult_concat=$( grep -e '^>' --count "${CONCAT_FILE}" )
-	echo $(date +%H:%M) "${seq_N_demult_concat}" "sequences found in file" "${CONCAT_FILE}"
+	echo $(date +%Y-%m-%d\ %H:%M) "${seq_N_demult_concat}" "sequences found in primer removal input" #"${CONCAT_FILE}"
+	echo
 
 	# TODO wrap in '( ) &' to force into background and allow parallel processing
 	# i.e.
@@ -512,6 +545,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# done
 	# wait
 
+	echo $(date +%Y-%m-%d\ %H:%M) "Beginning primer removal..."
 	# remove primer 1 from left side of sequences
 	primerL1_removed="${CONCAT_DIR}"/5_primerL1_removed.fasta
 	( cutadapt \
@@ -533,9 +567,10 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	wait
 
 	# compress left primer removal input
-	echo $(date +%H:%M) "Compressing left primer removal input..."
+	echo $(date +%Y-%m-%d\ %H:%M) "Compressing left primer removal input..."
 	"${ZIPPER}" "${CONCAT_DIR}"/1_demult_concat.fasta
-	echo $(date +%H:%M) "Left primer removal input compressed."
+	echo $(date +%Y-%m-%d\ %H:%M) "Left primer removal input compressed."
+	echo
 
 	# check for cutadapt/primer removal success.
 	if [[ ! -s "${primerL1_removed}" ]]; then
@@ -587,12 +622,14 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		exit
 	fi
 
+	echo
+
 	# Reverse-complement the sequences in which the RC of primer 1 was found on the right side
+	echo $(date +%Y-%m-%d\ %H:%M) "Correcting sequence orientation..."
 	seqtk seq -r "${CONCAT_DIR}"/6_primerR1_removed.fasta > "${CONCAT_DIR}"/6_primerR1_removedRC.fasta
 
 	# paste together the contents of the files that primers were removed from.
 	DEREP_INPUT="${CONCAT_DIR}"/7_no_primers.fasta
-
 	cat "${CONCAT_DIR}"/6_primerR1_removedRC.fasta "${CONCAT_DIR}"/6_primerR2_removed.fasta > "${DEREP_INPUT}"
 
 	# check that it worked (derep input / no primers)
@@ -602,12 +639,12 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	    exit
 	fi
 
-
+	echo
 
 	################################################################################
 	# CONSOLIDATE IDENTICAL SEQUENCES (DEREPLICATION)
 	################################################################################
-	echo $(date +%H:%M) "Identifying identical sequences... (python)"
+	echo $(date +%Y-%m-%d\ %H:%M) "Identifying identical sequences... (python)"
 	derep_output="${DEREP_INPUT}".derep
 	python "$SCRIPT_DIR/dereplication/dereplicate_fasta.py" "${DEREP_INPUT}"
 
@@ -623,7 +660,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# COUNT SEQUENCES, REMOVE SINGLETONS
 	##############################################################################
 	# count the number of sequences per duplicate (print NF-1), sort them by the number of sequences per duplicate (sort -nr), and precede with a name ("DUP_X", where X is the line number), excluding singleton sequences (if NF > 2) if specified
-	echo $(date +%H:%M) "Counting duplicates per identical sequence and excluding singletons if specified... (awk)"
+	echo $(date +%Y-%m-%d\ %H:%M) "Counting duplicates per identical sequence and excluding singletons if specified... (awk)"
 
 	dup_counts="${DEREP_INPUT%/*}"/dup_counts.txt
 
@@ -674,14 +711,14 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# for each of the batches of files
 	for batch in "${sample_batch_prefix}"* ; do
 
-		echo processing "${batch##*/}"
+		# echo processing "${batch##*/}"
 
 		# 	current_batch=$( cat "${batch}" ) # this reads whitespace rather than newline
 
 		for sample in $( cat "$batch" ) ; do
 
 			# say that it's being processed
-			echo $(date +%H:%M) "Processing" "${sample}""..."
+			echo $(date +%Y-%m-%d\ %H:%M) "Processing" "${sample}""..."
 
 			# Isolate this process to be put in the background
 			(
@@ -718,15 +755,17 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# rm "${sample_batch_prefix}"*
 
 	# say that you're finished.
-	echo $(date +%H:%M) "Identical sequences consolidated in file ""${duplicate_table}"
+	echo $(date +%Y-%m-%d\ %H:%M) "Identical sequences consolidated in file:"
+	echo "${duplicate_table}"
+	echo
 
 	# OLD/UNSTABLE/BAD -- but generated CSV in different orientation
 	# This will start as many processes as you have libraries... be careful!
-	# echo $(date +%H:%M) "Consolidating identical sequences per sample... (awk)"
+	# echo $(date +%Y-%m-%d\ %H:%M) "Consolidating identical sequences per sample... (awk)"
 	# for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	# 	( for TAG_SEQ in $TAGS; do
 	# 		LIB_TAG="lib_${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
-	# 		echo $(date +%H:%M) "Processing" "${LIB_TAG}""..."
+	# 		echo $(date +%Y-%m-%d\ %H:%M) "Processing" "${LIB_TAG}""..."
 	# 		# the output of the awk function gsub is the number of replacements, so you could use this instead... however, it appears slower?
 	# 		# ( awk 'BEGIN {print "'$LIB_TAG'" } { print gsub(/"'$LIB_TAG'"/,"") }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
 	# 		awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup
@@ -740,8 +779,9 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	# rm ${DEREP_INPUT%/*}/*.dup
 
 	# Write fasta file in order to blast sequences
-	echo $(date +%H:%M) "Writing fasta file of duplicate sequences"
+	echo $(date +%Y-%m-%d\ %H:%M) "Writing fasta file of duplicate sequences"
 	awk -F';' '{ print $1 ";size=" $2 ";\n" $3 }' "${dup_counts}" > "${duplicate_fasta}"
+	echo
 
 	# check if duplicate fasta and duplicate table exist. (Might need to check size)
 	if [[ ! -s "${duplicate_fasta}" ]] ; then
@@ -766,9 +806,10 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 # CHECK FOR CHIMERAS
 ##############################################################################
 if [[ "${remove_chimeras}" = "YES" ]] ; then
-	echo $(date +%H:%M) 'Looking for chimeras in duplicate fasta file using vsearch'
+	echo $(date +%Y-%m-%d\ %H:%M) 'Looking for chimeras in duplicate fasta file using vsearch'
 	source "${SCRIPT_DIR}"/chimera_check.sh "${duplicate_fasta}"
 	clustering_input="${chimera_free_fasta}"
+	echo
 else
 	clustering_input="${duplicate_fasta}"
 fi
@@ -785,31 +826,32 @@ fi
 	if [ "$CLUSTER_OTUS" = "NO" ]; then
 		BLAST_INPUT="${clustering_input}"
 	else
-		echo $(date +%H:%M) "Clustering OTUs..."
-
 		case "${cluster_method}" in
 
 		    "swarm" )
 
-		        echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
+		        echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using swarm'
 		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
+						echo
 
 		    ;;
 
 		    "vsearch" )
 
-		        # echo $(date +%H:%M) 'Clustering sequences into OTUs using vsearch'
+		        # echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using vsearch'
 		        # source "${SCRIPT_DIR}"/OTU_clustering/cluster_vsearch.sh "${duplicate_fasta}"
 						echo "Sorry, OTU clustering with vsearch has not been implemented yet."
-						echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
+						echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using swarm'
 		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
+						echo
 
 		    ;;
 
 		    "usearch" )
 
-		        echo $(date +%H:%M) 'Clustering sequences into OTUs using usearch'
+		        echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using usearch'
 		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_usearch.sh "${clustering_input}"
+						echo
 
 		    ;;
 
@@ -817,8 +859,10 @@ fi
 
 		        echo "${cluster_method}" 'is an invalid clustering method.'
 		        echo 'Must be one of swarm, vsearch, usearch, or none.'
-		        echo $(date +%H:%M) 'Clustering sequences into OTUs using swarm'
+		        echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using swarm'
 		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
+						echo
+
 
 		    ;;
 
@@ -829,6 +873,7 @@ fi
 		size_dup_otu_map=$(wc -c <"${dup_otu_map}")
 		if [ $size_dup_otu_map -lt $minsize ]; then
 		    echo 'There was an error generating the dup-to-otu map.'
+				echo
 		fi
 
 
@@ -855,7 +900,7 @@ fi
 	################################################################################
 	# BLAST CLUSTERS
 	################################################################################
-	echo $(date +%H:%M) "BLASTing..."
+	echo $(date +%Y-%m-%d\ %H:%M) "BLASTing..."
 	blast_output="${DEREP_INPUT%/*}"/10_BLASTed.xml
 	blastn \
 		-query "${BLAST_INPUT}" \
@@ -899,7 +944,7 @@ else
 	################################################################################
 	# PRIMER REMOVAL
 	################################################################################
-	echo $(date +%H:%M) "Removing primers..."
+	echo $(date +%Y-%m-%d\ %H:%M) "Removing primers..."
 	for TAG_SEQ in $TAGS; do
 		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 		# Remove PRIMER1 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
@@ -922,7 +967,7 @@ else
 		DEREP_INPUT="${TAG_DIR}"/7_no_primers.fasta
 
 		# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
-		echo $(date +%H:%M) "Consolidating identical sequences..."
+		echo $(date +%Y-%m-%d\ %H:%M) "Consolidating identical sequences..."
 		python "$SCRIPT_DIR/dereplication/dereplicate_fasta.py" "${DEREP_INPUT}"
 
 		# REMOVE SINGLETONS
@@ -971,7 +1016,8 @@ for DIR in "$DIRECTORIES"; do
 		# check for blast output
 		if [[ -s "${blast_output}"  ]]; then
 
-		echo $(date +%H:%M) 'BLAST output found; proceeding to MEGAN.'
+		echo $(date +%Y-%m-%d\ %H:%M) 'BLAST output found; proceeding to MEGAN.'
+		echo
 		# Specify paths to megan-related files
 		BLAST_XML="${DIR}"/10_BLASTed.xml
 		MEGAN_COMMAND_FILE="${DIR}"/megan_commands.txt
@@ -1030,7 +1076,7 @@ done
 # TODO rename preliminary to OTU analyses; move analysis script to OTU analysis directory
 OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
-echo $(date +%H:%M) "passing args to R for preliminary analysis..."
+echo $(date +%Y-%m-%d\ %H:%M) "passing args to R for preliminary analysis..."
 Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_METADATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}" "${ColumnName_SampleName}" "${ColumnName_SampleType}"
 
 
@@ -1046,20 +1092,20 @@ fi
 
 
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
-	echo $(date +%H:%M) "Compressing fasta, fastq, and xml files..."
+	echo $(date +%Y-%m-%d\ %H:%M) "Compressing fasta, fastq, and xml files..."
 	find "${ANALYSIS_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
 	find "${ANALYSIS_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
 	find "${ANALYSIS_DIR}" -type f -name '*.xml' -exec ${ZIPPER} "{}" \;
-	echo $(date +%H:%M) "Cleanup performed."
+	echo $(date +%Y-%m-%d\ %H:%M) "Cleanup performed."
 else
-	echo $(date +%H:%M) "Cleanup not performed."
+	echo $(date +%Y-%m-%d\ %H:%M) "Cleanup not performed."
 fi
 
 FINISH_TIME=$(date +%Y%m%d_%H%M)
 
 echo 'Pipeline finished! Started at' $START_TIME 'and finished at' $FINISH_TIME | mail -s "banzai is finished" "${EMAIL_ADDRESS}"
 
-echo -e '\n'$(date +%H:%M)'\tAll finished! Why not treat yourself to a...\n'
+echo -e '\n'$(date +%Y-%m-%d\ %H:%M)'\tAll finished! Why not treat yourself to a...\n'
 echo
 echo -e '\t~~~ MAI TAI ~~~'
 echo -e '\t2 oz\taged rum'
