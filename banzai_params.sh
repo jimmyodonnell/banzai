@@ -176,6 +176,8 @@ remove_chimeras="YES"
 # TAXONOMIC ANNOTATION
 ################################################################################
 ## BLAST ##
+PERFORM_BLAST="NO"
+
 # For more information on these parameters, type into a terminal window: blastn -help
 # Specify the path to the BLAST database.
 # Note this should be a path to any one of three files WITHOUT their extension *.nhr, *.nin, or *.nsq
@@ -191,6 +193,8 @@ culling_limit="20"
 
 ################################################################################
 ## MEGAN ##
+PERFORM_MEGAN="NO"
+
 # For more information, see the manual provided with the software
 # Specify the path to the MEGAN executable file you want to use.
 # Note that in recent versions an executable was not provided; in that case, you need to reference like so: '/Applications/MEGAN/MEGAN.app/Contents/MacOS/JavaApplicationStub'
