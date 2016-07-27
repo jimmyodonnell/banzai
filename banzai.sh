@@ -1116,7 +1116,7 @@ FINISH_TIME=$(date +%Y%m%d_%H%M)
 
 echo 'Pipeline finished! Started at' $START_TIME 'and finished at' $FINISH_TIME | mail -s "banzai is finished" "${EMAIL_ADDRESS}"
 
-SUMMARY_FILE="${ANALYSIS_DIR}"/banzai_summary.txt
+SUMMARY_FILE="${ANALYSIS_DIR}"/summary.txt
 echo "Writing summary file..."
 source "${SCRIPT_DIR}"/beta/summarize.sh "${LOGFILE}" > "${SUMMARY_FILE}"
 echo "Summary written to:"
