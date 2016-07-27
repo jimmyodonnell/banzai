@@ -1116,6 +1116,13 @@ FINISH_TIME=$(date +%Y%m%d_%H%M)
 
 echo 'Pipeline finished! Started at' $START_TIME 'and finished at' $FINISH_TIME | mail -s "banzai is finished" "${EMAIL_ADDRESS}"
 
+SUMMARY_FILE="${ANALYSIS_DIR}"/banzai_summary.txt
+echo "Writing summary file..."
+source "${SCRIPT_DIR}"/beta/summarize.sh "${LOGFILE}" > "${SUMMARY_FILE}"
+echo "Summary written to:"
+echo "${SUMMARY_FILE}"
+echo
+
 echo -e '\n'$(date +%Y-%m-%d\ %H:%M)'\tAll finished! Why not treat yourself to a...\n'
 echo
 echo -e '\t~~~ MAI TAI ~~~'
