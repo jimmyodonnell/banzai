@@ -99,7 +99,14 @@ echo "Identity value:" ${identity}
 # full nt on UW CEG server: blast_db="/local/blast-local-db/nt"
 # full nt on NWFSC iMac: /Users/jimmy.odonnell/NCBI/databases/nt/nt
 blast_db="/Users/jimmy.odonnell/NCBI/databases/nt/nt"
-echo "Database:" "${blast_db}"
+
+if [[ -d "${blast_db%/*}" ]]; then
+  echo "Database:" "${blast_db}"
+else
+	echo "${blast_db%/*}" "is not a directory on this computer. Aborting script."
+	exit
+fi
+
 
 # NUMBER OF MATCHES
 # suggested: 200, 500
