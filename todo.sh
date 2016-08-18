@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# TODO test metadata for newline at end of file.
+#     create new file: sed  '$a\' metadata.csv > newfile.csv
+#     edit in place: sed -i '' -e '$a\' metadata.csv (this SHOULD be safe because it only adds the terminal newline if it doesn't exist)
+
+# TODO test metadata for CRLF line endings, which break everything.
+#      if [[ $( file metadata.csv ) == *"CRLF"* ]]; then    echo "File has CRLF endings"; fi
+#      tr -d '\r' < metadata.csv > metadata_formatted.csv
+
 # TODO clean up blast results parsing.
 
 # TODO add automatic output of blast methods.
