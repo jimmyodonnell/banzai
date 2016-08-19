@@ -55,7 +55,7 @@ for current_file in "${file_list[@]}"; do
   # get everything after the final / (the filename) of original file
   oldfile="${subpath##*/}"
 
-  # append the "_sub.fastq" to the filename, and add to new directory sturcture
+  # append the "_sub.fastq" to the filename, and add to new directory structure
   newfile="${new_dir}"/"${oldfile%.*}"_sub.fastq
   echo new file is "${newfile}"
 
