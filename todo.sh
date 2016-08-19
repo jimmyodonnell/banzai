@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# TODO fix subset to not decompress and recompress entire files
+
+# TODO ignore libraries named 'N'
+
 # TODO test metadata for newline at end of file.
 #     create new file: sed  '$a\' metadata.csv > newfile.csv
 #     edit in place: sed -i '' -e '$a\' metadata.csv (this SHOULD be safe because it only adds the terminal newline if it doesn't exist)
