@@ -44,7 +44,7 @@ duplicate (duplicate name from dups.fasta)
 otu (otu name from otus.fasta)
 
 
-# TODO add checks for installation of R packages
+# TODO add checks for installation of R packages (replace crap in  analyses_prelim.R)
 
 # TODO be aware of potential problems between awk versions on Linux and Mac. On a Mac, the output of `awk --version` is `awk version 20070501` (BSD, I believe)
 
