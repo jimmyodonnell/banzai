@@ -42,7 +42,7 @@ vsearch \
 
 # rm "${DEREP_INPUT%/*}"/9_OTUs_linebreaks.fasta # "${DEREP_INPUT%/*}"/9_notmatched_linebreaks.fasta
 
-exit 
+exit
 
 ################################################################################
 # RESOLVE OTUS AND DUPLICATES
@@ -64,15 +64,15 @@ Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${DUPS_TO_OTUS}" 
 
 # TAG_COLUMN_NAME="tag_sequence"
 # LIBRARY_COLUMN_NAME="library"
-# 
+#
 # SEQUENCING_METADATA="/Users/threeprime/Desktop/20150717/libraries/kelly_lab/SEQUENCING_POOL_20150618.csv"
-# 
+#
 # LIB_COL=$(awk -F',' -v LIB_COL_NAME=$LIBRARY_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == LIB_COL_NAME) print i; exit}' $SEQUENCING_METADATA)
 # LIBS=$(awk -F',' -v LIBCOL=$LIB_COL 'NR>1 {print $LIBCOL}' $SEQUENCING_METADATA | sort | uniq)
-# 
+#
 # echo $LIBS
-# 
+#
 # TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == TAG_COL_NAME) print i; exit}' $SEQUENCING_METADATA)
 # TAGS=$(awk -F',' -v TAGCOL=$TAG_COL 'NR>1 {print $TAGCOL}' $SEQUENCING_METADATA | sort | uniq)
-# 
+#
 # echo $TAGS

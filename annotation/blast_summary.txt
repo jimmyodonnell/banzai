@@ -1,0 +1,20 @@
+TAXONOMIC ASSIGNMENT
+====================
+S1 Table. Summary of results of taxonomic annotation.
+Sequences were queried against the full NCBI nucleotide database (nt) "${blast_db}" obtained on "DATE OF DATABASE DOWNLOAD", using the BLASTN algorithm with a word size of "${word_size}"  
+if [ "${identity}" = 0 ]; then
+		with no restriction on the lower bound for percent identity.
+	else
+		and a minimum of "${identity}"\% identity.
+fi
+A maximum of "${num_matches}" hits were retained per query sequence; if match quality dropped after "${culling_limit}" sequences, matches were no longer retained.
+We used a nested approach whereby sequences were queried at sequentially higher  e-value thresholds (i.e. inferior match) until a match was assigned. The e-value thresholds were determined based on a preliminary assessment of the best possible e-value given sequence length and database size ("${nested_evalues}"=( 4.430273e-52 3.077510e-48 2.137807e-44 1.485037e-40 1.031588e-36 7.165977e-33 4.977879e-29 3.457907e-25 2.402052e-21 1.668597e-17 1.159098e-13 10)).
+
+
+Thus, we report here the lowest taxonomic classification at which there was agreement among equally good matches.
+
+
+CITATIONS
+BLASTN
+Altschul, S.F., Gish, W., Miller, W., Myers, E.W. & Lipman, D.J. (1990) "Basic local alignment search tool." J. Mol. Biol. 215:403-410. PubMed
+Camacho C, Coulouris G, Avagyan V, Ma N, Papadopoulos J, Bealer K, et al. BLAST+: architecture and applications. BMC Bioinformatics. 2009;10:421. 

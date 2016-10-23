@@ -10,8 +10,9 @@
 input_fasta="${1}"
 
 # DATABASE
-# for full nt on UW CEG server: blast_db="/local/blast-local-db/nt"
-blast_db="/local/blast-local-db/nt"
+# full nt on UW CEG server: blast_db="/local/blast-local-db/nt"
+# full nt on NWFSC iMac: /Users/jimmy.odonnell/NCBI/databases/nt/nt
+blast_db="/Users/jimmy.odonnell/NCBI/databases/nt/nt"
 
 # OUTPUT FORMAT
 # suggested outputs: XML (5) or uncommented tabular (6) or commented tabular (7)
@@ -23,18 +24,26 @@ output_format="6 qseqid sallseqid pident length mismatch gapopen qstart qend sst
 
 # IDENTITY
 # percent identity suggestions: 97, 98, 99
+identity="97"
 
 # NUMBER OF MATCHES
 # suggested: 200, 500
+num_matches="500"
 
 # CULLING_LIMIT
+# "If the query range of a hit is enveloped by that of at least this many higher-scoring hits, delete the hit"
 # suggestion changed from 5 to 20 (20150805) because the lower (and default) number can produce odd results when there are several species with similar high scores.
+culling_limit="20"
 
 # WORD SIZE
-# larger word sizes yield substantial speedups. RPK suggests 30.
+# larger word sizes yield substantial speedups. Smaller words yield more hits.
+# default = 11; minimum = 7
+# RPK suggests 30.
+word_size="30"
 
 # E VALUE
 # No suggestions as of 20150819
+evalue="1e-20"
 
 # Automatically detect the time and set it to make a unique filename
 start_time=$(date +%Y%m%d_%H%M)
@@ -42,16 +51,25 @@ start_time=$(date +%Y%m%d_%H%M)
 # Automatically detect and set the number of cores
 n_cores=$(getconf _NPROCESSORS_ONLN)
 
+# make the output file name based on the choice of format
+outfile_base="${input_fasta%/*}"/blasted_"${start_time}"
+if [[ "${output_format}" = "5" ]] ; then
+	extension="xml"
+else
+	extension="txt"
+fi
+outfile="${outfile_base}"."${extension}"
+
 blastn \
 	-db "${blast_db}" \
 	-query "${input_fasta}" \
-	-perc_identity 95 \
-	-word_size 30 \
-	-evalue 1e-20 \
-	-max_target_seqs 500 \
-	-culling_limit 20 \
+	-perc_identity "${identity}" \
+	-word_size "${word_size}" \
+	-evalue "${evalue}" \
+	-max_target_seqs "${num_matches}" \
+	-culling_limit "${culling_limit}" \
 	-outfmt  "${output_format}" \
-	-out blasted_"${start_time}".tsv \
+	-out "${outfile}" \
 	-num_threads "${n_cores}"
 
 

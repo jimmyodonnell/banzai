@@ -1,0 +1,33 @@
+Banzai attempts to input and output data according to the following schema:
+
+genomic DNA:    ----------------------------------------------------------------
+target region:                   ~~~~~~~~~~~~~~~~~~~~~~~~
+
+PCR
+primers:                   ******                        ******
+secondary index:        +++                                    +++
+full primer:            +++******                        ******+++
+amplicon:               +++******~~~~~~~~~~~~~~~~~~~~~~~~******+++
+
+LIBRARY PREP
+primary index:       :::                                          :::
+adapter:           aa                                                aa
+final fragment:    aa:::+++******~~~~~~~~~~~~~~~~~~~~~~~~******+++:::aa
+
+SEQUENCING
+read 1:            aa:::+++******~~~~~~~~~~~~~~
+read 2:                                    ~~~~~~~~~~~~~~******+++:::aa
+
+DEMULTIPLEXING (PRIMARY)
+read 1:                 +++******~~~~~~~~~~~~~~
+read 2:                                    ~~~~~~~~~~~~~~******+++
+
+READ MERGING
+merged reads:           +++******~~~~~~~~~~~~~~~~~~~~~~~~******+++
+
+DEMULTIPLEXING (SECONDARY)
+                           ******~~~~~~~~~~~~~~~~~~~~~~~~******
+
+PRIMER REMOVAL
+                                 ~~~~~~~~~~~~~~~~~~~~~~~~
+

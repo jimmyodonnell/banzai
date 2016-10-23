@@ -1,0 +1,121 @@
+Bioinformatics Summary:
+
+pear_version=$(pear --help | grep 'PEAR v' | awk '{ print $2 }')
+vsearch_version=$(vsearch --version | head -1 | awk '{ print $2 }')
+cutadapt_version=$(cutadapt --version)
+
+
+SEQUENCING RUN
+==============
+The sequencing run consisted of X libraries distinguished by ligation index sequence, each of which contained (min, mean, max?) samples distinguished by primer index sequence. 
+
+
+
+
+
+After sequences were demultiplexed by the sequencing facility on the basis of the ligated (library) index, we merged forward and reverse paired-end reads and performed quality control using PEAR "${pear_version}" \cite{Zhang2014}).
+
+Reads were discarded if more than "$UNCALLEDMAX" of its bases were uncalled, 
+
+If a read contained two consecutive base calls with quality scores less than "$Quality_Threshold" (i.e. probability of incorrect base call = XXX), these bases and all subsequent bases were removed from the read before merging. 
+
+
+Read alignments were scored using the 
+if [ "$SCORING" == 2 ] then;
+	echo "assembly scoring method, using +1 for match and -1 for mismatch, multiplied by base quality scores."
+fi
+if [ "$SCORING" == 1 ] then;
+	echo "observed expected alignment scores with +1 for match and -1 for mismatch."
+fi
+
+Merged reads were assessed for statistical significance using 
+if [ "$TEST" == 1 ] then;
+	echo "observed expected alignment scores"
+fi
+if [ "$TEST" == 2 ] then;
+	echo "maximal acceptance probability"
+fi
+
+and merged reads with a p-value greater than $PVALUE were discarded
+
+
+Forward and reverse reads were merged using PEAR v0.9.4 \cite{Zhang2014} and discarded if more than 0.01 of the bases were uncalled. If a read contained two consecutive base calls with quality scores less than 15 (i.e. probability of incorrect base call = 0.0316), these bases and all subsequent bases were removed from the read. 
+
+Read pairs for which the probability of matching by chance alone exceeded 0.01 were not assembled and omitted from the analysis. 
+
+Assembled reads were discarded if assembled sequences were not between 50 and 168 bp long, or if reads did not overlap by at least 100 bp.
+
+
+Merged reads were discarded if the sum of the per-base error probabilities was greater than 0.5 (``expected errors'' as defined by Edgar \cite{2010} and implemented in vsearch \cite{torognes2016https://github.com/torognes/vsearch}). Sequences were demultiplexed on the basis of the 6bp index sequence at base positions 4-9 at both ends using the programming language AWK. Primer sequences were removed using cutadapt version $(cutadapt --version) \cite{Martin2011}, allowing for 2 mismatches in the primer sequence. To speed up subsequent clustering, identical sequences were consolidated in python. Singleton sequences were removed. 
+
+
+We assessed whether each unique sequence was likely to be an artefact of the PCR (chimera) using the de novo chimera detection algorithm described by Edgar \cite{} and implemented by vsearch $(vsearch_version).
+
+Sequences were clustered into operational taxonomic units (OTUs) using CLUSTER_METHOD with a clustering radius of 1\%. The final data are thus a matrix of counts of OTUs present in each sample.
+
+
+
+
+CONTROLS
+========
+We included negative controls for the filtration process by filtering a volume of deionized water equal to that used for the environmental samples.
+We included negative controls for the PCR process by conducting PCRs using deionized water in place of template alongside the target samples.
+
+We tested for amplification of both the filtration and PCR negative controls by running their PCR products on an agarose gel. XXX of YYY filtration negative controls produced visible bands, and XXX of YYY PCR negative controls produced visible products. We sequenced XXX of the filtration negative controls and XXX of the PCR negative controls.
+
+
+
+CONTAMINATION
+=============
+
+We calculated the rate of contamination in two directions: reads belonging to the positive control taxon in non-control samples, and reads in control samples that do NOT belong to the control taxon. 
+
+proportion of reads assigned to the positive control taxon in non-control samples. 
+
+
+
+
+
+
+
+
+
+
+
+@article{Edgar01102010,
+author = {Edgar, Robert C.
+}, 
+title = {Search and clustering orders of magnitude faster than BLAST},
+volume = {26}, 
+number = {19}, 
+pages = {2460-2461}, 
+year = {2010}, 
+doi = {10.1093/bioinformatics/btq461}, 
+abstract ={Motivation: Biological sequence data is accumulating rapidly, motivating the development of improved high-throughput methods for sequence classification.Results: UBLAST and USEARCH are new algorithms enabling sensitive local and global search of large sequence databases at exceptionally high speeds. They are often orders of magnitude faster than BLAST in practical applications, though sensitivity to distant protein relationships is lower. UCLUST is a new clustering method that exploits USEARCH to assign sequences to clusters. UCLUST offers several advantages over the widely used program CD-HIT, including higher speed, lower memory use, improved sensitivity, clustering at lower identities and classification of much larger datasets.Availability: Binaries are available at no charge for non-commercial use at http://www.drive5.com/usearchContact: robert@drive5.comSupplementary information: Supplementary data are available at Bioinformatics online.}, 
+URL = {http://bioinformatics.oxfordjournals.org/content/26/19/2460.abstract}, 
+eprint = {http://bioinformatics.oxfordjournals.org/content/26/19/2460.full.pdf+html}, 
+journal = {Bioinformatics} 
+}
+
+@article{Edgar15082011,
+author = {Edgar, Robert C. and Haas, Brian J. and Clemente, Jose C. and Quince, Christopher and Knight, Rob}, 
+title = {UCHIME improves sensitivity and speed of chimera detection},
+volume = {27}, 
+number = {16}, 
+pages = {2194-2200}, 
+year = {2011}, 
+doi = {10.1093/bioinformatics/btr381}, 
+abstract ={Motivation: Chimeric DNA sequences often form during polymerase chain reaction amplification, especially when sequencing single regions (e.g. 16S rRNA or fungal Internal Transcribed Spacer) to assess diversity or compare populations. Undetected chimeras may be misinterpreted as novel species, causing inflated estimates of diversity and spurious inferences of differences between populations. Detection and removal of chimeras is therefore of critical importance in such experiments.Results: We describe UCHIME, a new program that detects chimeric sequences with two or more segments. UCHIME either uses a database of chimera-free sequences or detects chimeras de novo by exploiting abundance data. UCHIME has better sensitivity than ChimeraSlayer (previously the most sensitive database method), especially with short, noisy sequences. In testing on artificial bacterial communities with known composition, UCHIME de novo sensitivity is shown to be comparable to Perseus. UCHIME is >100Ã faster than Perseus and >1000Ã faster than ChimeraSlayer.Contact: robert@drive5.comAvailability: Source, binaries and data: http://drive5.com/uchime.Supplementary information: Supplementary data are available at Bioinformatics online.}, 
+URL = {http://bioinformatics.oxfordjournals.org/content/27/16/2194.abstract}, 
+eprint = {http://bioinformatics.oxfordjournals.org/content/27/16/2194.full.pdf+html}, 
+journal = {Bioinformatics} 
+}
+
+
+PEAR
+
+SWARM
+
+
+VSEARCH
+https://github.com/torognes/vsearch
