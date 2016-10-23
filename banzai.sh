@@ -84,7 +84,7 @@ else
 fi
 
 # make an analysis directory with starting time timestamp
-ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/Analysis_"${START_TIME}"
+ANALYSIS_DIR="${ANALYSIS_DIRECTORY}"/banzai_out_"${START_TIME}"
 mkdir "${ANALYSIS_DIR}"
 
 # Write a log file of output from this script (everything that prints to terminal)
