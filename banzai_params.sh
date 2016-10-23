@@ -5,10 +5,10 @@
 # INPUT
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="/Users/jimmy.odonnell/test_data"
+PARENT_DIR=~/test_data
 
 # Where is the sequencing metadata file? (SEE FORMATTING GUIDELINES IN README!)
-SEQUENCING_METADATA="/Users/jimmy.odonnell/Desktop/Kelly_Lab_Big/Illumina_Data_Raw/20150717/libraries/kelly_lab/SEQUENCING_POOL_20150618.csv"
+SEQUENCING_METADATA="${PARENT_DIR}"/metadata.csv
 
 
 ################################################################################
@@ -16,12 +16,12 @@ SEQUENCING_METADATA="/Users/jimmy.odonnell/Desktop/Kelly_Lab_Big/Illumina_Data_R
 ################################################################################
 # This script will generate a directory (folder) containing the output of the script.
 # Where do you want this new folder to go?
-ANALYSIS_DIRECTORY="/Users/jimmy.odonnell/Desktop"
+ANALYSIS_DIRECTORY="${PARENT_DIR%/*}"
 
 # You can optionally specify a folder into which the script copies a PDF containing some results.
 # The pdf is created by default in the analysis folder specified above, but
 # if you set this to your DropBox or Google Drive Folder, you can check it out from anywhere.
-OUTPUT_PDF_DIR="/Users/jimmy.odonnell/Desktop"
+OUTPUT_PDF_DIR=""
 
 
 ################################################################################
@@ -38,7 +38,7 @@ frag_size_column="fragment_size_BA"
 # What is the maximum expected length of the fragment of interest?
 # This is the length of the fragments input into library prep --
 # i.e. with (indexed) primers, but without library index or sequencing adapters
-LENGTH_FRAG="182"
+LENGTH_FRAG="180"
 
 # Your metadata must have a column corresponding to the subfolders containing the raw reads.
 # In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
