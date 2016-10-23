@@ -234,6 +234,10 @@ FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Anal
 ################################################################################
 # GENERAL SETTINGS
 ################################################################################
+# Would you like to save every single intermediate file as we go? YES | NO
+# recommendation: NO, unless testing or troubleshooting
+HOARD="YES"
+
 # Would you like to compress extraneous intermediate files once the analysis is finished? YES/NO
 PERFORM_CLEANUP="YES"
 
