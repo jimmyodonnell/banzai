@@ -5,7 +5,7 @@
 # INPUT
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR=~/test_data
+PARENT_DIR="./data/PS_16S"
 
 # Where is the sequencing metadata file? (SEE FORMATTING GUIDELINES IN README!)
 SEQUENCING_METADATA="${PARENT_DIR}"/metadata.csv
@@ -52,6 +52,15 @@ LIBRARY_COLUMN_NAME="library"
 # Bokulich recommends:
 # Quality_Threshold=3, r=3 (PEAR only considers r=2), UNCALLEDMAX=0
 # TRIMMIN= 0.75 * LENGTH_READ # this is hard-coded in the script banzai.sh
+
+# do you want banzai to automatically calculate the expected assembled sequence lengths and overlap based on read length and fragment size?
+calculate_merge_length="NO" # [ YES | NO]
+
+# if "NO", provide the following values for PEAR:
+minimum_overlap="10" # [10]
+assembled_max="10000" # [1000]
+assembled_min="50" # [50]
+# note that as of 20151124, the PEAR default for assembly max (0) doesn't merge any reads.
 
 # --quality-threshold
 Quality_Threshold=15
@@ -134,6 +143,13 @@ ColumnName_SampleName="sample_name"
 ColumnName_SampleType="sample_type"
 
 ################################################################################
+# SINGLETONS
+################################################################################
+# exclude sequences that are found only once? (at the duplicate level)
+remove_singletons="YES"  # [YES|NO]
+
+
+################################################################################
 # CLUSTER OTUs
 ################################################################################
 # Would you like to cluster sequences into OTUs based on similarity?
@@ -160,6 +176,8 @@ remove_chimeras="YES"
 # TAXONOMIC ANNOTATION
 ################################################################################
 ## BLAST ##
+PERFORM_BLAST="NO"
+
 # For more information on these parameters, type into a terminal window: blastn -help
 # Specify the path to the BLAST database.
 # Note this should be a path to any one of three files WITHOUT their extension *.nhr, *.nin, or *.nsq
@@ -172,8 +190,11 @@ EVALUE="1e-20"
 MAXIMUM_MATCHES="500"
 culling_limit="20"
 
+
 ################################################################################
 ## MEGAN ##
+PERFORM_MEGAN="NO"
+
 # For more information, see the manual provided with the software
 # Specify the path to the MEGAN executable file you want to use.
 # Note that in recent versions an executable was not provided; in that case, you need to reference like so: '/Applications/MEGAN/MEGAN.app/Contents/MacOS/JavaApplicationStub'
