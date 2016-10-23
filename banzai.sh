@@ -808,7 +808,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 ##############################################################################
 if [[ "${remove_chimeras}" = "YES" ]] ; then
 	echo $(date +%Y-%m-%d\ %H:%M) 'Looking for chimeras in duplicate fasta file using vsearch'
-	source "${SCRIPT_DIR}"/chimera_check.sh "${duplicate_fasta}"
+	source "${SCRIPT_DIR}"/scripts/chimera_check.sh "${duplicate_fasta}"
 	clustering_input="${chimera_free_fasta}"
 	echo
 else
@@ -1088,7 +1088,7 @@ fi
 OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
 
 echo $(date +%Y-%m-%d\ %H:%M) "passing args to R for preliminary analysis..."
-Rscript "$SCRIPT_DIR/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_METADATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}" "${ColumnName_SampleName}" "${ColumnName_SampleType}"
+Rscript "$SCRIPT_DIR/scripts/analysis/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_METADATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}" "${ColumnName_SampleName}" "${ColumnName_SampleType}"
 echo
 
 # EMPTY PDFs are 3829 bytes
