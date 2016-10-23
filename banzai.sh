@@ -882,7 +882,7 @@ fi
 		# OTU_table="${dir_out}"/OTU_table.csv
 
 		# Convert duplicate table to OTU table using R script (arguments: (1) duplicate table, (2) dup to otu table, (3) otu table path
-		Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${dup_otu_map}" "${OTU_table}"
+		Rscript "$SCRIPT_DIR/scripts/dup_to_OTU_table.R" "${duplicate_table}" "${dup_otu_map}" "${OTU_table}"
 
 		# check if OTU table and OTU fasta exist (and/or are of size gt 1?)
 		if [[ ! -s "${OTU_fasta}" ]] ; then
@@ -1064,7 +1064,7 @@ if [ "$PERFORM_MEGAN" = "YES" ]; then
 			sed 's|;size=|,|' <"${DIR}"/meganout_${COLLAPSE_RANK2}.csv >"${DIR}"/meganout_${COLLAPSE_RANK2}_mod.csv
 
 			# Run the R script, passing the current tag directory as the directory to which R will "setwd()"
-			Rscript "$SCRIPT_DIR/megan_plotter.R" "${DIR}"
+			Rscript "$SCRIPT_DIR/scripts/analysis/megan_plotter.R" "${DIR}"
 
 		else
 			echo
