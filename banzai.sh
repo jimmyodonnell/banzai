@@ -832,7 +832,7 @@ fi
 		    "swarm" )
 
 		        echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using swarm'
-		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
+		        source "${SCRIPT_DIR}"/scripts/OTU_clustering/cluster_swarm.sh "${clustering_input}"
 						echo
 
 		    ;;
@@ -840,10 +840,10 @@ fi
 		    "vsearch" )
 
 		        # echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using vsearch'
-		        # source "${SCRIPT_DIR}"/OTU_clustering/cluster_vsearch.sh "${duplicate_fasta}"
+		        # source "${SCRIPT_DIR}"/scripts/OTU_clustering/cluster_vsearch.sh "${duplicate_fasta}"
 						echo "Sorry, OTU clustering with vsearch has not been implemented yet."
 						echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using swarm'
-		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
+		        source "${SCRIPT_DIR}"/scripts/OTU_clustering/cluster_swarm.sh "${clustering_input}"
 						echo
 
 		    ;;
@@ -851,7 +851,7 @@ fi
 		    "usearch" )
 
 		        echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using usearch'
-		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_usearch.sh "${clustering_input}"
+		        source "${SCRIPT_DIR}"/scripts/OTU_clustering/cluster_usearch.sh "${clustering_input}"
 						echo
 
 		    ;;
@@ -861,7 +861,7 @@ fi
 		        echo "${cluster_method}" 'is an invalid clustering method.'
 		        echo 'Must be one of swarm, vsearch, usearch, or none.'
 		        echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using swarm'
-		        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
+		        source "${SCRIPT_DIR}"/scripts/OTU_clustering/cluster_swarm.sh "${clustering_input}"
 						echo
 
 
