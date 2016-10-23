@@ -58,17 +58,8 @@ fi
 # CHECK FOR DEPENDENCIES
 ################################################################################
 dependencies=($( echo pear cutadapt vsearch swarm seqtk python blastn R ))
-echo 'Checking for dependencies:' "${dependencies[@]}"
-for i in "${dependencies[@]}"; do
-	if hash "${i}" 2>/dev/null; then
-	# if command -v "${i}" >/dev/null 2>&1; then
-		echo 'Found program' "${i}" 'in' $( which "${i}" )
-	else
-		echo 'ERROR: A program on which this script depends was not found:' "${i}"
-		echo 'Aborting script.'
-		exit
-	fi
-done
+source "${SCRIPT_DIR}"/scripts/dependency_check.sh "${dependencies[@]}"
+
 
 # Specify compression utility
 if hash pigz 2>/dev/null; then
