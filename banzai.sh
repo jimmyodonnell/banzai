@@ -302,9 +302,8 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 
 	fi
-	if [ "${HOARD}" = "NO" ]; then
-
-	fi
+	# if [ "${HOARD}" = "NO" ]; then
+	# fi
 
 	################################################################################
 	# EXPECTED ERROR FILTERING (vsearch)
