@@ -84,21 +84,21 @@ else
 fi
 
 # make an analysis directory with starting time timestamp
-ANALYSIS_DIR="${OUTPUT_DIRECTORY}"/banzai_out_"${START_TIME}"
-mkdir "${ANALYSIS_DIR}"
+OUTPUT_DIR="${OUTPUT_DIRECTORY}"/banzai_out_"${START_TIME}"
+mkdir "${OUTPUT_DIR}"
 
 # Write a log file of output from this script (everything that prints to terminal)
-LOGFILE="${ANALYSIS_DIR}"/logfile.txt
+LOGFILE="${OUTPUT_DIR}"/logfile.txt
 exec > >(tee "${LOGFILE}") 2>&1
 
 echo $(date +%Y-%m-%d\ %H:%M) "Analysis started at ""${START_TIME}"
 echo "Output is located in:"
-echo "${ANALYSIS_DIR}"
+echo "${OUTPUT_DIR}"
 echo
 
 # Copy these files into that directory as a verifiable log you can refer back to.
-cp "${SCRIPT_DIR}"/banzai.sh "${ANALYSIS_DIR}"/analysis_script.txt
-cp "${param_file}" "${ANALYSIS_DIR}"/analysis_parameters.txt
+cp "${SCRIPT_DIR}"/banzai.sh "${OUTPUT_DIR}"/analysis_script.txt
+cp "${param_file}" "${OUTPUT_DIR}"/analysis_parameters.txt
 
 
 
@@ -226,7 +226,7 @@ fi
 LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v TAGCOL=$TAG_COL 'NR>1 { print "lib_" $LIBCOL "_tag_" $TAGCOL }' $SEQUENCING_METADATA | sort | uniq )
 
 # create a file to store tag efficiency data
-TAG_COUNT="${ANALYSIS_DIR}"/tag_count.txt
+TAG_COUNT="${OUTPUT_DIR}"/tag_count.txt
 echo "library tag left_tagged right_tagged" >> "${TAG_COUNT}"
 
 ################################################################################
@@ -242,7 +242,7 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	# READ1=$(find "${CURRENT_LIB}" -name '*R1*fastq*')
 	# READ2=$(find "${CURRENT_LIB}" -name '*R2*fastq*')
 
-	LIB_OUTPUT_DIR="${ANALYSIS_DIR}"/${CURRENT_LIB##*/}
+	LIB_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_LIB##*/}
 	mkdir "${LIB_OUTPUT_DIR}"
 
 	##############################################################################
@@ -480,14 +480,14 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 	# TODO MOVE THE VARIABLE ASSIGNMENT TO TOP; MOVE MKDIR TO TOP OF CONCAT IF LOOP
 	echo $(date +%Y-%m-%d\ %H:%M) "Concatenating fasta files..."
-	CONCAT_DIR="$ANALYSIS_DIR"/all_lib
+	CONCAT_DIR="${OUTPUT_DIR}"/all_lib
 	mkdir "${CONCAT_DIR}"
 	CONCAT_FILE="${CONCAT_DIR}"/1_demult_concat.fasta
 
 	# TODO could move this into above loop after demultiplexing?
 	for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
-		LIB_OUTPUT_DIR="${ANALYSIS_DIR}"/${CURRENT_LIB##*/}
+		LIB_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_LIB##*/}
 
 		for TAG_SEQ in $TAGS; do
 			cat "${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/2_notags.fasta >> "${CONCAT_FILE}"
@@ -942,7 +942,7 @@ else
 	################################################################################
 	echo $(date +%Y-%m-%d\ %H:%M) "Removing primers..."
 	for TAG_SEQ in $TAGS; do
-		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+		TAG_DIR="${OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 		# Remove PRIMER1 from the beginning of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
 		cutadapt -g ^"${PRIMER1}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/2_notags.fasta > "${TAG_DIR}"/5_primerL1_removed.fasta
 		cutadapt -g ^"${PRIMER2}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${TAG_DIR}"/2_notags.fasta > "${TAG_DIR}"/5_primerL2_removed.fasta
@@ -958,7 +958,7 @@ else
 	# CONSOLIDATE IDENTICAL SEQUENCES
 	################################################################################
 	for TAG_SEQ in $TAGS; do
-		TAG_DIR="${ANALYSIS_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
+		TAG_DIR="${OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
 
 		DEREP_INPUT="${TAG_DIR}"/7_no_primers.fasta
 
@@ -1002,7 +1002,7 @@ if [ "$PERFORM_MEGAN" = "YES" ]; then
 	if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		DIRECTORIES="${DEREP_INPUT%/*}"
 	else
-		DIRECTORIES=$( find "${ANALYSIS_DIR}"/demultiplexed -type d -d 1 )
+		DIRECTORIES=$( find "${OUTPUT_DIR}"/demultiplexed -type d -d 1 )
 	fi
 
 	for DIR in "$DIRECTORIES"; do
@@ -1076,7 +1076,7 @@ fi
 ################################################################################
 # Once you have a final CSV file of the number of occurences of each OTU in each sample, run some preliminary analyses in R
 # TODO rename preliminary to OTU analyses; move analysis script to OTU analysis directory
-OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
+OUTPUT_PDF="${OUTPUT_DIR}"/analysis_results_"${START_TIME}".pdf
 
 echo $(date +%Y-%m-%d\ %H:%M) "passing args to R for preliminary analysis..."
 Rscript "$SCRIPT_DIR/scripts/analysis/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_METADATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}" "${ColumnName_SampleName}" "${ColumnName_SampleType}"
@@ -1095,9 +1095,9 @@ fi
 
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
 	echo $(date +%Y-%m-%d\ %H:%M) "Compressing fasta, fastq, and xml files..."
-	find "${ANALYSIS_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
-	find "${ANALYSIS_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
-	find "${ANALYSIS_DIR}" -type f -name '*.xml' -exec ${ZIPPER} "{}" \;
+	find "${OUTPUT_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
+	find "${OUTPUT_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
+	find "${OUTPUT_DIR}" -type f -name '*.xml' -exec ${ZIPPER} "{}" \;
 	echo $(date +%Y-%m-%d\ %H:%M) "Cleanup performed."
 else
 	echo $(date +%Y-%m-%d\ %H:%M) "Cleanup not performed."
@@ -1107,7 +1107,7 @@ FINISH_TIME=$(date +%Y%m%d_%H%M)
 
 echo 'Pipeline finished! Started at' $START_TIME 'and finished at' $FINISH_TIME | mail -s "banzai is finished" "${EMAIL_ADDRESS}"
 
-SUMMARY_FILE="${ANALYSIS_DIR}"/summary.txt
+SUMMARY_FILE="${OUTPUT_DIR}"/summary.txt
 echo "Writing summary file..."
 source "${SCRIPT_DIR}"/beta/summarize.sh "${LOGFILE}" > "${SUMMARY_FILE}"
 echo "Summary written to:"
