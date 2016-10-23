@@ -647,7 +647,7 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 	################################################################################
 	echo $(date +%Y-%m-%d\ %H:%M) "Identifying identical sequences... (python)"
 	derep_output="${DEREP_INPUT}".derep
-	python "$SCRIPT_DIR/dereplication/dereplicate_fasta.py" "${DEREP_INPUT}"
+	python "$SCRIPT_DIR/scripts/dereplication/dereplicate_fasta.py" "${DEREP_INPUT}"
 
 	# check for derep output
 	if [[ ! -s "${derep_output}" ]] ; then
@@ -973,7 +973,7 @@ else
 
 		# usearch -derep_fulllength "${DEREP_INPUT}" -sizeout -strand both -uc "${TAG_DIR}"/derep.uc -output "${TAG_DIR}"/7_derep.fasta
 		echo $(date +%Y-%m-%d\ %H:%M) "Consolidating identical sequences..."
-		python "$SCRIPT_DIR/dereplication/dereplicate_fasta.py" "${DEREP_INPUT}"
+		python "$SCRIPT_DIR/scripts/dereplication/dereplicate_fasta.py" "${DEREP_INPUT}"
 
 		# REMOVE SINGLETONS
 		# usearch -sortbysize "${TAG_DIR}"/7_derep.fasta -minsize 2 -sizein -sizeout -output "${TAG_DIR}"/8_nosingle.fasta
