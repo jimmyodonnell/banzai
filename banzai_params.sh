@@ -16,7 +16,7 @@ SEQUENCING_METADATA="${PARENT_DIR}"/metadata.csv
 ################################################################################
 # This script will generate a directory (folder) containing the output of the script.
 # Where do you want this new folder to go?
-ANALYSIS_DIRECTORY="${PARENT_DIR%/*}"
+OUTPUT_DIRECTORY="${PARENT_DIR%/*}"
 
 # You can optionally specify a folder into which the script copies a PDF containing some results.
 # The pdf is created by default in the analysis folder specified above, but
