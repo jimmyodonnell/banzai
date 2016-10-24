@@ -28,32 +28,32 @@ adapter:           aa                                                aa
 final fragment:    aa:::+++******~~~~~~~~~~~~~~~~~~~~~~~~******+++:::aa
 ```
 
-SEQUENCING
+Sequencing
 ```
 Read 1:            aa:::+++******~~~~~~~~~~~~~~
 Read 2:                                    ~~~~~~~~~~~~~~******+++:::aa
 ```
 
-DEMULTIPLEXING (PRIMARY)
+Demultiplexing (primary)
 ```
 Read 1:                 +++******~~~~~~~~~~~~~~
 Read 2:                                    ~~~~~~~~~~~~~~******+++
 ```
 
-READ MERGING
+Read merging
 ```
 merged reads:           +++******~~~~~~~~~~~~~~~~~~~~~~~~******+++
 ```
 
-DEMULTIPLEXING (SECONDARY)
+Demultiplexing (secondary)
 ```
                            ******~~~~~~~~~~~~~~~~~~~~~~~~******
  ```
-PRIMER REMOVAL
+Primer removal
 ```
                                  ~~~~~~~~~~~~~~~~~~~~~~~~
 ```
-(Layout inspired in part by [this](https://github.com/geraldinepascal/FROGS).)
+(Layout inspired in part by the [FROGS](https://github.com/geraldinepascal/FROGS) documentation.)
 
 ## Basic implementation ##
 Copy the file 'banzai_params.sh' into a new folder and set parameters as desired. Then run the banzai script, using your newly edited parameter file like so (Mac OSX):
@@ -97,33 +97,8 @@ No field should contain any spaces. That means row names, column names, and cell
 As of 2015-10-09, libraries no longer have to be named anything in particular (e.g. A, B, lib1, lib2),
 BUT THEY CANNOT CONTAIN UNDERSCORES or spaces! (This will be moot once library index sequences are required)
 
-## Organization of raw data ##
+## Raw Data ##
 Your data (fastq files) can be compressed or not; but banzai currently only works with paired-end Illumina data. Thus, the bare minimum input is two fastq files corresponding to the first and second read. *Banzai will fail if there are files in your library folders that are not your raw data but have 'fastq' in the filename!* For example, if your library contains four files: "R1.fastq", "R1.fastq.gz", "R2.fastq", and "R2.fastq.gz". banzai will grab the first two (R1.fastq and R1.fastq.gz) and try to merge them, and (correctly) fail miserably. Note that while PEAR 0.9.7 merges compressed (\*.gz) files directly, PEAR 0.9.6 does not do so correctly. If given compressed files as input, banzai first decompresses them, which will add a little bit of time to the overall analysis.
-
-## A note on removal of duplicate sequences##
-
-###  (dereplicate_fasta.py) ###
-
-* Input: a fasta file (e.g. 'infile.fasta')
-
-* Output: a file with the same name as the input but with the added extension '.derep' (e.g. 'infile.fasta.derep')
-
-This output file contains each unique DNA sequence from the fasta file, followed by the labels of the reads matching this sequence
-Thus, if an input fasta file consisted of three reads with identical DNA sequences:
-
-	>READ1
-	AATAGCGCTACGT
-	>READ2
-	AATAGCGCTACGT
-	>READ3
-	AATAGCGCTACGT
-
-The output file is as follows:
-
-	AATAGCGCTACGT; READ1; READ2; READ3
-
-Note that the original script also output a file of the sequences only (no names), but I removed this functionality on 20150417
-
 
 ## Known Issues/Bugs ##
 * Currently awaiting catastrophic finding...
