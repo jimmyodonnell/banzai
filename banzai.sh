@@ -156,20 +156,20 @@ else
 fi
 
 ################################################################################
-# LOAD MULTIPLEX TAGS
+# LOAD MULTIPLEX INDEXES
 ################################################################################
-TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{
+IND2_COL=$(awk -F',' -v IND2_COLNAME=$SECONDARY_INDEX_COLUMN_NAME '{
 	for (i=1;i<=NF;i++)
-	  if($i == TAG_COL_NAME)
+	  if($i == IND2_COLNAME)
 			print i;
 	exit
 }' $SEQUENCING_METADATA)
-TAGS=$(awk -F',' -v TAGCOL=$TAG_COL \
+IND2S=$(awk -F',' -v INDCOL=$IND2_COL \
 'NR>1 {
-	print $TAGCOL
+	print $INDCOL
 }' $SEQUENCING_METADATA |\
 sort | uniq)
-N_index_sequences=$(echo $TAGS | awk '{print NF}')
+N_index_sequences=$(echo $IND2S | awk '{print NF}')
 
 # check if number of tags is greater than one:
 if [[ "${N_index_sequences}" -gt 1 ]]; then
@@ -183,7 +183,7 @@ else
 	exit
 fi
 
-declare -a TAGS_ARRAY=($TAGS)
+declare -a IND2_ARRAY=($IND2S)
 
 
 ################################################################################
@@ -238,7 +238,7 @@ read -a primersRC_arr <<< $( echo $PRIMER1RC $PRIMER2RC )
 ################################################################################
 # Calculate the expected size of the region of interest, given the total size of fragments, and the length of primers and tags
 ################################################################################
-EXTRA_SEQ=${TAGS_ARRAY[0]}${TAGS_ARRAY[0]}$PRIMER1$PRIMER2
+EXTRA_SEQ=${IND2_ARRAY[0]}${IND2_ARRAY[0]}$PRIMER1$PRIMER2
 LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
 LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
@@ -315,14 +315,14 @@ fi
 
 # Unique samples are given by combining the library and tags
 # TODO originally contained sort | uniq; this is unnecessary I think
-LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v TAGCOL=$TAG_COL \
+LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v INDCOL=$IND2_COL \
 'NR>1 {
-  print "lib_" $LIBCOL "_tag_" $TAGCOL
+  print "lib_" $LIBCOL "_tag_" $INDCOL
 }' $SEQUENCING_METADATA | sort | uniq )
 
 # create a file to store tag efficiency data
-TAG_COUNT="${OUTPUT_DIR}"/tag_count.txt
-echo "library tag left_tagged right_tagged" >> "${TAG_COUNT}"
+INDEX_COUNT="${OUTPUT_DIR}"/index_count.txt
+echo "library tag left_tagged right_tagged" >> "${INDEX_COUNT}"
 
 ################################################################################
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
@@ -490,53 +490,42 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	DEMULTIPLEXED_DIR="${LIB_OUTPUT_DIR}"/demultiplexed
 	mkdir "${DEMULTIPLEXED_DIR}"
 
-	# Copy sequences to fasta files into separate directories based on tag sequence on left side of read
-	# TODO test for speed against removing the tag while finding it: wrap first tag regex in gsub(/pattern/,""):  awk 'gsub(/^.{0,9}'"$TAG_SEQ"'/,""){if . . .
+	# Copy sequences to fasta files into separate directories based on index sequence on left side of read
+	# TODO test for speed against removing the index while finding it: wrap first index regex in gsub(/pattern/,""):  awk 'gsub(/^.{0,9}'"$IND_SEQ"'/,""){if . . .
 	# 20150522 changed {0,9} to {3} to eliminate flexibility (that could result in a read being assigned to >1 sample)
-	# awk '/^.{0,9}'"$TAG_SEQ"'/{if (a && a !~ /^.{0,9}'"$TAG_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
+	# awk '/^.{0,9}'"$IND_SEQ"'/{if (a && a !~ /^.{0,9}'"$IND_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${TAG_DIR}"/1_tagL_present.fasta ) &
 
-	echo $(date +%Y-%m-%d\ %H:%M) "Demultiplexing: removing tags and adding to sequence ID in library" "${CURRENT_LIB##*/}""..."
-	for TAG_SEQ in $TAGS; do
-	(	TAG_DIR="${DEMULTIPLEXED_DIR}"/tag_"${TAG_SEQ}"
+	echo $(date +%Y-%m-%d\ %H:%M) "Demultiplexing: removing secondary index sequences and adding to sequence ID in library" "${CURRENT_LIB##*/}""..."
+	for IND_SEQ in $IND2S; do
+	(	TAG_DIR="${DEMULTIPLEXED_DIR}"/tag_"${IND_SEQ}"
 		mkdir "${TAG_DIR}"
 		demult_file_L="${TAG_DIR}"/1_tagL_removed.fasta
 	  demult_file_R="${TAG_DIR}"/2_notags.fasta
 
 		# Left side tag
-		awk 'gsub(/^.{3}'"$TAG_SEQ"'/,"") {
-			if (a && a !~ /^.{3}'"$TAG_SEQ"'/)
+		awk 'gsub(/^.{3}'"$IND_SEQ"'/,"") {
+			if (a && a !~ /^.{3}'"$IND_SEQ"'/)
 				print a;
 			print
 		} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${demult_file_L}"
 
 		# Right side tag
-		TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
+		TAG_RC=$( echo ${IND_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
 		awk 'gsub(/'"$TAG_RC"'.{3}$/,"") {
 			if (a && a !~ /'"$TAG_RC"'.{3}$/)
-				print a "tag_""'"$TAG_SEQ"'";
+				print a "tag_""'"$IND_SEQ"'";
 			print
 		} {a = $0}' "${demult_file_L}" > "${demult_file_R}"
 
-		echo "${CURRENT_LIB##*/}" "${TAG_SEQ}" $(wc -l "${demult_file_L}" | \
+		echo "${CURRENT_LIB##*/}" "${IND_SEQ}" $(wc -l "${demult_file_L}" | \
 			awk '{ print ($1/2) }') $(wc -l "${demult_file_R}" | \
-			awk '{ print ($1/2)}') >> "${TAG_COUNT}" ) &
+			awk '{ print ($1/2)}') >> "${INDEX_COUNT}" ) &
 
 	done
 
 	wait
 
 	echo
-
-	# echo $(date +%Y-%m-%d\ %H:%M) "Demultiplexing: removing right tag and adding tag sequence to sequence ID in library" "${CURRENT_LIB##*/}""..."
-	# for TAG_SEQ in $TAGS; do
-	# (	TAG_DIR="${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"
-	# 	demult_file_R="${TAG_DIR}"/2_notags.fasta
-	# 	TAG_RC=$( echo ${TAG_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
-	# 	# 20150522 changed {0,9} to {3} to eliminate flexibility (that could result in a read being assigned to >1 sample)
-	# 	awk 'gsub(/'"$TAG_RC"'.{3}$/,"") {if (a && a !~ /'"$TAG_RC"'.{3}$/) print a "tag_""'"$TAG_SEQ"'"; print } {a = $0}' "${TAG_DIR}"/1_tagL_removed.fasta > "${demult_file_R}" ) &
-	# done
-	#
-	# wait
 
 done
 ################################################################################
@@ -575,8 +564,8 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 
 	LIB_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_LIB##*/}
 
-	for TAG_SEQ in $TAGS; do
-		cat "${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${TAG_SEQ}"/2_notags.fasta >> "${CONCAT_FILE}"
+	for IND_SEQ in $IND2S; do
+		cat "${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${IND_SEQ}"/2_notags.fasta >> "${CONCAT_FILE}"
 	done
 
 	echo $(date +%Y-%m-%d\ %H:%M) "Compressing fasta files..."
@@ -984,7 +973,7 @@ fi
 OUTPUT_PDF="${OUTPUT_DIR}"/analysis_results_"${START_TIME}".pdf
 
 echo $(date +%Y-%m-%d\ %H:%M) "passing args to R for preliminary analysis..."
-Rscript "$SCRIPT_DIR/scripts/analysis/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_METADATA}" "${LIBRARY_COLUMN_NAME}" "${TAG_COLUMN_NAME}" "${ColumnName_SampleName}" "${ColumnName_SampleType}"
+Rscript "$SCRIPT_DIR/scripts/analysis/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_METADATA}" "${LIBRARY_COLUMN_NAME}" "${SECONDARY_INDEX_COLUMN_NAME}" "${ColumnName_SampleName}" "${ColumnName_SampleType}"
 echo
 
 # EMPTY PDFs are 3829 bytes

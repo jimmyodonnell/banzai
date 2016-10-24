@@ -112,25 +112,22 @@ HOMOPOLYMER_MAX="7"
 ################################################################################
 # DEMULTIPLEXING
 ################################################################################
-# Specify the nucleotide sequences that differentiate multiplexed samples ("tags", and in the case of the Kelly Lab, primer tags)
-# You can grab these from the file specified above (SEQUENCING_METADATA) by specifying the column name holding tags.
-# Or you can specify a text file containing only these tags (choose "NO", and then specify path to the tag file).
-# This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
-# To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
-TAG_COLUMN_NAME="tag_sequence"
+# Specify the nucleotide sequences that differentiate multiplexed samples
+# (sometimes, confusingly referred to as "tags" or "barcodes")
+# these are the secondary index -- the primary index added with the sequencing adapters should not be in the sequence data
+# You can grab these from the file specified above (SEQUENCING_METADATA) by specifying the column name of index sequences.
+SECONDARY_INDEX_COLUMN_NAME="tag_sequence"
 
 
 # How many nucleotides pad the 5' end of the tag sequence?
 # TODO build in flexibility (this number is unused right now)
 TAG_Ns="3"
-# What is the maximum number of Ns to allow at the end of a sequence before a tag is reached?
-# TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
 
 ################################################################################
 # PRIMER REMOVAL
 ################################################################################
 # Specify the primers used to generate these amplicons.
-# As with the multiplex tags, Banzai will grab these from the file SEQUENCING_METADATA.
+# As with the multiplex indexes, Banzai will grab these from the file SEQUENCING_METADATA.
 # You must indicate the column names of the forward and reverse primers
 PRIMER_1_COLUMN_NAME="primer_sequence_F"
 PRIMER_2_COLUMN_NAME="primer_sequence_R"
@@ -195,8 +192,6 @@ culling_limit="20"
 # REANALYSIS
 ################################################################################
 # Would you like to pick up where a previous analysis left off?
-# If reanalyzing existing demultiplexed data, point this variable to the directory storing the individual tag folders.
-# EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed'
 
 # Have the reads already been paired?
 ALREADY_PEARED="NO" # YES/NO

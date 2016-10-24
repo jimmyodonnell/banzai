@@ -58,7 +58,7 @@ for TAG_SEQ in $TAGS; do
 
     echo "${CURRENT_LIB##*/}" "${TAG_SEQ}" $(wc -l "${demult_file_L}" | \
         awk '{ print ($1/2) }') $(wc -l "${demult_file_R}" | \
-        awk '{ print ($1/2)}') >> "${TAG_COUNT}" ) &
+        awk '{ print ($1/2)}') >> "${INDEX_COUNT}" ) &
 
 done
 
