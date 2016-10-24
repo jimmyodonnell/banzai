@@ -947,7 +947,7 @@ else
 fi
 
 ################################################################################
-# BLAST CLUSTERS
+# TAXONOMIC ANNOTATION
 ################################################################################
 if [ "$PERFORM_BLAST" = "YES" ]; then
 	echo $(date +%Y-%m-%d\ %H:%M) "BLASTing..."
@@ -973,80 +973,6 @@ if [ "$PERFORM_BLAST" = "YES" ]; then
 	fi
 else
 	echo 'BLAST search not performed.'
-	echo
-fi
-
-
-################################################################################
-# TAXONOMIC ANNOTATION
-################################################################################
-if [ "$PERFORM_MEGAN" = "YES" ]; then
-
-	DIRECTORIES="${DEREP_INPUT%/*}"
-
-	for DIR in "$DIRECTORIES"; do
-
-		# Some POTENTIAL OPTIONS FOR MEGAN EXPORT:
-		# {readname_taxonname|readname_taxonid|readname_taxonpath|readname_matches|taxonname_count|taxonpath_count|taxonid_count|taxonname_readname|taxonpath_readname|taxonid_readname}
-		# PERFORM COMMON ANCESTOR GROUPING IN MEGAN
-
-			# check for blast output
-		if [[ -s "${blast_output}"  ]]; then
-
-			echo $(date +%Y-%m-%d\ %H:%M) 'BLAST output found; proceeding to MEGAN.'
-			echo
-			# Specify paths to megan-related files
-			BLAST_XML="${DIR}"/10_BLASTed.xml
-			MEGAN_COMMAND_FILE="${DIR}"/megan_commands.txt
-			MEGAN_RMA_FILE="${DIR}"/meganfile.rma
-			MEGAN_SHELL_SCRIPT="${DIR}"/megan_script.sh
-
-			echo "import blastfile='${BLAST_XML}' meganFile='${MEGAN_RMA_FILE}' \
-	minScore=${MINIMUM_SCORE} \
-	maxExpected=${MAX_EXPECTED} \
-	topPercent=${TOP_PERCENT} \
-	minSupportPercent=${MINIMUM_SUPPORT_PERCENT} \
-	minSupport=${MINIMUM_SUPPORT} \
-	minComplexity=${MINIMUM_COMPLEXITY} \
-	lcapercent=${LCA_PERCENT};" > "${MEGAN_COMMAND_FILE}"
-			echo "update;" >> "${MEGAN_COMMAND_FILE}"
-			echo "collapse rank='$COLLAPSE_RANK1';" >> "${MEGAN_COMMAND_FILE}"
-			echo "update;" >> "${MEGAN_COMMAND_FILE}"
-			echo "select nodes=all;" >> "${MEGAN_COMMAND_FILE}"
-			echo "export what=DSV format=readname_taxonname separator=comma file=${DIR}/meganout_${COLLAPSE_RANK1}.csv;" >> "${MEGAN_COMMAND_FILE}"
-			if [ "$PERFORM_SECONDARY_MEGAN" = "YES" ]; then
-				echo "collapse rank='$COLLAPSE_RANK2';" >> "${MEGAN_COMMAND_FILE}"
-				echo "update;" >> "${MEGAN_COMMAND_FILE}"
-				echo "select nodes=all;" >> "${MEGAN_COMMAND_FILE}"
-				echo "export what=DSV format=readname_taxonname separator=comma file=${DIR}/meganout_${COLLAPSE_RANK2}.csv;" >> "${MEGAN_COMMAND_FILE}"
-			fi
-			echo "quit;" >> "${MEGAN_COMMAND_FILE}"
-
-			echo "#!/bin/bash" > "$MEGAN_SHELL_SCRIPT"
-			echo "cd "${megan_exec%/*}"" >> "$MEGAN_SHELL_SCRIPT"
-			echo "./"${megan_exec##*/}" -g -E -c ${DIR}/megan_commands.txt" >> "$MEGAN_SHELL_SCRIPT"
-
-			# Run MEGAN
-			sh "${DIR}"/megan_script.sh
-
-			# Modify the MEGAN output so that it is a standard CSV file with clusterID, N_reads, and Taxon
-			sed 's|;size=|,|' <"${DIR}"/meganout_${COLLAPSE_RANK1}.csv >"${DIR}"/meganout_${COLLAPSE_RANK1}_mod.csv
-			sed 's|;size=|,|' <"${DIR}"/meganout_${COLLAPSE_RANK2}.csv >"${DIR}"/meganout_${COLLAPSE_RANK2}_mod.csv
-
-			# Run the R script, passing the current tag directory as the directory to which R will "setwd()"
-			Rscript "$SCRIPT_DIR/scripts/analysis/megan_plotter.R" "${DIR}"
-
-		else
-			echo
-			echo 'BLAST failed: the output file is empty or absent.'
-			echo 'File should be:' "${blast_output}"
-			echo
-		fi
-
-	done
-
-else
-	echo 'MEGAN not performed.'
 	echo
 fi
 

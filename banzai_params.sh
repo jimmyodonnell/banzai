@@ -192,30 +192,6 @@ culling_limit="20"
 
 
 ################################################################################
-## MEGAN ##
-PERFORM_MEGAN="NO"
-
-# For more information, see the manual provided with the software
-# Specify the path to the MEGAN executable file you want to use.
-# Note that in recent versions an executable was not provided; in that case, you need to reference like so: '/Applications/MEGAN/MEGAN.app/Contents/MacOS/JavaApplicationStub'
-megan_exec='/Applications/MEGAN/MEGAN.app/Contents/MacOS/JavaApplicationStub'
-
-# What is the lowest taxonomic rank at which MEGAN should group OTUs?
-COLLAPSE_RANK1="Family"
-MINIMUM_SUPPORT="1"
-MINIMUM_COMPLEXITY="0"
-TOP_PERCENT="3"
-MINIMUM_SUPPORT_PERCENT="0"
-MINIMUM_SCORE="140"
-LCA_PERCENT="70"
-MAX_EXPECTED="1e-25"
-
-# Do you want to perform a secondary MEGAN analysis, collapsing at a different taxonomic level?
-PERFORM_SECONDARY_MEGAN="YES"
-COLLAPSE_RANK2="Genus"
-
-
-################################################################################
 # REANALYSIS
 ################################################################################
 # Would you like to pick up where a previous analysis left off?
