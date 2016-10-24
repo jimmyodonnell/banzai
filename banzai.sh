@@ -54,6 +54,12 @@ else
 	exit
 fi
 
+# check for correct newline characters (CRLF will break things)
+source "${SCRIPT_DIR}"/scripts/newline_fix.sh "${SEQUENCING_METADATA}"
+if [[ -s "${NEWLINES_FIXED}" ]]; then
+	SEQUENCING_METADATA="${NEWLINES_FIXED}"
+fi
+
 ################################################################################
 # CHECK FOR DEPENDENCIES
 ################################################################################
