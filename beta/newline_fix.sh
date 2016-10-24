@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# INFILE="${1}"
+INFILE="${1}"
 
-if ! [ -s "${INFILE}" ]; then
+if ! [[ -s "${INFILE}" ]]; then
 
   echo "Whoa there! Could not find the file you specified. Check the path."
 
@@ -18,16 +18,17 @@ if [[ $( file "${INFILE}" ) == *"CRLF"* ]]; then
 
   EXT="${INFILE##*.}"
 
-  OUTFILE="${BASE}"_fix."${EXT}"
+  NEWLINES_FIXED="${BASE}"_fix."${EXT}"
 
-  tr -d '\r' < "${INFILE}" > "${OUTFILE}"
+  tr -d '\r' < "${INFILE}" > "${NEWLINES_FIXED}"
 
   echo "The new file is here:"
 
-  echo "${OUTFILE}"
+  echo "${NEWLINES_FIXED}"
 
 else
 
-  echo "File passes test for CRLF. Everybody dance!"
+  echo "The file passes test for CRLF. Everybody dance!"
+  echo
 
 fi
