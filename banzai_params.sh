@@ -126,10 +126,6 @@ TAG_Ns="3"
 # What is the maximum number of Ns to allow at the end of a sequence before a tag is reached?
 # TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
 
-# Should demultiplexed samples be concatenated for annotation as a single unit? (Each read can still be mapped back to samples)
-# Recommended: YES
-CONCATENATE_SAMPLES="YES"
-
 ################################################################################
 # PRIMER REMOVAL
 ################################################################################
