@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# TODO fix subset to not decompress and recompress entire files
+
+# TODO ignore libraries named 'N'
+
 # TODO clean up blast results parsing.
 
 # TODO add automatic output of blast methods.
@@ -32,15 +36,13 @@ duplicate (duplicate name from dups.fasta)
 otu (otu name from otus.fasta)
 
 
-# TODO add checks for installation of R packages
+# TODO add checks for installation of R packages (replace crap in  analyses_prelim.R)
 
 # TODO be aware of potential problems between awk versions on Linux and Mac. On a Mac, the output of `awk --version` is `awk version 20070501` (BSD, I believe)
 
 # TODO add flexibility to stripchart "Reads by sample" in otu analyses
 
 # TODO compress nosingle.txt and 7_no_primers.fasta.derep
-
-# TODO move all scripts into subdirectories
 
 # TODO add vsearch clustering
 
@@ -62,8 +64,6 @@ otu (otu name from otus.fasta)
 # TODO Add normalization
 
 # TODO streamline config file
-
-# TODO Incorporate warnings for missing columns in metadata
 
 # TODO Add library names variable (require alpha?)
 
@@ -119,7 +119,8 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 		# an attempt at making this robust to underscores
 		# grep -E -o '_lib_.+?(?=_tag)_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
 
-		# TODO wrap in '( ) &' to force into background and allow parallel processing
+		# NOPE! TODO wrap in '( ) &' to force into background and allow parallel processing
+		# TODO: Parallelize cutadapt using gnu parallel: https://github.com/marcelm/cutadapt/issues/157
 		# i.e.
 		# for primer in "${primers_arr[@]}"; do
 		# 	( cutadapt -g ^"${primer}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_L"${primer}"_removed.fasta ) &
@@ -132,14 +133,6 @@ if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
 
 
 
-# TODO check for all dependencies
-if hash pigz 2>/dev/null; then
-	ZIPPER="pigz"
-	echo "pigz installation found"
-else
-	ZIPPER="gzip"
-	echo "pigz installation not found; using gzip"
-fi
 
 
 
@@ -147,6 +140,7 @@ fi
 
 
 exit
+
 # TODO fix this:
 # Failed to parse command: export what = DSV format = readname_taxonname separator = comma file = / Users / threeprime / Desktop / Analysis_20151017_1752 / all_lib / meganout_Genus.csv
 # Command: quit;
@@ -166,77 +160,3 @@ exit
 # 2: In max(x) : no non-missing arguments to max; returning -Inf
 # Execution halted
 # There was a problem generating the PDF.
-
-# TODO documentation:
-
-Genomic DNA:    ----------------------------------------------------------------
-target region:                   ~~~~~~~~~~~~~~~~~~~~~~~~
-
-PCR
-Primers:                   ******                        ******
-Secondary index:        +++                                    +++
-full primer:            +++******                        ******+++
-amplicon:               +++******~~~~~~~~~~~~~~~~~~~~~~~~******+++
-
-LIBRARY PREP
-primary index:       :::                                          :::
-adapter:           aa                                                aa
-final fragment:    aa:::+++******~~~~~~~~~~~~~~~~~~~~~~~~******+++:::aa
-
-SEQUENCING
-Read 1:            aa:::+++******~~~~~~~~~~~~~~
-Read 2:                                    ~~~~~~~~~~~~~~******+++:::aa
-
-DEMULTIPLEXING (PRIMARY)
-Read 1:                 +++******~~~~~~~~~~~~~~
-Read 2:                                    ~~~~~~~~~~~~~~******+++
-
-READ MERGING
-merged reads:           +++******~~~~~~~~~~~~~~~~~~~~~~~~******+++
-
-DEMULTIPLEXING (SECONDARY)
-                           ******~~~~~~~~~~~~~~~~~~~~~~~~******
-
-PRIMER REMOVAL
-                                 ~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-# following was shamelessly stolen from https://github.com/geraldinepascal/FROGS
-Legend for the next schemas:
-    .: Complete nucleic sequence
-    !: Region of interest
-    *: PCR primers
-
-Paired-end classical protocol:
-    In the paired-end protocol R1 and R2 must share a nucleic region.
-    For example the amplicons on V3-V4 regions can have a length between
-    350 and 500nt; with 2*300pb sequencing the overlap is between 250nt
-    and 100nt.
-    From:                                    To:
-     rDNA .........!!!!!!................    ......!!!!!!!!!!!!!!!!!!!.....
-     Ampl      ****!!!!!!****                  ****!!!!!!!!!!!!!!!!!!!****
-       R1      --------------                  --------------
-       R2      --------------                               --------------
-
-    The maximum overlap between R1 and R2 can be the complete overlap.
-        Inconvenient maximum overlap:
-        R1    --------------
-        R2   --------------
-    In this case it is necessary to trim R1 and R2 ends before the process.
-
-    The minimum overlap between R1 and R2 can have 15nt. With less the
-    overlap can be incorrect.
-
-Single-end classical protocol:
-    rDNA .........!!!!!!................
-    Ampl      ****!!!!!!****
-    Read      --------------
-
-Custom protocol
-    rDNA .....!!!!!!!!!!!!!!............
-    Ampl      ****!!!!!!****
-    Read      --------------
-
-Note: The amplicons can have a length variability.
-      The R1 and R2 can have different length.

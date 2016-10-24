@@ -16,7 +16,7 @@ SEQUENCING_METADATA="${PARENT_DIR}"/metadata.csv
 ################################################################################
 # This script will generate a directory (folder) containing the output of the script.
 # Where do you want this new folder to go?
-OUTPUT_DIRECTORY="${HOME}" #"${PARENT_DIR%/*}"
+OUTPUT_DIRECTORY="${PARENT_DIR%/*}"
 
 # You can optionally specify a folder into which the script copies a PDF containing some results.
 # The pdf is created by default in the analysis folder specified above, but
@@ -27,10 +27,6 @@ OUTPUT_PDF_DIR=""
 ################################################################################
 # METADATA DETAILS
 ################################################################################
-# Specify columns for raw sequencing files:
-FILE1_COLNAME="file1"
-FILE2_COLNAME="file2"
-
 # TODO grab this from a fragment_size column in the sequencing metadata file
 ### ***** REMEMBER TO WATCH FOR ZEROS WHEN IMPLEMENTING THIS!
 # Is there a column in the metadata file for fragment size?
@@ -112,22 +108,29 @@ HOMOPOLYMER_MAX="7"
 ################################################################################
 # DEMULTIPLEXING
 ################################################################################
-# Specify the nucleotide sequences that differentiate multiplexed samples
-# (sometimes, confusingly referred to as "tags" or "barcodes")
-# these are the secondary index -- the primary index added with the sequencing adapters should not be in the sequence data
-# You can grab these from the file specified above (SEQUENCING_METADATA) by specifying the column name of index sequences.
-SECONDARY_INDEX_COLUMN_NAME="tag_sequence"
+# Specify the nucleotide sequences that differentiate multiplexed samples ("tags", and in the case of the Kelly Lab, primer tags)
+# You can grab these from the file specified above (SEQUENCING_METADATA) by specifying the column name holding tags.
+# Or you can specify a text file containing only these tags (choose "NO", and then specify path to the tag file).
+# This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
+# To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
+TAG_COLUMN_NAME="tag_sequence"
 
 
 # How many nucleotides pad the 5' end of the tag sequence?
 # TODO build in flexibility (this number is unused right now)
 TAG_Ns="3"
+# What is the maximum number of Ns to allow at the end of a sequence before a tag is reached?
+# TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
+
+# Should demultiplexed samples be concatenated for annotation as a single unit? (Each read can still be mapped back to samples)
+# Recommended: YES
+CONCATENATE_SAMPLES="YES"
 
 ################################################################################
 # PRIMER REMOVAL
 ################################################################################
 # Specify the primers used to generate these amplicons.
-# As with the multiplex indexes, Banzai will grab these from the file SEQUENCING_METADATA.
+# As with the multiplex tags, Banzai will grab these from the file SEQUENCING_METADATA.
 # You must indicate the column names of the forward and reverse primers
 PRIMER_1_COLUMN_NAME="primer_sequence_F"
 PRIMER_2_COLUMN_NAME="primer_sequence_R"
@@ -189,9 +192,35 @@ culling_limit="20"
 
 
 ################################################################################
+## MEGAN ##
+PERFORM_MEGAN="NO"
+
+# For more information, see the manual provided with the software
+# Specify the path to the MEGAN executable file you want to use.
+# Note that in recent versions an executable was not provided; in that case, you need to reference like so: '/Applications/MEGAN/MEGAN.app/Contents/MacOS/JavaApplicationStub'
+megan_exec='/Applications/MEGAN/MEGAN.app/Contents/MacOS/JavaApplicationStub'
+
+# What is the lowest taxonomic rank at which MEGAN should group OTUs?
+COLLAPSE_RANK1="Family"
+MINIMUM_SUPPORT="1"
+MINIMUM_COMPLEXITY="0"
+TOP_PERCENT="3"
+MINIMUM_SUPPORT_PERCENT="0"
+MINIMUM_SCORE="140"
+LCA_PERCENT="70"
+MAX_EXPECTED="1e-25"
+
+# Do you want to perform a secondary MEGAN analysis, collapsing at a different taxonomic level?
+PERFORM_SECONDARY_MEGAN="YES"
+COLLAPSE_RANK2="Genus"
+
+
+################################################################################
 # REANALYSIS
 ################################################################################
 # Would you like to pick up where a previous analysis left off?
+# If reanalyzing existing demultiplexed data, point this variable to the directory storing the individual tag folders.
+# EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed'
 
 # Have the reads already been paired?
 ALREADY_PEARED="NO" # YES/NO
@@ -205,10 +234,6 @@ FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Anal
 ################################################################################
 # GENERAL SETTINGS
 ################################################################################
-# Would you like to save every single intermediate file as we go? YES | NO
-# recommendation: NO, unless testing or troubleshooting
-HOARD="YES"
-
 # Would you like to compress extraneous intermediate files once the analysis is finished? YES/NO
 PERFORM_CLEANUP="YES"
 

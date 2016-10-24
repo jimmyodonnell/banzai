@@ -11,64 +11,42 @@ my_dir="${1}"
 out_dir="${my_dir}"_sub
 
 # find files with '.fastq.' somewhere in the filename
-file_list=($( find "${my_dir}" -type f -name '*.fastq*' ))
-
-# test whether pigz is installed
-if command -v pigz >/dev/null 2>&1; then
-  echo "pigz is installed"
-  zipper="pigz"
-else
-  echo "pigz not installed"
-  zipper="gzip"
-fi
-
-echo 
+file_list=($( find "${my_dir}" -type f -name '*.fastq' -o -name '*.fastq.gz' ))
 
 # loop over files found
 for current_file in "${file_list[@]}"; do
 
-  # If the extension is .gz, decompress
-  if [[ "${current_file}" =~ \.gz$ ]]; then
+  echo 'original file is' "${current_file}"
 
-    echo 'decompressing' "${current_file}"
-    "${zipper}" -d "${current_file}"
-
-    my_fastq="${current_file%.gz}"
-
-  else
-
-    my_fastq="${current_file}"
-
-  fi
-
-  echo 'fastq file is' "${my_fastq}"
-  
   # get the file path relative to the parent (user-given) directory
-  subpath=${my_fastq##$my_dir}
-  
+  subpath=${current_file##$my_dir}
+
   # append that relative path, minus the file name, to the output directory
   new_dir="$out_dir${subpath%/*}"
-  
+
   # make the new directory
   mkdir -p "${new_dir}"
-  
+
   # get everything after the final / (the filename) of original file
   oldfile="${subpath##*/}"
-  
-  # append the "_sub.fastq" to the filename, and add to new directory sturcture
+
+  # append the "_sub.fastq" to the filename, and add to new directory structure
   newfile="${new_dir}"/"${oldfile%.*}"_sub.fastq
   echo new file is "${newfile}"
 
-  head -n "${N_lines}" "${my_fastq}" > "${newfile}"
-
-  # if the input file was compressed, compress it again.
+  # perform the subsetting:
+  # If the extension is .gz, decompress
   if [[ "${current_file}" =~ \.gz$ ]]; then
 
-    "${zipper}" "${my_fastq}"
+    gzip -cd "${current_file}" | head -n "${N_lines}" > "${newfile}"
+
+  else
+
+    head -n "${N_lines}" "${current_file}" > "${newfile}"
 
   fi
-  
-  # echo a blanke line to space out messages printing to screen
+
+  # echo a blank line to space out messages printing to screen
   echo
 
 done

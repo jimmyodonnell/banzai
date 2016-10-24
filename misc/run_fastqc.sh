@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Run fastqc on any file containing 'fastq' in the filename in a specified directory (and it's subdirectories).
+# Run fastqc on any file ending in '.fastq' or '.fastq.gz' in a specified directory (and it's subdirectories).
 
 # Example usage: run_fastqc.sh /Users/threeprime/IlluminaRuns/20150717/libraries
 
@@ -15,7 +15,7 @@ mkdir "${output_dir}"
 # use this if the fancy bells and whistles fail (thread counts and output directory)
 # find "${my_dir}" -type f -name "*.fastq*" | xargs fastqc
 
-find "${my_dir}" -type f -name "*.fastq*" | xargs \
+find "${my_dir}" -type f -name "*.fastq" -o -name "*.fastq.gz" | xargs \
 fastqc \
 --outdir "${output_dir}" \
 --threads "${n_cores}"
