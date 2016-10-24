@@ -13,47 +13,51 @@ Genomic DNA:    ----------------------------------------------------------------
 target region:                   ~~~~~~~~~~~~~~~~~~~~~~~~
 ```
 
-PCR:
+**PCR:**
 ```
 Primers:                   ******                        ******
 Secondary index:        +++                                    +++
 full primer:            +++******                        ******+++
 amplicon:               +++******~~~~~~~~~~~~~~~~~~~~~~~~******+++
 ```
+The amplicon contains everything that will show up in the sequence. This is more generally referred to as the 'insert'. Note that the insert size is greater than the size of the region of interest alone.
 
-Library Prep:
+**Library Prep:**
 ```
 primary index:       :::                                          :::
 adapter:           aa                                                aa
 final fragment:    aa:::+++******~~~~~~~~~~~~~~~~~~~~~~~~******+++:::aa
 ```
+This is the fragment that actually goes into the sequencer. Note that it is bigger than the insert (above), and that the adapter and primary indexes shouldn't end up in your sequences.
 
-Sequencing
+**Sequencing:**
 ```
 Read 1:            aa:::+++******~~~~~~~~~~~~~~
 Read 2:                                    ~~~~~~~~~~~~~~******+++:::aa
 ```
 
-Demultiplexing (primary)
+**Demultiplexing (primary):**
 ```
 Read 1:                 +++******~~~~~~~~~~~~~~
 Read 2:                                    ~~~~~~~~~~~~~~******+++
 ```
+This has probably already been performed by the time you get the data.
 
-Read merging
+**Read merging:**
 ```
 merged reads:           +++******~~~~~~~~~~~~~~~~~~~~~~~~******+++
 ```
 
-Demultiplexing (secondary)
+**Demultiplexing (secondary):**
 ```
                            ******~~~~~~~~~~~~~~~~~~~~~~~~******
  ```
-Primer removal
+
+**Primer removal:**
 ```
                                  ~~~~~~~~~~~~~~~~~~~~~~~~
 ```
-(Layout inspired in part by the [FROGS](https://github.com/geraldinepascal/FROGS) documentation.)
+*(Layout inspired in part by the [FROGS](https://github.com/geraldinepascal/FROGS) documentation.)*
 
 ## Basic implementation ##
 Copy the file 'banzai_params.sh' into a new folder and set parameters as desired. Then run the banzai script, using your newly edited parameter file like so (Mac OSX):
