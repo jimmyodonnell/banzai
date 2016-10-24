@@ -109,6 +109,34 @@ cp "${param_file}" "${OUTPUT_DIR}"/analysis_parameters.txt
 
 
 ################################################################################
+# READ FILE NAMES
+################################################################################
+FILE1_COLNUM=$(awk -F',' -v FILE1_COL=$FILE1_COLNAME '{for (i=1;i<=NF;i++) if($i == FILE1_COL) print i; exit}' $SEQUENCING_METADATA)
+FILE2_COLNUM=$(awk -F',' -v FILE2_COL=$FILE2_COLNAME '{for (i=1;i<=NF;i++) if($i == FILE2_COL) print i; exit}' $SEQUENCING_METADATA)
+FILE1=($(awk -F',' -v FILE1_COL=$FILE1_COLNUM 'NR>1 {print $FILE1_COL}' $SEQUENCING_METADATA | sort | uniq ))
+FILE2=($(awk -F',' -v FILE2_COL=$FILE2_COLNUM 'NR>1 {print $FILE2_COL}' $SEQUENCING_METADATA | sort | uniq ))
+
+NFILE1="${#FILE1[@]}"
+NFILE2="${#FILE2[@]}"
+if [ "${NFILE1}" != "${NFILE2}" ]; then
+	echo "ERROR: Whoa! different number of forward and reverse files"
+fi
+
+if [[ -n "${FILE1}" && -n "${FILE2}" ]]; then
+  echo 'Files read from metadata columns' "${FILE1_COLNUM}" 'and' "${FILE2_COLNUM}"
+  echo 'File names:'
+	for (( i=0; i < "${NFILE1}"; ++i)); do
+		printf '%s\t%s\n' "${FILE1[i]}" "${FILE2[i]}"
+	done
+	echo
+else
+  echo 'ERROR:' 'At least one file is not valid'
+  echo 'Looked in metadata columns' "${FILE1_COLNUM}" 'and' "${FILE2_COLNUM}"
+  echo 'Aborting script'
+  exit
+fi
+
+################################################################################
 # LOAD MULTIPLEX TAGS
 ################################################################################
 TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == TAG_COL_NAME) print i; exit}' $SEQUENCING_METADATA)

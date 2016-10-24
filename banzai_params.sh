@@ -27,6 +27,10 @@ OUTPUT_PDF_DIR=""
 ################################################################################
 # METADATA DETAILS
 ################################################################################
+# Specify columns for raw sequencing files:
+FILE1_COLNAME="file1"
+FILE2_COLNAME="file2"
+
 # TODO grab this from a fragment_size column in the sequencing metadata file
 ### ***** REMEMBER TO WATCH FOR ZEROS WHEN IMPLEMENTING THIS!
 # Is there a column in the metadata file for fragment size?
