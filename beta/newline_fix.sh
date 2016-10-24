@@ -2,7 +2,7 @@
 
 # INFILE="${1}"
 
-if ! [ -a "${INFILE}" ]; then
+if ! [ -s "${INFILE}" ]; then
 
   echo "Whoa there! Could not find the file you specified. Check the path."
 
