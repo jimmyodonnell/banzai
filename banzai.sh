@@ -430,20 +430,10 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	echo
 
 
-
-
-
 	if [ "${RENAME_READS}" = "YES" ]; then
 		echo $(date +%Y-%m-%d\ %H:%M) "Renaming reads in library" "${CURRENT_LIB##*/}""..."
 		# TODO remove whitespace from sequence labels?
 		# sed 's/ /_/'
-
-		# original (usearch7):	sed -E "s/ (1|2):N:0:[0-9]/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
-		# update for usearch8, which without warning removes any part of the sequence ID following a space.
-		# holy shit this ads the _"${CURRENT_LIB##*/}"_ to EVERY line
-		# sed -E "s/$/_"${CURRENT_LIB##*/}"_/" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/tmp.fasta
-		# sed -E "s/>([a-zA-Z0-9-]*:){4}/>/" "${CURRENT_LIB}"/tmp.fasta > "${FILTERED_OUTPUT%.*}"_renamed.fasta
-		# rm "${CURRENT_LIB}"/tmp.fasta
 
 		# updated 20150521; one step solution using awk; removes anything after the first space!
 		FILTERED_RENAMED="${FILTERED_OUTPUT%.*}"_renamed.fasta
@@ -617,21 +607,11 @@ echo
 ################################################################################
 # PRIMER REMOVAL
 ################################################################################
-# (moot for concatenated file): echo $(date +%Y-%m-%d\ %H:%M) "Removing primers in library" "${CURRENT_LIB##*/}""..."
-# Remove PRIMER1 and PRIMER2 from the BEGINNING of the reads. NOTE cutadapt1.7+ will accept ambiguities in primers.
-
 # count lines in primer removal input
 echo $(date +%Y-%m-%d\ %H:%M) "Counting sequences in primer removal input..."
 seq_N_demult_concat=$( grep -e '^>' --count "${CONCAT_FILE}" )
 echo $(date +%Y-%m-%d\ %H:%M) "${seq_N_demult_concat}" "sequences found in primer removal input" #"${CONCAT_FILE}"
 echo
-
-# TODO wrap in '( ) &' to force into background and allow parallel processing
-# i.e.
-# for primer in "${primers_arr[@]}"; do
-# 	( cutadapt -g ^"${primer}" -e "${PRIMER_MISMATCH_PROPORTION}" -m "${LENGTH_ROI_HALF}" --discard-untrimmed "${CONCAT_FILE}" > "${CONCAT_DIR}"/5_L"${primer}"_removed.fasta ) &
-# done
-# wait
 
 echo $(date +%Y-%m-%d\ %H:%M) "Beginning primer removal..."
 # remove primer 1 from left side of sequences
@@ -846,25 +826,6 @@ paste -s -d, "${dupnames}" "${temp_dir}"/*.dup > "${duplicate_table}"
 echo $(date +%Y-%m-%d\ %H:%M) "Identical sequences consolidated in file:"
 echo "${duplicate_table}"
 echo
-
-# OLD/UNSTABLE/BAD -- but generated CSV in different orientation
-# This will start as many processes as you have libraries... be careful!
-# echo $(date +%Y-%m-%d\ %H:%M) "Consolidating identical sequences per sample... (awk)"
-# for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
-# 	( for TAG_SEQ in $TAGS; do
-# 		LIB_TAG="lib_${CURRENT_LIB##*/}_tag_${TAG_SEQ}"
-# 		echo $(date +%Y-%m-%d\ %H:%M) "Processing" "${LIB_TAG}""..."
-# 		# the output of the awk function gsub is the number of replacements, so you could use this instead... however, it appears slower?
-# 		# ( awk 'BEGIN {print "'$LIB_TAG'" } { print gsub(/"'$LIB_TAG'"/,"") }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup ) &
-# 		awk 'BEGIN {print "'$LIB_TAG'" ; FS ="'${LIB_TAG}'" } { print NF -1 }' ${DEREP_INPUT%/*}/nosingle.txt > ${DEREP_INPUT%/*}/"${LIB_TAG}".dup
-# 	done ) &
-# done
-# wait
-# # Write a csv file of the number of occurrences of each duplicate sequence per tag. (rows = sequences, cols = samples)
-# duplicate_table="${DEREP_INPUT%/*}"/dups.csv
-# find "${DEREP_INPUT%/*}" -type f -name '*.dup' -exec paste -d, {} \+ | awk '{ print "DUP_" NR-1 "," $0 }' > "${duplicate_table}"
-# # delete all of the '.dup' files
-# rm ${DEREP_INPUT%/*}/*.dup
 
 # Write fasta file in order to blast sequences
 echo $(date +%Y-%m-%d\ %H:%M) "Writing fasta file of duplicate sequences"
