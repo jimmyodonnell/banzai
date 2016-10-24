@@ -111,10 +111,29 @@ cp "${param_file}" "${OUTPUT_DIR}"/analysis_parameters.txt
 ################################################################################
 # READ FILE NAMES
 ################################################################################
-FILE1_COLNUM=$(awk -F',' -v FILE1_COL=$FILE1_COLNAME '{for (i=1;i<=NF;i++) if($i == FILE1_COL) print i; exit}' $SEQUENCING_METADATA)
-FILE2_COLNUM=$(awk -F',' -v FILE2_COL=$FILE2_COLNAME '{for (i=1;i<=NF;i++) if($i == FILE2_COL) print i; exit}' $SEQUENCING_METADATA)
-FILE1=($(awk -F',' -v FILE1_COL=$FILE1_COLNUM 'NR>1 {print $FILE1_COL}' $SEQUENCING_METADATA | sort | uniq ))
-FILE2=($(awk -F',' -v FILE2_COL=$FILE2_COLNUM 'NR>1 {print $FILE2_COL}' $SEQUENCING_METADATA | sort | uniq ))
+FILE1_COLNUM=$(awk -F',' -v FILE1_COL=$FILE1_COLNAME \
+  '{for (i=1;i<=NF;i++)
+	    if($i == FILE1_COL)
+		  print i;
+		exit}' \
+$SEQUENCING_METADATA)
+
+FILE2_COLNUM=$(awk -F',' -v FILE2_COL=$FILE2_COLNAME \
+	'{for (i=1;i<=NF;i++)
+	    if($i == FILE2_COL)
+			print i;
+		exit}' \
+$SEQUENCING_METADATA)
+
+FILE1=($(awk -F',' -v FILE1_COL=$FILE1_COLNUM \
+	'NR>1 {print $FILE1_COL}' \
+$SEQUENCING_METADATA |\
+sort | uniq ))
+
+FILE2=($(awk -F',' -v FILE2_COL=$FILE2_COLNUM \
+	'NR>1 {print $FILE2_COL}' \
+$SEQUENCING_METADATA |\
+sort | uniq ))
 
 NFILE1="${#FILE1[@]}"
 NFILE2="${#FILE2[@]}"
@@ -139,8 +158,17 @@ fi
 ################################################################################
 # LOAD MULTIPLEX TAGS
 ################################################################################
-TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == TAG_COL_NAME) print i; exit}' $SEQUENCING_METADATA)
-TAGS=$(awk -F',' -v TAGCOL=$TAG_COL 'NR>1 {print $TAGCOL}' $SEQUENCING_METADATA | sort | uniq)
+TAG_COL=$(awk -F',' -v TAG_COL_NAME=$TAG_COLUMN_NAME '{
+	for (i=1;i<=NF;i++)
+	  if($i == TAG_COL_NAME)
+			print i;
+	exit
+}' $SEQUENCING_METADATA)
+TAGS=$(awk -F',' -v TAGCOL=$TAG_COL \
+'NR>1 {
+	print $TAGCOL
+}' $SEQUENCING_METADATA |\
+sort | uniq)
 N_index_sequences=$(echo $TAGS | awk '{print NF}')
 
 # check if number of tags is greater than one:
@@ -161,10 +189,29 @@ declare -a TAGS_ARRAY=($TAGS)
 ################################################################################
 # Read in primers and create reverse complements.
 ################################################################################
-PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$PRIMER_1_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER1_COL) print i; exit}' $SEQUENCING_METADATA)
-PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$PRIMER_2_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == PRIMER2_COL) print i; exit}' $SEQUENCING_METADATA)
-PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM 'NR==2 {print $PRIMER1_COL}' $SEQUENCING_METADATA)
-PRIMER2=$(awk -F',' -v PRIMER2_COL=$PRIMER2_COLNUM 'NR==2 {print $PRIMER2_COL}' $SEQUENCING_METADATA)
+PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$PRIMER_1_COLUMN_NAME '{
+	for (i=1;i<=NF;i++)
+	  if($i == PRIMER1_COL)
+		  print i;
+		exit
+}' $SEQUENCING_METADATA)
+
+PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$PRIMER_2_COLUMN_NAME '{
+	for (i=1;i<=NF;i++)
+	  if($i == PRIMER2_COL)
+		  print i;
+	exit
+}' $SEQUENCING_METADATA)
+
+PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM \
+'NR==2 {
+	print $PRIMER1_COL
+}' $SEQUENCING_METADATA)
+
+PRIMER2=$(awk -F',' -v PRIMER2_COL=$PRIMER2_COLNUM \
+'NR==2 {
+	print $PRIMER2_COL
+}' $SEQUENCING_METADATA)
 
 if [[ -n "${PRIMER1}" && -n "${PRIMER2}" ]]; then
   echo 'Primers read from metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
@@ -229,9 +276,20 @@ LIBS_FROM_DIRECTORIES=$(for i in $LIBRARY_DIRECTORIES; do echo "${i##*/}" ; done
 
 # Read library names from file or sequencing metadata
 if [ "${READ_LIB_FROM_SEQUENCING_METADATA}" = "YES" ]; then
-	LIB_COL=$(awk -F',' -v LIB_COL_NAME=$LIBRARY_COLUMN_NAME '{for (i=1;i<=NF;i++) if($i == LIB_COL_NAME) print i; exit}' $SEQUENCING_METADATA)
-	LIBS=$(awk -F',' -v LIBCOL=$LIB_COL 'NR>1 {print $LIBCOL}' $SEQUENCING_METADATA | sort | uniq)
+
+	LIB_COL=$(awk -F',' -v LIB_COL_NAME=$LIBRARY_COLUMN_NAME '{
+		for (i=1;i<=NF;i++)
+		  if($i == LIB_COL_NAME)
+			  print i;
+		exit
+	}' $SEQUENCING_METADATA)
+
+	LIBS=$(awk -F',' -v LIBCOL=$LIB_COL 'NR>1 {
+		print $LIBCOL
+	}' $SEQUENCING_METADATA | sort | uniq)
+
 	N_libs=$(echo $LIBS | awk '{print NF}')
+
 	echo "Library names read from sequencing metadata (""${N_libs}"") total"
 	echo "${LIBS}"
 	echo
@@ -257,7 +315,10 @@ fi
 
 # Unique samples are given by combining the library and tags
 # TODO originally contained sort | uniq; this is unnecessary I think
-LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v TAGCOL=$TAG_COL 'NR>1 { print "lib_" $LIBCOL "_tag_" $TAGCOL }' $SEQUENCING_METADATA | sort | uniq )
+LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v TAGCOL=$TAG_COL \
+'NR>1 {
+  print "lib_" $LIBCOL "_tag_" $TAGCOL
+}' $SEQUENCING_METADATA | sort | uniq )
 
 # create a file to store tag efficiency data
 TAG_COUNT="${OUTPUT_DIR}"/tag_count.txt
@@ -283,7 +344,8 @@ for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
 	# MERGE PAIRED-END READS AND QUALITY FILTER (PEAR)
 	##############################################################################
 
-	LENGTH_READ=$( head -n 100000 "${READ1}" | awk '{print length($0);}' | sort -nr | uniq | head -n 1 )
+	LENGTH_READ=$( head -n 100000 "${READ1}" | awk '{print length($0);}' |\
+	  sort -nr | uniq | head -n 1 )
 
 	if [ "${calculate_merge_length}" = "YES" ]; then
 		##############################################################################
