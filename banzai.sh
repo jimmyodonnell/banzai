@@ -333,14 +333,25 @@ echo "library tag left_tagged right_tagged" >> "${INDEX_COUNT}"
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
 ################################################################################
 
-for CURRENT_ID1_NAME in "${ID1_NAMES[@]}"; do
+# for CURRENT_ID1_NAME in "${ID1_NAMES[@]}"; do
+for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 
 	# Identify the forward and reverse fastq files.
-	READS=($(find "${CURRENT_ID1_NAME}" -name '*.fastq*'))
-	READ1="${READS[0]}"
-	READ2="${READS[1]}"
+	CURRENT_FILE1="${FILE1[i]}"
+	CURRENT_FILE2="${FILE2[i]}"
 
-	ID1_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_ID1_NAME##*/}
+  CURRENT_ID1=$( awk -F, '
+	/'"${CURRENT_FILE1}"'/ { print $6; }' "${SEQUENCING_METADATA}" |\
+	sort | uniq )
+
+  CURRENT_ID1_NAME=$( awk -F, '
+	/'"${CURRENT_FILE1}"'/ { print $5; }' "${SEQUENCING_METADATA}" |\
+	sort | uniq )
+
+  READ1=$( find "${PARENT_DIR}" -name "${CURRENT_FILE1}" )
+	READ2=$( find "${PARENT_DIR}" -name "${CURRENT_FILE2}" )
+
+	ID1_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_ID1_NAME}
 	mkdir "${ID1_OUTPUT_DIR}"
 
 	##############################################################################
@@ -372,7 +383,7 @@ for CURRENT_ID1_NAME in "${ID1_NAMES[@]}"; do
 		echo "Paired reads have already been merged."
 		echo
 	else
-		echo $(date +%Y-%m-%d\ %H:%M) "Merging reads in library" "${CURRENT_ID1_NAME##*/}""..."
+		echo $(date +%Y-%m-%d\ %H:%M) "Merging reads in library" "${CURRENT_ID1_NAME}""..."
 		MERGED_READS_PREFIX="${ID1_OUTPUT_DIR}"/1_merged
 		MERGED_READS="${ID1_OUTPUT_DIR}"/1_merged.assembled.fastq
 		pear \
@@ -434,7 +445,7 @@ for CURRENT_ID1_NAME in "${ID1_NAMES[@]}"; do
 
 
 	if [ "${RENAME_READS}" = "YES" ]; then
-		echo $(date +%Y-%m-%d\ %H:%M) "Renaming reads in library" "${CURRENT_ID1_NAME##*/}""..."
+		echo $(date +%Y-%m-%d\ %H:%M) "Renaming reads in library" "${CURRENT_ID1_NAME}""..."
 		# TODO remove whitespace from sequence labels?
 		# sed 's/ /_/'
 
@@ -442,7 +453,7 @@ for CURRENT_ID1_NAME in "${ID1_NAMES[@]}"; do
 		FILTERED_RENAMED="${FILTERED_OUTPUT%.*}"_renamed.fasta
 		awk -F'[: ]' '{
 				if ( /^>/ )
-					print ">"$4":"$5":"$6":"$7"_ID1_'${CURRENT_ID1_NAME##*/}'_";
+					print ">"$4":"$5":"$6":"$7"_ID1_'${CURRENT_ID1_NAME}'_";
 				else
 					print $0
 		}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
@@ -457,7 +468,7 @@ for CURRENT_ID1_NAME in "${ID1_NAMES[@]}"; do
 
 		awk '{
 				if ( /^>/ )
-					print "$0"_ID1_'${CURRENT_ID1_NAME##*/}'_";
+					print "$0"_ID1_'${CURRENT_ID1_NAME}'_";
 				else
 					print $0
 		}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"

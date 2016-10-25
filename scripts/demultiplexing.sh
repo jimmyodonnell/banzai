@@ -31,7 +31,7 @@ for IND_SEQ in $IND2S; do
     print
   } {a = $0}' "${demult_file_L}" > "${demult_file_R}"
 
-  echo "${CURRENT_ID1_NAME##*/}" "${IND_SEQ}" $(wc -l "${demult_file_L}" | \
+  echo "${CURRENT_ID1_NAME}" "${IND_SEQ}" $(wc -l "${demult_file_L}" | \
     awk '{ print ($1/2) }') $(wc -l "${demult_file_R}" | \
     awk '{ print ($1/2)}') >> "${INDEX_COUNT}" ) &
 
