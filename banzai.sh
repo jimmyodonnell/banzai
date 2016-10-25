@@ -248,8 +248,7 @@ LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 ################################################################################
 # Look for any file with '.fastq' in the name in the parent directory
 # note that this will include ANY file with fastq -- including QC reports!
-# TODO make LIBRARY_DIRECTORIES an array by wrapping it in ()
-LIBRARY_DIRECTORIES=$( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique )
+LIBRARY_DIRECTORIES=($( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique ))
 
 # PEAR v0.9.6 does not correctly merge .gz files.
 # Look through files and decompress if necessary.
@@ -262,17 +261,15 @@ for myfile in "${raw_files[@]}"; do
 done
 
 # Count library directories and print the number found
-# TODO if LIBRARY_DIRECTORIES is an array, its length is "${#LIBRARY_DIRECTORIES[@]}"
-N_library_dir=$(echo $LIBRARY_DIRECTORIES | awk '{print NF}')
+N_library_dir="${#LIBRARY_DIRECTORIES[@]}"
 echo "${N_library_dir}"" library directories found:"
 
 # Show the libraries that were found:
-# TODO for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
-for i in $LIBRARY_DIRECTORIES; do echo "${i##*/}" ; done
+for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
 echo
 
 # Assign it to a variable for comparison
-LIBS_FROM_DIRECTORIES=$(for i in $LIBRARY_DIRECTORIES; do echo "${i##*/}" ; done)
+LIBS_FROM_DIRECTORIES=$(for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done)
 
 # Read library names from file or sequencing metadata
 if [ "${READ_LIB_FROM_SEQUENCING_METADATA}" = "YES" ]; then
@@ -328,7 +325,7 @@ echo "library tag left_tagged right_tagged" >> "${INDEX_COUNT}"
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
 ################################################################################
 
-for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
+for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
 
 	# Identify the forward and reverse fastq files.
 	READS=($(find "${CURRENT_LIB}" -name '*.fastq*'))
@@ -532,23 +529,6 @@ done
 # END LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
 ################################################################################
 
-
-
-
-
-
-
-
-
-
-# TODO add single if/else for CONCATENATE_SAMPLES: assign directory as appropriate, correct references within loop to be extendable
-if [ "$CONCATENATE_SAMPLES" = "YES" ]; then
-	# do the stuff here
-	WORKING_DIR="${CONCAT_DIR}"
-else
-	WORKING_DIR="${LIBRARY_DIRECTORIES}"
-fi
-
 ################################################################################
 # CONCATENATE SAMPLES
 ################################################################################
@@ -560,7 +540,7 @@ mkdir "${CONCAT_DIR}"
 CONCAT_FILE="${CONCAT_DIR}"/1_demult_concat.fasta
 
 # TODO could move this into above loop after demultiplexing?
-for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
+for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
 
 	LIB_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_LIB##*/}
 
