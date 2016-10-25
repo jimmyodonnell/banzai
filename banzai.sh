@@ -322,7 +322,7 @@ fi
 # TODO originally contained sort | uniq; this is unnecessary I think
 LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v INDCOL=$IND2_COL \
 'NR>1 {
-  print "lib_" $LIBCOL "_tag_" $INDCOL
+  print "ID1_" $LIBCOL "_tag_" $INDCOL
 }' $SEQUENCING_METADATA | sort | uniq )
 
 # create a file to store tag efficiency data
@@ -444,7 +444,7 @@ for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
 		FILTERED_RENAMED="${FILTERED_OUTPUT%.*}"_renamed.fasta
 		awk -F'[: ]' '{
 				if ( /^>/ )
-					print ">"$4":"$5":"$6":"$7"_lib_'${CURRENT_LIB##*/}'_";
+					print ">"$4":"$5":"$6":"$7"_ID1_'${CURRENT_LIB##*/}'_";
 				else
 					print $0
 				}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
@@ -533,7 +533,7 @@ echo
 # grep -E -o '_lib_.+?(?=_tag)_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
 
 echo $(date +%Y-%m-%d\ %H:%M) "Counting reads associated with each sample index (primer tag)..."
-grep -E -o '_lib_[^_]*_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
+grep -E -o '_ID1_[^_]*_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_ID1_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
 
 echo $(date +%Y-%m-%d\ %H:%M) "Counts of reads associated with each sample index found in:"
 echo "${CONCAT_DIR}""/1_demult_concat.fasta.tags"
