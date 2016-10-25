@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# TODO: test if paramfile arg has length < 1
+
+# TODO: fix CURRENT_ID1_NAME in REMOVE_HOMOPOLYMERS
+
 # TODO: use only ID1 from metadata; eliminate all references to LIBRARY_DIRECTORIES
 
 # TODO fix subset to not decompress and recompress entire files
