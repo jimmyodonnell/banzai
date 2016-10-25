@@ -20,14 +20,14 @@ START_TIME_SEC=$(date +%Y%m%d_%H%M%S)
 # Find the directory this script lives in, so it can find its friends.
 SCRIPT_DIR="$(dirname "$0")"
 
-# Read in the parameter file (was source "$SCRIPT_DIR/banzai_params.sh"; now argument 1)
+# Read in the parameter file
 param_file="${1}"
-source "${param_file}"
 
 # check if param file exists:
 if [[ -s "${param_file}" ]] ; then
 	echo "Reading analysis parameters from:"
 	echo "${param_file}"
+	source "${param_file}"
 	echo
 else
 	echo
