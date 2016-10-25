@@ -91,9 +91,5 @@ CONCAT_DIR="$ANALYSIS_DIR"/all_lib
 mkdir "${CONCAT_DIR}"
 CONCAT_FILE="${CONCAT_DIR}"/1_demult_concat.fasta
 
-	# TODO !!! This will fail if there are underscores in the library names !!!
-	# an attempt at making this robust to underscores
-	# grep -E -o '_lib_.+?(?=_tag)_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
-
 ## PRIMER REMOVAL
 # TODO: Parallelize cutadapt using gnu parallel: https://github.com/marcelm/cutadapt/issues/157
