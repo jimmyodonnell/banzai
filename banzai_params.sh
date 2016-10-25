@@ -36,7 +36,7 @@ FILE2_COLNAME="file2"
 # Is there a column in the metadata file for fragment size?
 frag_size_in_metadata="NO"
 # If YES, what is the name?
-frag_size_column="fragment_size_BA"
+frag_size_column="insert_size"
 
 # If fragment size is not specified in metadata, specify it here.
 # What is the maximum expected length of the fragment of interest?
@@ -47,7 +47,7 @@ LENGTH_FRAG="180"
 # Your metadata must have a column corresponding to the subfolders containing the raw reads.
 # In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
 READ_LIB_FROM_SEQUENCING_METADATA="YES"
-LIBRARY_COLUMN_NAME="library"
+LIBRARY_COLUMN_NAME="pri_index_name"
 
 ################################################################################
 # MERGE PAIRED READS
@@ -116,7 +116,7 @@ HOMOPOLYMER_MAX="7"
 # (sometimes, confusingly referred to as "tags" or "barcodes")
 # these are the secondary index -- the primary index added with the sequencing adapters should not be in the sequence data
 # You can grab these from the file specified above (SEQUENCING_METADATA) by specifying the column name of index sequences.
-SECONDARY_INDEX_COLUMN_NAME="tag_sequence"
+SECONDARY_INDEX_COLUMN_NAME="sec_index_seq"
 
 
 # How many nucleotides pad the 5' end of the tag sequence?
@@ -129,15 +129,15 @@ TAG_Ns="3"
 # Specify the primers used to generate these amplicons.
 # As with the multiplex indexes, Banzai will grab these from the file SEQUENCING_METADATA.
 # You must indicate the column names of the forward and reverse primers
-PRIMER_1_COLUMN_NAME="primer_sequence_F"
-PRIMER_2_COLUMN_NAME="primer_sequence_R"
+PRIMER_1_COLUMN_NAME="primerF_seq"
+PRIMER_2_COLUMN_NAME="primerR_seq"
 
 # What proportion of mismatches are you willing to accept when looking for primers?
 # Recommended: "0.10"
 PRIMER_MISMATCH_PROPORTION="0.10"
 
-ColumnName_SampleName="sample_name"
-ColumnName_SampleType="sample_type"
+ColumnName_SampleName="dna_id"
+ColumnName_SampleType="dna_source"
 
 ################################################################################
 # SINGLETONS
