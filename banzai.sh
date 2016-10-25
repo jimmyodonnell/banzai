@@ -15,6 +15,7 @@ echo
 
 # Define a variable called START_TIME
 START_TIME=$(date +%Y%m%d_%H%M)
+START_TIME_SEC=$(date +%Y%m%d_%H%M%S)
 
 # Find the directory this script lives in, so it can find its friends.
 SCRIPT_DIR="$(dirname "$0")"
@@ -91,6 +92,15 @@ fi
 
 # make an analysis directory with starting time timestamp
 OUTPUT_DIR="${OUTPUT_DIRECTORY}"/banzai_out_"${START_TIME}"
+if [[ -d "${OUTPUT_DIR}" ]]; then
+	OUTPUT_DIR="${OUTPUT_DIRECTORY}"/banzai_out_"${START_TIME_SEC}"
+	if [[ -d "${OUTPUT_DIR}" ]]; then
+		echo "Output directory already exists!"
+		echo "${OUTPUT_DIR}"
+		echo "Aborting script."
+		exit
+	fi
+fi
 mkdir "${OUTPUT_DIR}"
 
 # Write a log file of output from this script (everything that prints to terminal)
