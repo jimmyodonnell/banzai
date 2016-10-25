@@ -285,31 +285,31 @@ LIBS_FROM_DIRECTORIES=$(for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}"
 # Read library names from file or sequencing metadata
 if [ "${READ_LIB_FROM_SEQUENCING_METADATA}" = "YES" ]; then
 
-	LIB_COL=$(awk -F',' -v LIB_COL_NAME=$LIBRARY_COLUMN_NAME '{
+	COL_NUM_ID1=$(awk -F',' -v COL_NAME_ID1=$LIBRARY_COLUMN_NAME '{
 		for (i=1;i<=NF;i++)
-		  if($i == LIB_COL_NAME)
+		  if($i == COL_NAME_ID1)
 			  print i;
 		exit
 	}' $SEQUENCING_METADATA)
 
-	LIBS=$(awk -F',' -v LIBCOL=$LIB_COL 'NR>1 {
-		print $LIBCOL
+	ID1S=$(awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 'NR>1 {
+		print $COLNUM_ID1
 	}' $SEQUENCING_METADATA | sort | uniq)
 
-	N_libs=$(echo $LIBS | awk '{print NF}')
+	N_libs=$(echo $ID1S | awk '{print NF}')
 
 	echo "Library names read from sequencing metadata (""${N_libs}"") total"
-	echo "${LIBS}"
+	echo "${ID1S}"
 	echo
 else
-	LIBS=$(tr '\n' ' ' < "${LIB_FILE}" )
-	N_libs=$(echo $LIBS | awk '{print NF}')
-	echo "Library names read from lib file (""${LIBS}"") total"
+	ID1S=$(tr '\n' ' ' < "${LIB_FILE}" )
+	N_libs=$(echo $ID1S | awk '{print NF}')
+	echo "Library names read from lib file (""${ID1S}"") total"
 	echo
 fi
 
 # Check that library names are the same in the metadata and file system
-if [ "$LIBS_FROM_DIRECTORIES" != "$LIBS" ]; then
+if [ "$LIBS_FROM_DIRECTORIES" != "$ID1S" ]; then
 	echo "Warning: Library directories and library names in metadata are NOT the same. Something will probably go wrong later..."
 	echo
 else
@@ -320,9 +320,9 @@ fi
 
 # Unique samples are given by combining the library and tags
 # TODO originally contained sort | uniq; this is unnecessary I think
-LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v INDCOL=$IND2_COL \
+ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v INDCOL=$IND2_COL \
 'NR>1 {
-  print "ID1_" $LIBCOL "_ID2_" $INDCOL
+  print "ID1_" $COLNUM_ID1 "_ID2_" $INDCOL
 }' $SEQUENCING_METADATA | sort | uniq )
 
 # create a file to store tag efficiency data
@@ -695,7 +695,7 @@ mkdir "${temp_dir}"
 sample_batch_prefix="${temp_dir}"/sample_batch_
 
 # split the sample identifiers (lib + tag combination) into batches of no more than the number of available cores
-echo $LIB_TAG_MOD | tr ' ' '\n' | split -l "${n_cores}" - "${sample_batch_prefix}"
+echo $ID_COMBO | tr ' ' '\n' | split -l "${n_cores}" - "${sample_batch_prefix}"
 
 
 # for each of the batches of files
