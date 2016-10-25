@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # make a directory to put all the demultiplexed files in
-DEMULTIPLEXED_DIR="${LIB_OUTPUT_DIR}"/demultiplexed
+DEMULTIPLEXED_DIR="${ID1_OUTPUT_DIR}"/demultiplexed
 mkdir "${DEMULTIPLEXED_DIR}"
 
 # Copy sequences to fasta files into separate directories based on index sequence on left side of read
@@ -31,7 +31,7 @@ for IND_SEQ in $IND2S; do
     print
   } {a = $0}' "${demult_file_L}" > "${demult_file_R}"
 
-  echo "${CURRENT_LIB##*/}" "${IND_SEQ}" $(wc -l "${demult_file_L}" | \
+  echo "${CURRENT_ID1_NAME##*/}" "${IND_SEQ}" $(wc -l "${demult_file_L}" | \
     awk '{ print ($1/2) }') $(wc -l "${demult_file_R}" | \
     awk '{ print ($1/2)}') >> "${INDEX_COUNT}" ) &
 

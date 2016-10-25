@@ -259,7 +259,7 @@ LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 ################################################################################
 # Look for any file with '.fastq' in the name in the parent directory
 # note that this will include ANY file with fastq -- including QC reports!
-LIBRARY_DIRECTORIES=($( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique ))
+ID1_NAMES=($( find "$PARENT_DIR" -name '*.fastq*' -print0 | xargs -0 -n1 dirname | sort --unique ))
 
 # PEAR v0.9.6 does not correctly merge .gz files.
 # Look through files and decompress if necessary.
@@ -272,15 +272,15 @@ for myfile in "${raw_files[@]}"; do
 done
 
 # Count library directories and print the number found
-N_library_dir="${#LIBRARY_DIRECTORIES[@]}"
+N_library_dir="${#ID1_NAMES[@]}"
 echo "${N_library_dir}"" library directories found:"
 
 # Show the libraries that were found:
-for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done
+for i in "${ID1_NAMES[@]}"; do echo "${i##*/}" ; done
 echo
 
 # Assign it to a variable for comparison
-LIBS_FROM_DIRECTORIES=$(for i in "${LIBRARY_DIRECTORIES[@]}"; do echo "${i##*/}" ; done)
+LIBS_FROM_DIRECTORIES=$(for i in "${ID1_NAMES[@]}"; do echo "${i##*/}" ; done)
 
 # Read library names from file or sequencing metadata
 if [ "${READ_LIB_FROM_SEQUENCING_METADATA}" = "YES" ]; then
@@ -333,17 +333,15 @@ echo "library tag left_tagged right_tagged" >> "${INDEX_COUNT}"
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
 ################################################################################
 
-for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
+for CURRENT_ID1_NAME in "${ID1_NAMES[@]}"; do
 
 	# Identify the forward and reverse fastq files.
-	READS=($(find "${CURRENT_LIB}" -name '*.fastq*'))
+	READS=($(find "${CURRENT_ID1_NAME}" -name '*.fastq*'))
 	READ1="${READS[0]}"
 	READ2="${READS[1]}"
-	# READ1=$(find "${CURRENT_LIB}" -name '*R1*fastq*')
-	# READ2=$(find "${CURRENT_LIB}" -name '*R2*fastq*')
 
-	LIB_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_LIB##*/}
-	mkdir "${LIB_OUTPUT_DIR}"
+	ID1_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_ID1_NAME##*/}
+	mkdir "${ID1_OUTPUT_DIR}"
 
 	##############################################################################
 	# MERGE PAIRED-END READS AND QUALITY FILTER (PEAR)
@@ -374,9 +372,9 @@ for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
 		echo "Paired reads have already been merged."
 		echo
 	else
-		echo $(date +%Y-%m-%d\ %H:%M) "Merging reads in library" "${CURRENT_LIB##*/}""..."
-		MERGED_READS_PREFIX="${LIB_OUTPUT_DIR}"/1_merged
-		MERGED_READS="${LIB_OUTPUT_DIR}"/1_merged.assembled.fastq
+		echo $(date +%Y-%m-%d\ %H:%M) "Merging reads in library" "${CURRENT_ID1_NAME##*/}""..."
+		MERGED_READS_PREFIX="${ID1_OUTPUT_DIR}"/1_merged
+		MERGED_READS="${ID1_OUTPUT_DIR}"/1_merged.assembled.fastq
 		pear \
 			--forward-fastq "${READ1}" \
 			--reverse-fastq "${READ2}" \
@@ -412,7 +410,7 @@ for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
 	# FILTER READS (This is the last step that uses quality scores, so convert to fasta)
 	if [ "${Perform_Expected_Error_Filter}" = "YES" ]; then
 		echo $(date +%Y-%m-%d\ %H:%M) "Filtering merged reads..."
-		FILTERED_OUTPUT="${LIB_OUTPUT_DIR}"/2_filtered.fasta
+		FILTERED_OUTPUT="${ID1_OUTPUT_DIR}"/2_filtered.fasta
 		vsearch \
 			--fastq_filter "${MERGED_READS}" \
 			--fastq_maxee "${Max_Expected_Errors}" \
@@ -430,13 +428,13 @@ for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
 
 	# Compress merged reads
   echo $(date +%Y-%m-%d\ %H:%M) "Compressing PEAR output..."
-  find "${LIB_OUTPUT_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
+  find "${ID1_OUTPUT_DIR}" -type f -name '*.fastq' -exec ${ZIPPER} "{}" \;
   echo $(date +%Y-%m-%d\ %H:%M) "PEAR output compressed."
 	echo
 
 
 	if [ "${RENAME_READS}" = "YES" ]; then
-		echo $(date +%Y-%m-%d\ %H:%M) "Renaming reads in library" "${CURRENT_LIB##*/}""..."
+		echo $(date +%Y-%m-%d\ %H:%M) "Renaming reads in library" "${CURRENT_ID1_NAME##*/}""..."
 		# TODO remove whitespace from sequence labels?
 		# sed 's/ /_/'
 
@@ -444,7 +442,7 @@ for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
 		FILTERED_RENAMED="${FILTERED_OUTPUT%.*}"_renamed.fasta
 		awk -F'[: ]' '{
 				if ( /^>/ )
-					print ">"$4":"$5":"$6":"$7"_ID1_'${CURRENT_LIB##*/}'_";
+					print ">"$4":"$5":"$6":"$7"_ID1_'${CURRENT_ID1_NAME##*/}'_";
 				else
 					print $0
 		}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
@@ -459,7 +457,7 @@ for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
 
 		awk '{
 				if ( /^>/ )
-					print "$0"_ID1_'${CURRENT_LIB##*/}'_";
+					print "$0"_ID1_'${CURRENT_ID1_NAME##*/}'_";
 				else
 					print $0
 		}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
@@ -478,18 +476,18 @@ for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
 	################################################################################
 	if [ "${REMOVE_HOMOPOLYMERS}" = "YES" ]; then
 		echo $(date +%Y-%m-%d\ %H:%M) "Removing homopolymers..."
-		HomoLineNo="${CURRENT_LIB}"/homopolymer_line_numbers.txt
+		HomoLineNo="${CURRENT_ID1_NAME}"/homopolymer_line_numbers.txt
 		grep -E -i -B 1 -n "(A|T|C|G)\1{$HOMOPOLYMER_MAX,}" "${FILTERED_OUTPUT}" | \
 			cut -f1 -d: | \
 			cut -f1 -d- | \
 			sed '/^$/d' > "${HomoLineNo}"
 			echo
 		if [ -s "${HomoLineNo}" ]; then
-			DEMULTIPLEX_INPUT="${CURRENT_LIB}"/3_no_homopolymers.fasta
+			DEMULTIPLEX_INPUT="${CURRENT_ID1_NAME}"/3_no_homopolymers.fasta
 			awk 'NR==FNR{l[$0];next;} !(FNR in l)' "${HomoLineNo}" "${FILTERED_OUTPUT}" > "${DEMULTIPLEX_INPUT}"
-			awk 'NR==FNR{l[$0];next;} (FNR in l)' "${HomoLineNo}" "${FILTERED_OUTPUT}" > "${CURRENT_LIB}"/homopolymeric_reads.fasta
+			awk 'NR==FNR{l[$0];next;} (FNR in l)' "${HomoLineNo}" "${FILTERED_OUTPUT}" > "${CURRENT_ID1_NAME}"/homopolymeric_reads.fasta
 		else
-			echo "No homopolymers found" > "${CURRENT_LIB}"/3_no_homopolymers.fasta
+			echo "No homopolymers found" > "${CURRENT_ID1_NAME}"/3_no_homopolymers.fasta
 			DEMULTIPLEX_INPUT="${FILTERED_OUTPUT}"
 			echo
 		fi
@@ -522,16 +520,16 @@ mkdir "${CONCAT_DIR}"
 CONCAT_FILE="${CONCAT_DIR}"/1_demult_concat.fasta
 
 # TODO could move this into above loop after demultiplexing?
-for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
+for CURRENT_ID1_NAME in "${ID1_NAMES[@]}"; do
 
-	LIB_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_LIB##*/}
+	ID1_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_ID1_NAME##*/}
 
 	for IND_SEQ in $IND2S; do
-		cat "${LIB_OUTPUT_DIR}"/demultiplexed/tag_"${IND_SEQ}"/2_notags.fasta >> "${CONCAT_FILE}"
+		cat "${ID1_OUTPUT_DIR}"/demultiplexed/tag_"${IND_SEQ}"/2_notags.fasta >> "${CONCAT_FILE}"
 	done
 
 	echo $(date +%Y-%m-%d\ %H:%M) "Compressing fasta files..."
-	find "${LIB_OUTPUT_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
+	find "${ID1_OUTPUT_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
 	echo $(date +%Y-%m-%d\ %H:%M) "fasta files compressed."
 
 done
