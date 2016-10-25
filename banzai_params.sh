@@ -31,18 +31,9 @@ OUTPUT_PDF_DIR=""
 FILE1_COLNAME="file1"
 FILE2_COLNAME="file2"
 
-# TODO grab this from a fragment_size column in the sequencing metadata file
-### ***** REMEMBER TO WATCH FOR ZEROS WHEN IMPLEMENTING THIS!
-# Is there a column in the metadata file for fragment size?
-frag_size_in_metadata="NO"
-# If YES, what is the name?
-frag_size_column="insert_size"
 
-# If fragment size is not specified in metadata, specify it here.
-# What is the maximum expected length of the fragment of interest?
-# This is the length of the fragments input into library prep --
-# i.e. with (indexed) primers, but without library index or sequencing adapters
-LENGTH_FRAG="180"
+ColumnName_SampleName="dna_id"
+ColumnName_SampleType="dna_source"
 
 # Your metadata must have a column corresponding to the subfolders containing the raw reads.
 # In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
@@ -57,8 +48,21 @@ LIBRARY_COLUMN_NAME="pri_index_name"
 # Quality_Threshold=3, r=3 (PEAR only considers r=2), UNCALLEDMAX=0
 # TRIMMIN= 0.75 * LENGTH_READ # this is hard-coded in the script banzai.sh
 
+# TODO grab this from a fragment_size column in the sequencing metadata file
+### ***** REMEMBER TO WATCH FOR ZEROS WHEN IMPLEMENTING THIS!
+# Is there a column in the metadata file for fragment size?
+insert_size_in_metadata="NO"
+# If YES, what is the name?
+insert_size_column="insert_size"
+
 # do you want banzai to automatically calculate the expected assembled sequence lengths and overlap based on read length and fragment size?
 calculate_merge_length="NO" # [ YES | NO]
+
+# If fragment size is not specified in metadata, specify it here.
+# What is the maximum expected length of the fragment of interest?
+# This is the length of the fragments input into library prep --
+# i.e. with (indexed) primers, but without library index or sequencing adapters
+LENGTH_FRAG="180"
 
 # if "NO", provide the following values for PEAR:
 minimum_overlap="10" # [10]
@@ -93,8 +97,6 @@ min_seq_length=75
 # Substantial quality filtering (e.g. trimming, minimum length, etc) is performed by PEAR during read merging.
 # You may also want to exclude sequences containing more than a specified threshold of 'expected errors'
 # This number is equal to the sum of the error probabilities.
-# The only software that currently implements this is usearch, but it requires breaking up files larger than ~4GB
-# I think this can be written in python relatively easily, but I haven't gotten to it yet.
 # For more information on this parameter, Google the usearch help
 Perform_Expected_Error_Filter="YES" # [YES|NO]
 Max_Expected_Errors="0.5"
@@ -102,6 +104,8 @@ Max_Expected_Errors="0.5"
 ################################################################################
 # HOMOPOLYMERS
 ################################################################################
+# 454 sequencers have trouble correctly identifying the length of a strech of consecutive identical bases (homopolymers).
+# Illumina machines do not have this problem, yet some people are still paranoid.
 # Would you like to remove reads containing runs of consecutive identical bases (homopolymers)?
 REMOVE_HOMOPOLYMERS="NO"
 # What is the maximum homopolymer length you're willing to accept?
@@ -122,6 +126,8 @@ SECONDARY_INDEX_COLUMN_NAME="sec_index_seq"
 # How many nucleotides pad the 5' end of the tag sequence?
 # TODO build in flexibility (this number is unused right now)
 TAG_Ns="3"
+SECONDARY_INDEX_START="4"
+SECONDARY_INDEX_START_COLNAME="sec_index_start"
 
 ################################################################################
 # PRIMER REMOVAL
@@ -135,9 +141,6 @@ PRIMER_2_COLUMN_NAME="primerR_seq"
 # What proportion of mismatches are you willing to accept when looking for primers?
 # Recommended: "0.10"
 PRIMER_MISMATCH_PROPORTION="0.10"
-
-ColumnName_SampleName="dna_id"
-ColumnName_SampleType="dna_source"
 
 ################################################################################
 # SINGLETONS
@@ -219,13 +222,3 @@ RENAME_READS="YES"
 
 # If you want to receive a text message when the pipeline finishes, input your number here:
 EMAIL_ADDRESS="4077443377@tmomail.net"
-
-
-
-
-################################################################################
-# GRAVEYARD
-################################################################################
-# What is the path to the reads?
-# READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
-# READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
