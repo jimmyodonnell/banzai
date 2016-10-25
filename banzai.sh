@@ -322,7 +322,7 @@ fi
 # TODO originally contained sort | uniq; this is unnecessary I think
 LIB_TAG_MOD=$( awk -F',' -v LIBCOL=$LIB_COL -v INDCOL=$IND2_COL \
 'NR>1 {
-  print "ID1_" $LIBCOL "_tag_" $INDCOL
+  print "ID1_" $LIBCOL "_ID2_" $INDCOL
 }' $SEQUENCING_METADATA | sort | uniq )
 
 # create a file to store tag efficiency data
@@ -526,14 +526,14 @@ done
 echo
 
 ################################################################################
-# Count the occurrences of '_tag_' + the 6 characters following it in the concatenated file
+# Count the occurrences of '_ID2_' + the 6 characters following it in the concatenated file
 ################################################################################
 # TODO !!! This will fail if there are underscores in the library names !!!
 # an attempt at making this robust to underscores
-# grep -E -o '_lib_.+?(?=_tag)_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
+# grep -E -o '_ID1_.+?(?=_tag)_ID2_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_ID1_//;s/_ID2_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
 
 echo $(date +%Y-%m-%d\ %H:%M) "Counting reads associated with each sample index (primer tag)..."
-grep -E -o '_ID1_[^_]*_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_ID1_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
+grep -E -o '_ID1_[^_]*_ID2_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_ID1_//;s/_ID2_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
 
 echo $(date +%Y-%m-%d\ %H:%M) "Counts of reads associated with each sample index found in:"
 echo "${CONCAT_DIR}""/1_demult_concat.fasta.tags"
