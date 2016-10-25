@@ -523,29 +523,20 @@ done
 ################################################################################
 # CONCATENATE SAMPLES
 ################################################################################
-# TODO could move this first step up above any loops (no else)
-# TODO MOVE THE VARIABLE ASSIGNMENT TO TOP; MOVE MKDIR TO TOP OF CONCAT IF LOOP
 echo $(date +%Y-%m-%d\ %H:%M) "Concatenating fasta files..."
 CONCAT_DIR="${OUTPUT_DIR}"/all_lib
 mkdir "${CONCAT_DIR}"
 CONCAT_FILE="${CONCAT_DIR}"/1_demult_concat.fasta
-
-# TODO could move this into above loop after demultiplexing?
-for CURRENT_ID1_NAME in "${ID1_NAMES[@]}"; do
-
-	ID1_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_ID1_NAME##*/}
-
-	for IND_SEQ in $IND2S; do
-		cat "${ID1_OUTPUT_DIR}"/demultiplexed/tag_"${IND_SEQ}"/2_notags.fasta >> "${CONCAT_FILE}"
-	done
-
-	echo $(date +%Y-%m-%d\ %H:%M) "Compressing fasta files..."
-	find "${ID1_OUTPUT_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
-	echo $(date +%Y-%m-%d\ %H:%M) "fasta files compressed."
-
-done
+cat "${OUTPUT_DIR}"/*/demultiplexed/*/2_notags.fasta >> "${CONCAT_FILE}"
 echo
 
+# # TODO turn on compression of demult files
+# for CURRENT_ID1_NAME in "${ID1_NAMES[@]}"; do
+# 	ID1_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_ID1_NAME##*/}
+# 	echo $(date +%Y-%m-%d\ %H:%M) "Compressing fasta files..."
+# 	find "${ID1_OUTPUT_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
+# 	echo $(date +%Y-%m-%d\ %H:%M) "fasta files compressed."
+# done
 
 ################################################################################
 # PRIMER REMOVAL
