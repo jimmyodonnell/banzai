@@ -69,6 +69,7 @@ otu (otu name from otus.fasta)
 # TODO Find primer index as a function of 6bp preceeding or following primer seq  `grep -E -o '^.{6}'"${primer_F}"''`
 
 # TODO add --debug / --verbose flag to generate files.
+
 # TODO Potential files to be removed as part of cleanup at the end of script:
 # - homopolymer_line_numbers.txt
 # - 2_filtered.fasta
@@ -90,18 +91,9 @@ CONCAT_DIR="$ANALYSIS_DIR"/all_lib
 mkdir "${CONCAT_DIR}"
 CONCAT_FILE="${CONCAT_DIR}"/1_demult_concat.fasta
 
-# TODO could move this into above loop after demultiplexing?
-for CURRENT_LIB in $LIBRARY_DIRECTORIES; do
-
-	LIB_OUTPUT_DIR="${ANALYSIS_DIR}"/${CURRENT_LIB##*/}
-
 	# TODO !!! This will fail if there are underscores in the library names !!!
 	# an attempt at making this robust to underscores
 	# grep -E -o '_lib_.+?(?=_tag)_tag_.{6}' "${CONCAT_DIR}"/1_demult_concat.fasta | sed 's/_lib_//;s/_tag_/ /' | sort | uniq -c | sort -nr > "${CONCAT_DIR}"/1_demult_concat.fasta.tags
 
 ## PRIMER REMOVAL
 # TODO: Parallelize cutadapt using gnu parallel: https://github.com/marcelm/cutadapt/issues/157
-
-
-# TODO rename preliminary to OTU analyses; move analysis script to OTU analysis directory
-OUTPUT_PDF="${ANALYSIS_DIR}"/analysis_results_"${START_TIME}".pdf
