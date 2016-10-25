@@ -914,6 +914,9 @@ else
 fi
 
 
+################################################################################
+# CLEAN UP
+################################################################################
 if [ "$PERFORM_CLEANUP" = "YES" ]; then
 	echo $(date +%Y-%m-%d\ %H:%M) "Compressing fasta, fastq, and xml files..."
 	find "${OUTPUT_DIR}" -type f -name '*.fasta' -exec ${ZIPPER} "{}" \;
@@ -928,6 +931,9 @@ FINISH_TIME=$(date +%Y%m%d_%H%M)
 
 echo 'Pipeline finished! Started at' $START_TIME 'and finished at' $FINISH_TIME | mail -s "banzai is finished" "${EMAIL_ADDRESS}"
 
+################################################################################
+# WRITE SUMMARY
+################################################################################
 SUMMARY_FILE="${OUTPUT_DIR}"/summary.txt
 echo "Writing summary file..."
 source "${SCRIPT_DIR}"/beta/summarize.sh "${LOGFILE}" > "${SUMMARY_FILE}"
@@ -935,6 +941,9 @@ echo "Summary written to:"
 echo "${SUMMARY_FILE}"
 echo
 
+################################################################################
+# EXIT
+################################################################################
 echo -e '\n'$(date +%Y-%m-%d\ %H:%M)'\tAll finished! Why not treat yourself to a...\n'
 echo
 echo -e '\t~~~ MAI TAI ~~~'
