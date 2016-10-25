@@ -37,7 +37,6 @@ ColumnName_SampleType="dna_source"
 
 # Your metadata must have a column corresponding to the subfolders containing the raw reads.
 # In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
-READ_LIB_FROM_SEQUENCING_METADATA="YES"
 LIBRARY_COLUMN_NAME="pri_index_name"
 
 ################################################################################
