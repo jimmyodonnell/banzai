@@ -296,9 +296,6 @@ else
 	echo "Library names read from lib file (""${LIBS}"") total"
 	echo
 fi
-# make library names into an array
-# TODO LIBS_ARRAY is never used
-# declare -a LIBS_ARRAY=($LIBS)
 
 # Check that library names are the same in the metadata and file system
 if [ "$LIBS_FROM_DIRECTORIES" != "$LIBS" ]; then
