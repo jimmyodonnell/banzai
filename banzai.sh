@@ -456,8 +456,20 @@ for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
 		echo
 
 	else
+
+		awk '{
+				if ( /^>/ )
+					print "$0"_ID1_'${CURRENT_LIB##*/}'_";
+				else
+					print $0
+		}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
+
+		mv "${FILTERED_RENAMED}" "${FILTERED_OUTPUT}"
+		rm "${FILTERED_RENAMED}"
+
 		echo "Reads not renamed"
 		echo
+
 	fi
 
 
