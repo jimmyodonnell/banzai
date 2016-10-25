@@ -936,7 +936,7 @@ echo 'Pipeline finished! Started at' $START_TIME 'and finished at' $FINISH_TIME 
 ################################################################################
 SUMMARY_FILE="${OUTPUT_DIR}"/summary.txt
 echo "Writing summary file..."
-source "${SCRIPT_DIR}"/beta/summarize.sh "${LOGFILE}" > "${SUMMARY_FILE}"
+source "${SCRIPT_DIR}"/scripts/summarize.sh "${LOGFILE}" > "${SUMMARY_FILE}"
 echo "Summary written to:"
 echo "${SUMMARY_FILE}"
 echo
