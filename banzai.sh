@@ -447,14 +447,13 @@ for CURRENT_LIB in "${LIBRARY_DIRECTORIES[@]}"; do
 					print ">"$4":"$5":"$6":"$7"_ID1_'${CURRENT_LIB##*/}'_";
 				else
 					print $0
-				}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
+		}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
 
-		FILTERED_OUTPUT="${FILTERED_RENAMED}"
+		mv "${FILTERED_RENAMED}" "${FILTERED_OUTPUT}"
+		rm "${FILTERED_RENAMED}"
 
 		echo $(date +%Y-%m-%d\ %H:%M) "Reads renamed"
 		echo
-
-	# rm "${FILTERED_OUTPUT}"
 
 	else
 		echo "Reads not renamed"
