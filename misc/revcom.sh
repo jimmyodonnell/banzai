@@ -10,3 +10,5 @@ revcom (){
 
 }
 
+# alt:
+#  tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]"

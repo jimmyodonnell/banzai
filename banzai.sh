@@ -228,8 +228,9 @@ fi
 read -a primers_arr <<< $( echo $PRIMER1 $PRIMER2 )
 
 # Reverse complement primers
-PRIMER1RC=$( echo ${PRIMER1} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
-PRIMER2RC=$( echo ${PRIMER2} | tr "[ABCDGHMNRSTUVWXYabcdghmnrstuvwxy]" "[TVGHCDKNYSAABWXRtvghcdknysaabwxr]" | rev )
+source "${SCRIPT_DIR}"/misc/revcom.sh
+PRIMER1RC=$( revcom "${PRIMER1}" )
+PRIMER2RC=$( revcom "${PRIMER2}" )
 
 # make primer array
 read -a primersRC_arr <<< $( echo $PRIMER1RC $PRIMER2RC )
