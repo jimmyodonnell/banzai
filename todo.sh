@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# TODO: use only ID1 from metadata; eliminate all references to LIBRARY_DIRECTORIES
+
 # TODO fix subset to not decompress and recompress entire files
 
 # TODO ignore libraries named 'N'
