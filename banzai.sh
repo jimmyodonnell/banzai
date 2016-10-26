@@ -651,3 +651,11 @@ echo -e '\t0.5 oz\torgeat'
 echo -e '\t0.5 oz\ttriple sec'
 echo -e '\t0.25 oz\tsimple syrup'
 echo -e '\tShake, strain, and enjoy!' '\xf0\x9f\x8d\xb9\x0a''\n'
+
+if [[ "${1}" == "test" ]]; then
+  source 	"${SCRIPT_DIR}"/test/test_duptab.sh
+  test_duptab "${PARENT_DIR}"/duptab_expected.csv "${OUTPUT_DIR}"
+	if [[ "$?" < 1 ]]; then
+		echo "banzai passes test"
+	fi
+fi

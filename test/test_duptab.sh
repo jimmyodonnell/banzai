@@ -2,18 +2,18 @@
 
 test_duptab () {
 
-  dir1="${1}"
+  file1="${1}"
 
   dir2="${2}"
-
-  file1="${dir1}"/all_lib/duplicate_table.csv
 
   file2="${dir2}"/all_lib/duplicate_table.csv
 
   if cmp -s "$file1" "$file2"; then
-     echo "The files match"
+    echo "The files match"
+    return 0
   else
-     echo "The files are different"
+    echo "The files are different"
+    return 1
   fi
 
 }
