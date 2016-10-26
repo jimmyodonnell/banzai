@@ -505,6 +505,9 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	cat "${ID1_OUTPUT_DIR}"/demultiplexed/*/2_notags.fasta >> "${CONCAT_FILE}"
 	echo
 
+	if [ "${HOARD}" = "NO" ]; then
+		rm "${ID1_OUTPUT_DIR}"
+	fi
 
 done
 
