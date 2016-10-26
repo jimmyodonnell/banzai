@@ -20,8 +20,12 @@ START_TIME_SEC=$(date +%Y%m%d_%H%M%S)
 # Find the directory this script lives in, so it can find its friends.
 SCRIPT_DIR="$(dirname "$0")"
 
-# Read in the parameter file
-param_file="${1}"
+# Specify the parameter file, check for test mode
+if [[ "${1}" == "test" ]]; then
+	param_file="${SCRIPT_DIR}"/banzai_params.sh
+else
+	param_file="${1}"
+fi
 
 # check if param file exists:
 if [[ -s "${param_file}" ]] ; then
