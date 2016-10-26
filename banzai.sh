@@ -271,7 +271,7 @@ for myfile in "${raw_files[@]}"; do
 done
 
 # Read library names from file or sequencing metadata
-COL_NUM_ID1=$(awk -F',' -v COL_NAME_ID1=$LIBRARY_COLUMN_NAME '{
+COL_NUM_ID1=$(awk -F',' -v COL_NAME_ID1=$COLNAME_ID1_NAME '{
 	for (i=1;i<=NF;i++)
 	  if($i == COL_NAME_ID1)
 		  print i;
@@ -314,7 +314,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	sort | uniq )
 
   CURRENT_ID1_NAME=$( awk -F, '
-	/'"${CURRENT_FILE1}"'/ { print $5; }' "${SEQUENCING_METADATA}" |\
+	/'"${CURRENT_FILE1}"'/ { print $'"${COL_NUM_ID1}"'; }' "${SEQUENCING_METADATA}" |\
 	sort | uniq )
 
   READ1=$( find "${PARENT_DIR}" -name "${CURRENT_FILE1}" )
