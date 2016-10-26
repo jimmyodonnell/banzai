@@ -381,12 +381,15 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 				continue
 		fi
 
+		if [ "${HOARD}" = "NO" ]; then
+			rm "${ID1_OUTPUT_DIR}"/1_merged.discarded.fastq
+			rm "${ID1_OUTPUT_DIR}"/1_merged.unassembled.forward.fastq
+			rm "${ID1_OUTPUT_DIR}"/1_merged.unassembled.reverse.fastq
+		fi
+
 		echo
 
-
 	fi
-	# if [ "${HOARD}" = "NO" ]; then
-	# fi
 
 	################################################################################
 	# EXPECTED ERROR FILTERING (vsearch)
@@ -408,6 +411,10 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 		FILTERED_OUTPUT="${MERGED_READS%.*}".fasta
 		seqtk seq -A "${MERGED_READS}" > "${FILTERED_OUTPUT}"
 		echo
+	fi
+
+	if [ "${HOARD}" = "NO" ]; then
+		rm "${MERGED_READS}"
 	fi
 
 	# Compress merged reads
@@ -484,6 +491,9 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	# DEMULTIPLEXING (awk)
 	################################################################################
   source "${SCRIPT_DIR}"/scripts/demultiplexing.sh
+	if [ "${HOARD}" = "NO" ]; then
+		rm "${DEMULTIPLEX_INPUT}"
+	fi
 	echo
 
 done
