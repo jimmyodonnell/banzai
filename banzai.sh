@@ -506,7 +506,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	echo
 
 	if [ "${HOARD}" = "NO" ]; then
-		rm "${ID1_OUTPUT_DIR}"
+		rm -rf "${ID1_OUTPUT_DIR}"
 	fi
 
 done
