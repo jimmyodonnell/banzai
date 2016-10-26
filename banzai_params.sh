@@ -110,7 +110,7 @@ Max_Expected_Errors="0.5"
 REMOVE_HOMOPOLYMERS="NO"
 # What is the maximum homopolymer length you're willing to accept?
 # Reads containing runs of identical bases longer than this will be discarded.
-HOMOPOLYMER_MAX="7"
+HOMOPOLYMER_MAX="10"
 
 
 ################################################################################

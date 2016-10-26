@@ -458,18 +458,19 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	################################################################################
 	if [ "${REMOVE_HOMOPOLYMERS}" = "YES" ]; then
 		echo $(date +%Y-%m-%d\ %H:%M) "Removing homopolymers..."
-		HomoLineNo="${CURRENT_ID1_NAME}"/homopolymer_line_numbers.txt
+		HomoLineNo="${ID1_OUTPUT_DIR}"/homopolymer_line_numbers.txt
+		NOHOMO_FASTA="${ID1_OUTPUT_DIR}"/3_no_homopolymers.fasta
 		grep -E -i -B 1 -n "(A|T|C|G)\1{$HOMOPOLYMER_MAX,}" "${FILTERED_OUTPUT}" | \
 			cut -f1 -d: | \
 			cut -f1 -d- | \
 			sed '/^$/d' > "${HomoLineNo}"
 			echo
 		if [ -s "${HomoLineNo}" ]; then
-			DEMULTIPLEX_INPUT="${CURRENT_ID1_NAME}"/3_no_homopolymers.fasta
-			awk 'NR==FNR{l[$0];next;} !(FNR in l)' "${HomoLineNo}" "${FILTERED_OUTPUT}" > "${DEMULTIPLEX_INPUT}"
+			awk 'NR==FNR{l[$0];next;} !(FNR in l)' "${HomoLineNo}" "${FILTERED_OUTPUT}" > "${NOHOMO_FASTA}"
 			awk 'NR==FNR{l[$0];next;} (FNR in l)' "${HomoLineNo}" "${FILTERED_OUTPUT}" > "${CURRENT_ID1_NAME}"/homopolymeric_reads.fasta
+			DEMULTIPLEX_INPUT="${NOHOMO_FASTA}"
 		else
-			echo "No homopolymers found" > "${CURRENT_ID1_NAME}"/3_no_homopolymers.fasta
+			echo "No homopolymers found" > "${NOHOMO_FASTA}"
 			DEMULTIPLEX_INPUT="${FILTERED_OUTPUT}"
 			echo
 		fi
