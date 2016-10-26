@@ -28,16 +28,17 @@ OUTPUT_PDF_DIR=""
 # METADATA DETAILS
 ################################################################################
 # Specify columns for raw sequencing files:
-FILE1_COLNAME="file1"
-FILE2_COLNAME="file2"
+COLNAME_FILE1="file1"
+COLNAME_FILE2="file2"
 
 
-ColumnName_SampleName="dna_id"
-ColumnName_SampleType="dna_source"
+COLNAME_DNA_ID="dna_id"
+COLNAME_SAMPLE_TYPE="dna_source"
 
 # Your metadata must have a column corresponding to the subfolders containing the raw reads.
 # In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
 COLNAME_ID1_NAME="pri_index_name"
+COLNAME_ID1_SEQ="pri_index_seq"
 
 ################################################################################
 # MERGE PAIRED READS
@@ -52,7 +53,7 @@ COLNAME_ID1_NAME="pri_index_name"
 # Is there a column in the metadata file for fragment size?
 insert_size_in_metadata="NO"
 # If YES, what is the name?
-insert_size_column="insert_size"
+COLNAME_INSERT_SIZE="insert_size"
 
 # do you want banzai to automatically calculate the expected assembled sequence lengths and overlap based on read length and fragment size?
 calculate_merge_length="NO" # [ YES | NO]
@@ -119,14 +120,14 @@ HOMOPOLYMER_MAX="7"
 # (sometimes, confusingly referred to as "tags" or "barcodes")
 # these are the secondary index -- the primary index added with the sequencing adapters should not be in the sequence data
 # You can grab these from the file specified above (SEQUENCING_METADATA) by specifying the column name of index sequences.
-SECONDARY_INDEX_COLUMN_NAME="sec_index_seq"
+COLNAME_ID2_SEQ="sec_index_seq"
 
 
 # How many nucleotides pad the 5' end of the tag sequence?
 # TODO build in flexibility (this number is unused right now)
 TAG_Ns="3"
 SECONDARY_INDEX_START="4"
-SECONDARY_INDEX_START_COLNAME="sec_index_start"
+COLNAME_ID2_START="sec_index_start"
 
 ################################################################################
 # PRIMER REMOVAL
@@ -134,8 +135,8 @@ SECONDARY_INDEX_START_COLNAME="sec_index_start"
 # Specify the primers used to generate these amplicons.
 # As with the multiplex indexes, Banzai will grab these from the file SEQUENCING_METADATA.
 # You must indicate the column names of the forward and reverse primers
-PRIMER_1_COLUMN_NAME="primerF_seq"
-PRIMER_2_COLUMN_NAME="primerR_seq"
+COLNAME_PRIMER1="primerF_seq"
+COLNAME_PRIMER2="primerR_seq"
 
 # What proportion of mismatches are you willing to accept when looking for primers?
 # Recommended: "0.10"

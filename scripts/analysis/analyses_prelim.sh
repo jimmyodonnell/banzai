@@ -8,7 +8,7 @@
 OUTPUT_PDF="${OUTPUT_DIR}"/analysis_results_"${START_TIME}".pdf
 
 echo $(date +%Y-%m-%d\ %H:%M) "passing args to R for preliminary analysis..."
-Rscript "$SCRIPT_DIR/scripts/analysis/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_METADATA}" "${LIBRARY_COLUMN_NAME}" "${SECONDARY_INDEX_COLUMN_NAME}" "${ColumnName_SampleName}" "${ColumnName_SampleType}"
+Rscript "$SCRIPT_DIR/scripts/analysis/analyses_prelim.R" "${OUTPUT_PDF}" "${OTU_table}" "${SEQUENCING_METADATA}" "${LIBRARY_COLUMN_NAME}" "${COLNAME_ID2_SEQ}" "${COLNAME_DNA_ID}" "${COLNAME_SAMPLE_TYPE}"
 echo
 
 # EMPTY PDFs are 3829 bytes

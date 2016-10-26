@@ -132,15 +132,15 @@ CONCATENATE_SAMPLES="YES"
 # Specify the primers used to generate these amplicons.
 # As with the multiplex tags, Banzai will grab these from the file SEQUENCING_METADATA.
 # You must indicate the column names of the forward and reverse primers
-PRIMER_1_COLUMN_NAME="primer_sequence_F"
-PRIMER_2_COLUMN_NAME="primer_sequence_R"
+COLNAME_PRIMER1="primer_sequence_F"
+COLNAME_PRIMER2="primer_sequence_R"
 
 # What proportion of mismatches are you willing to accept when looking for primers?
 # Recommended: "0.10"
 PRIMER_MISMATCH_PROPORTION="0.10"
 
-ColumnName_SampleName="sample_name"
-ColumnName_SampleType="sample_type"
+COLNAME_DNA_ID="sample_name"
+COLNAME_SAMPLE_TYPE="sample_type"
 
 ################################################################################
 # SINGLETONS

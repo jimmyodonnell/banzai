@@ -125,14 +125,14 @@ cp "${param_file}" "${OUTPUT_DIR}"/analysis_parameters.txt
 ################################################################################
 # READ FILE NAMES
 ################################################################################
-FILE1_COLNUM=$(awk -F',' -v FILE1_COL=$FILE1_COLNAME \
+FILE1_COLNUM=$(awk -F',' -v FILE1_COL=$COLNAME_FILE1 \
   '{for (i=1;i<=NF;i++)
 	    if($i == FILE1_COL)
 		  print i;
 		exit}' \
 $SEQUENCING_METADATA)
 
-FILE2_COLNUM=$(awk -F',' -v FILE2_COL=$FILE2_COLNAME \
+FILE2_COLNUM=$(awk -F',' -v FILE2_COL=$COLNAME_FILE2 \
 	'{for (i=1;i<=NF;i++)
 	    if($i == FILE2_COL)
 			print i;
@@ -172,7 +172,7 @@ fi
 ################################################################################
 # LOAD MULTIPLEX INDEXES
 ################################################################################
-IND2_COL=$(awk -F',' -v IND2_COLNAME=$SECONDARY_INDEX_COLUMN_NAME '{
+IND2_COL=$(awk -F',' -v IND2_COLNAME=$COLNAME_ID2_SEQ '{
 	for (i=1;i<=NF;i++)
 	  if($i == IND2_COLNAME)
 			print i;
@@ -203,14 +203,14 @@ declare -a IND2_ARRAY=($IND2S)
 ################################################################################
 # Read in primers and create reverse complements.
 ################################################################################
-PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$PRIMER_1_COLUMN_NAME '{
+PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$COLNAME_PRIMER1 '{
 	for (i=1;i<=NF;i++)
 	  if($i == PRIMER1_COL)
 		  print i;
 		exit
 }' $SEQUENCING_METADATA)
 
-PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$PRIMER_2_COLUMN_NAME '{
+PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$COLNAME_PRIMER2 '{
 	for (i=1;i<=NF;i++)
 	  if($i == PRIMER2_COL)
 		  print i;
