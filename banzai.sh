@@ -303,6 +303,11 @@ ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v INDCOL=$IND2_COL \
 INDEX_COUNT="${OUTPUT_DIR}"/index_count.txt
 echo "library tag left_tagged right_tagged" >> "${INDEX_COUNT}"
 
+# create a directory to store concatenated output
+CONCAT_DIR="${OUTPUT_DIR}"/all_lib
+mkdir "${CONCAT_DIR}"
+CONCAT_FILE="${CONCAT_DIR}"/1_demult_concat.fasta
+
 ################################################################################
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
 ################################################################################
@@ -496,23 +501,16 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	fi
 	echo
 
+	echo $(date +%Y-%m-%d\ %H:%M) "Concatenating fasta files..."
+	cat "${ID1_OUTPUT_DIR}"/demultiplexed/*/2_notags.fasta >> "${CONCAT_FILE}"
+	echo
+
+
 done
 
 ################################################################################
 # END LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
 ################################################################################
-
-################################################################################
-# CONCATENATE SAMPLES
-################################################################################
-echo $(date +%Y-%m-%d\ %H:%M) "Concatenating fasta files..."
-CONCAT_DIR="${OUTPUT_DIR}"/all_lib
-mkdir "${CONCAT_DIR}"
-CONCAT_FILE="${CONCAT_DIR}"/1_demult_concat.fasta
-cat "${OUTPUT_DIR}"/*/demultiplexed/*/2_notags.fasta >> "${CONCAT_FILE}"
-echo
-
-# # TODO turn on compression of demult files
 
 ################################################################################
 # PRIMER REMOVAL
