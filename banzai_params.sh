@@ -43,6 +43,7 @@ COLNAME_ID1_SEQ="pri_index_seq"
 ################################################################################
 # MERGE PAIRED READS
 ################################################################################
+USE_PEAR_DEFAULTS="NO"
 # For more information on these parameters, type into a terminal window: pear -help
 # Bokulich recommends:
 # Quality_Threshold=3, r=3 (PEAR only considers r=2), UNCALLEDMAX=0

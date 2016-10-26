@@ -364,20 +364,27 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 		echo $(date +%Y-%m-%d\ %H:%M) "Merging reads in library" "${CURRENT_ID1_NAME}""..."
 		MERGED_READS_PREFIX="${ID1_OUTPUT_DIR}"/1_merged
 		MERGED_READS="${ID1_OUTPUT_DIR}"/1_merged.assembled.fastq
-		pear \
+		if [[ "${USE_PEAR_DEFAULTS}" == "NO" ]]; then
+			pear \
+				--forward-fastq "${READ1}" \
+				--reverse-fastq "${READ2}" \
+				--output "${MERGED_READS_PREFIX}" \
+				-v $MINOVERLAP \
+				-m $ASSMAX \
+				-n $ASSMIN \
+				-t $min_seq_length \
+				-q $Quality_Threshold \
+				-u $UNCALLEDMAX \
+				-g $TEST \
+				-p $PVALUE \
+				-s $SCORING \
+				-j $n_cores
+		else
+			pear \
 			--forward-fastq "${READ1}" \
 			--reverse-fastq "${READ2}" \
-			--output "${MERGED_READS_PREFIX}" \
-			-v $MINOVERLAP \
-			-m $ASSMAX \
-			-n $ASSMIN \
-			-t $min_seq_length \
-			-q $Quality_Threshold \
-			-u $UNCALLEDMAX \
-			-g $TEST \
-			-p $PVALUE \
-			-s $SCORING \
-			-j $n_cores
+			--output "${MERGED_READS_PREFIX}"
+    fi
 
 		# check pear output:
 		if [[ ! -s "${MERGED_READS}" ]] ; then
