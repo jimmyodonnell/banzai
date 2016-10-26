@@ -16,6 +16,7 @@ echo
 # Define a variable called START_TIME
 START_TIME=$(date +%Y%m%d_%H%M)
 START_TIME_SEC=$(date +%Y%m%d_%H%M%S)
+time1=$(date -u +"%s")
 
 # Find the directory this script lives in, so it can find its friends.
 SCRIPT_DIR="$(dirname "$0")"
@@ -643,6 +644,9 @@ else
 fi
 
 FINISH_TIME=$(date +%Y%m%d_%H%M)
+time2=$(date -u +"%s")
+timediff=$(($time2-$time1))
+echo "banzai took $(($timediff / 3600)) hours, $((($timediff / 60) % 60)) minutes and $(($timediff % 60)) seconds."
 
 mail -e
 if [[ "$?" < 1 ]]; then
