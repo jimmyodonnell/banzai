@@ -644,7 +644,10 @@ fi
 
 FINISH_TIME=$(date +%Y%m%d_%H%M)
 
-echo 'Pipeline finished! Started at' $START_TIME 'and finished at' $FINISH_TIME | mail -s "banzai is finished" "${EMAIL_ADDRESS}"
+mail -e
+if [[ "$?" < 1 ]]; then
+	echo 'Pipeline finished! Started at' $START_TIME 'and finished at' $FINISH_TIME | mail -s "banzai is finished" "${EMAIL_ADDRESS}"
+fi
 
 ################################################################################
 # WRITE SUMMARY
