@@ -218,7 +218,7 @@ PERFORM_CLEANUP="YES"
 # Is it ok to rename the sequences within a fasta file?
 # This will only remove info about the machine; reads can still be traced back to origin in fastq.
 # This will happen after the fastq has been converted to a fasta file at the quality filtering step.
-RENAME_READS="YES"
+RENAME_READS="NO"
 
 # If you want to receive a text message when the pipeline finishes, input your number here:
 EMAIL_ADDRESS="4077443377@tmomail.net"
