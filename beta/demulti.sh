@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+!! ADD TO BANZAI
+# source "${SCRIPT_DIR}"/beta/demulti.sh -i "${DEMULTIPLEX_INPUT}" -s "${SECONDARY_INDEX_START}" -l 6 > "${CONCAT_DIR}"/demultiplexed_alt.fasta
+
 # Author: Jimmy O'Donnell jodonnellbio@gmail.com
 
 # Usage    bash demulti.sh -i infile.fasta -s 4 -l 6
