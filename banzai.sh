@@ -126,19 +126,20 @@ cp "${param_file}" "${OUTPUT_DIR}"/analysis_parameters.txt
 ################################################################################
 # READ FILE NAMES
 ################################################################################
-FILE1_COLNUM=$(awk -F',' -v FILE1_COL=$COLNAME_FILE1 \
-  '{for (i=1;i<=NF;i++)
-	    if($i == FILE1_COL)
-		  print i;
-		exit}' \
-$SEQUENCING_METADATA)
 
-FILE2_COLNUM=$(awk -F',' -v FILE2_COL=$COLNAME_FILE2 \
-	'{for (i=1;i<=NF;i++)
-	    if($i == FILE2_COL)
-			print i;
-		exit}' \
-$SEQUENCING_METADATA)
+get_colnum () {
+	# define a function to find column number; $1 = column name; $2 = file name
+	awk -F',' -v COLNAME=$1 \
+	  '{for (i=1;i<=NF;i++)
+		    if($i == COLNAME)
+			  print i;
+			exit}' \
+	$2
+}
+
+FILE1_COLNUM=$( get_colnum "${COLNAME_FILE1}" "${SEQUENCING_METADATA}")
+
+FILE2_COLNUM=$( get_colnum "${COLNAME_FILE2}" "${SEQUENCING_METADATA}")
 
 FILE1=($(awk -F',' -v FILE1_COL=$FILE1_COLNUM \
 	'NR>1 {print $FILE1_COL}' \
@@ -173,12 +174,8 @@ fi
 ################################################################################
 # LOAD MULTIPLEX INDEXES
 ################################################################################
-IND2_COL=$(awk -F',' -v IND2_COLNAME=$COLNAME_ID2_SEQ '{
-	for (i=1;i<=NF;i++)
-	  if($i == IND2_COLNAME)
-			print i;
-	exit
-}' $SEQUENCING_METADATA)
+IND2_COL=$( get_colnum "${COLNAME_ID2_SEQ}" "${SEQUENCING_METADATA}")
+
 IND2S=$(awk -F',' -v INDCOL=$IND2_COL \
 'NR>1 {
 	print $INDCOL
@@ -204,19 +201,9 @@ declare -a IND2_ARRAY=($IND2S)
 ################################################################################
 # Read in primers and create reverse complements.
 ################################################################################
-PRIMER1_COLNUM=$(awk -F',' -v PRIMER1_COL=$COLNAME_PRIMER1 '{
-	for (i=1;i<=NF;i++)
-	  if($i == PRIMER1_COL)
-		  print i;
-		exit
-}' $SEQUENCING_METADATA)
+PRIMER1_COLNUM=$( get_colnum "${COLNAME_PRIMER1}" "${SEQUENCING_METADATA}")
 
-PRIMER2_COLNUM=$(awk -F',' -v PRIMER2_COL=$COLNAME_PRIMER2 '{
-	for (i=1;i<=NF;i++)
-	  if($i == PRIMER2_COL)
-		  print i;
-	exit
-}' $SEQUENCING_METADATA)
+PRIMER2_COLNUM=$( get_colnum "${COLNAME_PRIMER2}" "${SEQUENCING_METADATA}")
 
 PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM \
 'NR==2 {
@@ -276,12 +263,7 @@ for myfile in "${raw_files[@]}"; do
 done
 
 # Read library names from file or sequencing metadata
-COL_NUM_ID1=$(awk -F',' -v COL_NAME_ID1=$COLNAME_ID1_NAME '{
-	for (i=1;i<=NF;i++)
-	  if($i == COL_NAME_ID1)
-		  print i;
-	exit
-}' $SEQUENCING_METADATA)
+COL_NUM_ID1=$( get_colnum "${COLNAME_ID1_NAME}" "${SEQUENCING_METADATA}")
 
 ID1S=$(awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 'NR>1 {
 	print $COLNUM_ID1
