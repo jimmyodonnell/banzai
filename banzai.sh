@@ -174,14 +174,14 @@ fi
 ################################################################################
 # LOAD MULTIPLEX INDEXES
 ################################################################################
-IND2_COL=$( get_colnum "${COLNAME_ID2_SEQ}" "${SEQUENCING_METADATA}")
+COLNUM_ID2=$( get_colnum "${COLNAME_ID2_SEQ}" "${SEQUENCING_METADATA}")
 
-IND2S=$(awk -F',' -v INDCOL=$IND2_COL \
+ID2S=($(awk -F',' -v COLNUM_ID2=$COLNUM_ID2 \
 'NR>1 {
-	print $INDCOL
+	print $COLNUM_ID2
 }' $SEQUENCING_METADATA |\
-sort | uniq)
-N_index_sequences=$(echo $IND2S | awk '{print NF}')
+sort | uniq))
+N_index_sequences="${#ID2S}"
 
 # check if number of tags is greater than one:
 if [[ "${N_index_sequences}" -gt 1 ]]; then
@@ -194,9 +194,6 @@ else
   echo 'Aborting script.'
 	exit
 fi
-
-declare -a IND2_ARRAY=($IND2S)
-
 
 ################################################################################
 # Read in primers and create reverse complements.
@@ -241,7 +238,7 @@ read -a primersRC_arr <<< $( echo $PRIMER1RC $PRIMER2RC )
 ################################################################################
 # Calculate the expected size of the region of interest, given the total size of fragments, and the length of primers and tags
 ################################################################################
-EXTRA_SEQ=${IND2_ARRAY[0]}${IND2_ARRAY[0]}$PRIMER1$PRIMER2
+EXTRA_SEQ=${ID2S[0]}${ID2S[0]}$PRIMER1$PRIMER2
 LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
 LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
@@ -277,9 +274,9 @@ echo
 
 # Unique samples are given by combining the library and tags
 # TODO originally contained sort | uniq; this is unnecessary I think
-ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v INDCOL=$IND2_COL \
+ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v COLNUM_ID2=$COLNUM_ID2 \
 'NR>1 {
-  print "ID1_" $COLNUM_ID1 "_ID2_" $INDCOL
+  print "ID1_" $COLNUM_ID1 "_ID2_" $COLNUM_ID2
 }' $SEQUENCING_METADATA | sort | uniq )
 
 # create a file to store tag efficiency data

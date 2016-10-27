@@ -10,7 +10,7 @@ mkdir "${DEMULTIPLEXED_DIR}"
 # awk '/^.{0,9}'"$IND_SEQ"'/{if (a && a !~ /^.{0,9}'"$IND_SEQ"'/) print a; print} {a=$0}' "${DEMULTIPLEX_INPUT}" > "${ID2_DIR}"/1_tagL_present.fasta ) &
 
 echo $(date +%Y-%m-%d\ %H:%M) "Demultiplexing: removing secondary index sequences and adding to sequence ID in library" "${CURRENT_LIB##*/}""..."
-for IND_SEQ in $IND2S; do
+for IND_SEQ in "${ID2S[@]}"; do
 (	ID2_DIR="${DEMULTIPLEXED_DIR}"/tag_"${IND_SEQ}"
   mkdir "${ID2_DIR}"
   demult_file_L="${ID2_DIR}"/1_tagL_removed.fasta
