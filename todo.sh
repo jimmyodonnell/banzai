@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# TODO: Change variable name IND2 to ID2
 # TODO: use only ID1 from metadata; eliminate all references to LIBRARY_DIRECTORIES
 
 # TODO fix subset to not decompress and recompress entire files
