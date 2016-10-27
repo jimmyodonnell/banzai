@@ -200,9 +200,9 @@ ID2S=($(awk -F',' -v COLNUM_ID2=$COLNUM_ID2 \
 sort | uniq))
 N_index_sequences="${#ID2S}"
 
-# check if number of tags is greater than one:
+# check if number of indexes is greater than one:
 if [[ "${N_index_sequences}" -gt 1 ]]; then
-	echo "Multiplex tags read from sequencing metadata (""${N_index_sequences}"" total)"
+	echo "Secondary indexes read from sequencing metadata (""${N_index_sequences}"" total)"
 	echo
 else
   echo
@@ -249,23 +249,23 @@ read -a primersRC_arr <<< $( echo $PRIMER1RC $PRIMER2RC )
 
 
 ################################################################################
-# Calculate the expected size of the region of interest, given the total size of fragments, and the length of primers and tags
+# Calculate the expected size of the region of interest
 ################################################################################
 EXTRA_SEQ=${ID2S[0]}${ID2S[0]}$PRIMER1$PRIMER2
 LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
 LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
 
-# Unique samples are given by combining the library and tags
+# Unique samples are given by combining the primary and secondary indexes
 # TODO originally contained sort | uniq; this is unnecessary I think
 ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v COLNUM_ID2=$COLNUM_ID2 \
 'NR>1 {
   print "ID1_" $COLNUM_ID1 "_ID2_" $COLNUM_ID2
 }' $SEQUENCING_METADATA | sort | uniq )
 
-# create a file to store tag efficiency data
+# create a file to store index efficiency data
 INDEX_COUNT="${OUTPUT_DIR}"/index_count.txt
-echo "library tag left_tagged right_tagged" >> "${INDEX_COUNT}"
+echo "index1 index2 left_side right_side" >> "${INDEX_COUNT}"
 
 # create a directory to store concatenated output
 CONCAT_DIR="${OUTPUT_DIR}"/all_lib
