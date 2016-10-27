@@ -124,7 +124,7 @@ cp "${param_file}" "${OUTPUT_DIR}"/analysis_parameters.txt
 
 
 ################################################################################
-# READ FILE NAMES
+# READ METADATA
 ################################################################################
 
 get_colnum () {
@@ -143,10 +143,23 @@ get_colnum () {
 	fi
 }
 
+# Filnames
 FILE1_COLNUM=$( get_colnum "${COLNAME_FILE1}" "${SEQUENCING_METADATA}")
-
 FILE2_COLNUM=$( get_colnum "${COLNAME_FILE2}" "${SEQUENCING_METADATA}")
 
+# Library names
+COL_NUM_ID1=$( get_colnum "${COLNAME_ID1_NAME}" "${SEQUENCING_METADATA}")
+
+# Secondary multiplex index sequences
+COLNUM_ID2=$( get_colnum "${COLNAME_ID2_SEQ}" "${SEQUENCING_METADATA}")
+
+# Primers
+PRIMER1_COLNUM=$( get_colnum "${COLNAME_PRIMER1}" "${SEQUENCING_METADATA}")
+PRIMER2_COLNUM=$( get_colnum "${COLNAME_PRIMER2}" "${SEQUENCING_METADATA}")
+
+################################################################################
+# CHECK FILES
+################################################################################
 FILE1=($(awk -F',' -v FILE1_COL=$FILE1_COLNUM \
 	'NR>1 {print $FILE1_COL}' \
 $SEQUENCING_METADATA |\
@@ -178,10 +191,8 @@ else
 fi
 
 ################################################################################
-# LOAD MULTIPLEX INDEXES
+# LOAD SECONDARY INDEXES
 ################################################################################
-COLNUM_ID2=$( get_colnum "${COLNAME_ID2_SEQ}" "${SEQUENCING_METADATA}")
-
 ID2S=($(awk -F',' -v COLNUM_ID2=$COLNUM_ID2 \
 'NR>1 {
 	print $COLNUM_ID2
@@ -204,10 +215,6 @@ fi
 ################################################################################
 # Read in primers and create reverse complements.
 ################################################################################
-PRIMER1_COLNUM=$( get_colnum "${COLNAME_PRIMER1}" "${SEQUENCING_METADATA}")
-
-PRIMER2_COLNUM=$( get_colnum "${COLNAME_PRIMER2}" "${SEQUENCING_METADATA}")
-
 PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM \
 'NR==2 {
 	print $PRIMER1_COL
@@ -249,25 +256,6 @@ LENGTH_ROI=$(( $LENGTH_FRAG - ${#EXTRA_SEQ} ))
 LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
 
-################################################################################
-# Find raw sequence files
-################################################################################
-# Look for any file with '.fastq' in the name in the parent directory
-# note that this will include ANY file with fastq -- including QC reports!
-raw_files=($( find "${PARENT_DIR}" -name '*.fastq*' ))
-
-# PEAR v0.9.6 does not correctly merge .gz files.
-# Look through files and decompress if necessary.
-for myfile in "${raw_files[@]}"; do
-	if [[ "${myfile}" =~ \.gz$ ]]; then
-		echo $(date +%Y-%m-%d\ %H:%M) "decompressing "${myfile}""
-		"${ZIPPER}" -d "${myfile}"
-	fi
-done
-
-# Read library names from file or sequencing metadata
-COL_NUM_ID1=$( get_colnum "${COLNAME_ID1_NAME}" "${SEQUENCING_METADATA}")
-
 # Unique samples are given by combining the library and tags
 # TODO originally contained sort | uniq; this is unnecessary I think
 ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v COLNUM_ID2=$COLNUM_ID2 \
@@ -293,6 +281,15 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	# Identify the forward and reverse fastq files.
 	CURRENT_FILE1="${FILE1[i]}"
 	CURRENT_FILE2="${FILE2[i]}"
+
+	# PEAR v0.9.6 does not correctly merge .gz files.
+	# Look through files and decompress if necessary.
+	# for myfile in "${CURRENT_FILE1}" "${CURRENT_FILE2}"; do
+	# 	if [[ "${myfile}" =~ \.gz$ ]]; then
+	# 		echo $(date +%Y-%m-%d\ %H:%M) "decompressing "${myfile}""
+	# 		"${ZIPPER}" -d "${myfile}"
+	# 	fi
+	# done
 
   CURRENT_ID1=$( awk -F, '
 	/'"${CURRENT_FILE1}"'/ { print $6; }' "${SEQUENCING_METADATA}" |\
