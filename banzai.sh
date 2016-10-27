@@ -262,16 +262,6 @@ done
 # Read library names from file or sequencing metadata
 COL_NUM_ID1=$( get_colnum "${COLNAME_ID1_NAME}" "${SEQUENCING_METADATA}")
 
-ID1S=$(awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 'NR>1 {
-	print $COLNUM_ID1
-}' $SEQUENCING_METADATA | sort | uniq)
-
-N_libs=$(echo $ID1S | awk '{print NF}')
-
-echo "Library names read from sequencing metadata (""${N_libs}"") total"
-echo "${ID1S}"
-echo
-
 # Unique samples are given by combining the library and tags
 # TODO originally contained sort | uniq; this is unnecessary I think
 ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v COLNUM_ID2=$COLNUM_ID2 \
