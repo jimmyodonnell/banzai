@@ -45,8 +45,7 @@ demult_perc=$( \
 
 # primer removal
 primers_found=$( \
-  awk '/Reads written \(passing filters/ {print $5}' "${banzai_logfile}" | \
-  sed 's/,//g' | \
+  awk '/Trimmed reads:/ { print $3 }' "${banzai_logfile}" |\
   tail -n 2 | \
   awk '{sum+=$0} END {print sum}'
 )
@@ -76,10 +75,10 @@ unique_seqs=$( \
   awk '{ print $(NF-2)}'
 )
 
-echo The run produced a total of "${total_reads}" reads in each direction passing the Illumina quality filter.
+echo "A total of" "${total_reads}" "reads in each direction passed the Illumina quality filter and could be assigned to the correct sample on the basis of their primary index."
 echo "Of these, ""${assembled_reads}"" ("${assembled_perc:0:5}"%) met the criteria for paired-end assembly and initial quality filtering."
 echo "library_reads" "library_percent" "reads were assigned to one of the on the basis of the index sequences ligated during library preparation."
-echo "${passed_ee_filter}"" ("${passed_ee_perc:0:5}"%)" of the assembled reads passed filtering based on expected errors.
-echo "${demult_primers}" "("${demult_perc:0:5}"%)" "of the filtered reads contained secondary (primer) index sequences in the expected positions, and " 
+echo "${passed_ee_filter}"" ("${passed_ee_perc:0:5}"%)" "of the assembled reads passed filtering based on expected errors."
+echo "${demult_primers}" "("${demult_perc:0:5}"%)" "of the filtered reads contained secondary (primer) index sequences in the expected positions, and "
 echo "${primers_found}" "("${primers_perc:0:5}"%)" "of the demultiplexed reads contained primer sequences in the expected position"
-echo "Of these reads, a total of" "${no_singletons}" "sequences occurred more than once, "${non_chimeras}" of which passed chimera filtering, in total comprising" "${unique_seqs}" "unique sequences." 
+echo "Of these reads, a total of" "${no_singletons}" "sequences occurred more than once, "${non_chimeras}" of which passed chimera filtering, in total comprising" "${unique_seqs}" "unique sequences."
