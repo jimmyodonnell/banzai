@@ -1,0 +1,5 @@
+uniqseq		sample1	sample2	sample3
+uniqseq_1	1		0		0
+uniqseq_2	0		2		1
+uniqseq_3	4		2		2
+uniqseq_4	0		1		2

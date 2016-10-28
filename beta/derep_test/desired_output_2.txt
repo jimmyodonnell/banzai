@@ -1,0 +1,15 @@
+sequenceID01;sample1	uniqseq_1
+sequenceID02;sample1	uniqseq_1
+sequenceID04;sample1	uniqseq_1
+sequenceID07;sample3	uniqseq_1
+sequenceID09;sample2	uniqseq_1
+sequenceID12;sample3	uniqseq_1
+sequenceID13;sample2	uniqseq_1
+sequenceID14;sample1	uniqseq_1
+sequenceID03;sample3	uniqseq_2
+sequenceID05;sample3	uniqseq_2
+sequenceID06;sample2	uniqseq_2
+sequenceID08;sample2	uniqseq_3
+sequenceID10;sample2	uniqseq_3
+sequenceID11;sample3	uniqseq_3
+sequenceID15;sample1	uniqseq_4
