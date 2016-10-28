@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# TODO Put sample ID start ('ID1_') to variable
 # TODO Fix decompression for PEAR?
 
 # TODO fix subset to not decompress and recompress entire files
