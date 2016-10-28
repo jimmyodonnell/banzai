@@ -55,7 +55,7 @@ awk -F'[\t;]' 'BEGIN{ print "Query,Match" } { if ($4 == "otu") {print $1 "," $1}
 OTU_table="${DEREP_INPUT%/*}"/OTU_table.csv
 
 # Convert duplicate table to OTU table using R script (arguments: duplicate table, dup to otu table, otu table path, concatenated directory (obsolete?))
-Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${duplicate_table}" "${DUPS_TO_OTUS}" "${OTU_table}" "${CONCAT_DIR}"
+Rscript "$SCRIPT_DIR/dup_to_OTU_table.R" "${DUPLICATE_TABLE}" "${DUPS_TO_OTUS}" "${OTU_table}" "${CONCAT_DIR}"
 
 
 
