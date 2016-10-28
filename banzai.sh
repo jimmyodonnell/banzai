@@ -503,19 +503,49 @@ source "${SCRIPT_DIR}"/scripts/primer_removal.sh
 ################################################################################
 # CONSOLIDATE IDENTICAL SEQUENCES (DEREPLICATION)
 ################################################################################
-source "${SCRIPT_DIR}"/scripts/dereplication.sh
+echo $(date +%Y-%m-%d\ %H:%M) "Identifying identical sequences... (python)"
+DEREP_FASTA="${CONCAT_DIR}"/derep.fasta
+DEREP_MAP="${CONCAT_DIR}"/derep.map
+python "$SCRIPT_DIR/scripts/dereplication/derep_fasta.py" \
+  "${DEREP_INPUT}" 'ID1_' "${DEREP_FASTA}" "${DEREP_MAP}"
 
+# check if duplicate fasta and duplicate table exist. (Might need to check size)
+if [[ ! -s "${DEREP_FASTA}" ]] ; then
+    echo 'There was a problem generating the duplicate fasta file. It is empty or absent.'
+    echo 'The remainder of the script depends on this file.'
+    echo 'Aborting script.'
+    exit
+fi
+# check if duplicate fasta and duplicate table exist. (Might need to check size)
+if [[ ! -s "${DEREP_MAP}" ]] ; then
+    echo 'There was a problem generating the dereplication map file. It is empty or absent.'
+    echo 'The remainder of the script depends on this file.'
+    echo 'Aborting script.'
+    exit
+fi
+
+DUPLICATE_TABLE="${CONCAT_DIR}"/duplicate_table.csv
+
+Rscript "${SCRIPT_DIR}"/scripts/dereplication/long_to_wide.R \
+  "${DEREP_MAP}" "${DUPLICATE_TABLE}" "${remove_singletons}"
+
+# check if duplicate table exists. (Might need to check size)
+if [[ ! -s "${DUPLICATE_TABLE}" ]] ; then
+    echo 'There was a problem generating the duplicate table. It is empty or absent.'
+    echo 'Aborting script.'
+    exit
+fi
 
 ##############################################################################
 # CHECK FOR CHIMERAS
 ##############################################################################
 if [[ "${remove_chimeras}" = "YES" ]] ; then
 echo $(date +%Y-%m-%d\ %H:%M) 'Looking for chimeras in duplicate fasta file using vsearch'
-source "${SCRIPT_DIR}"/scripts/chimera_check.sh "${duplicate_fasta}"
+source "${SCRIPT_DIR}"/scripts/chimera_check.sh "${DEREP_FASTA}"
 clustering_input="${chimera_free_fasta}"
 echo
 else
-clustering_input="${duplicate_fasta}"
+clustering_input="${DEREP_FASTA}"
 fi
 
 
@@ -585,7 +615,7 @@ else
 	# OTU_table="${dir_out}"/OTU_table.csv
 
 	# Convert duplicate table to OTU table using R script (arguments: (1) duplicate table, (2) dup to otu table, (3) otu table path
-	Rscript "$SCRIPT_DIR/scripts/dup_to_OTU_table.R" "${duplicate_table}" "${dup_otu_map}" "${OTU_table}"
+	Rscript "$SCRIPT_DIR/scripts/dup_to_OTU_table.R" "${DUPLICATE_TABLE}" "${dup_otu_map}" "${OTU_table}"
 
 	# check if OTU table and OTU fasta exist (and/or are of size gt 1?)
 	if [[ ! -s "${OTU_fasta}" ]] ; then
