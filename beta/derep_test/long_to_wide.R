@@ -1,64 +1,53 @@
-setwd("~/banzai_out_20161028_0508/all_lib")
+#!/usr/bin/env Rscript
 
-# note that singletons have been removed in this!
-derep_orig <- read.csv("duplicate_table.csv", row.names = 1)
-derep_orig[1:5,1:5]
+arguments   <- commandArgs(TRUE)
 
-derep_long <- read.table("derep.map", stringsAsFactors = FALSE)
-derep_long <- derep_long[derep_long[,3] > 1,]
+df_long_file <- arguments[1]  # path to the long format file
+df_wide_file <- arguments[2]  # path to the wide format file (to write)
+rm_single    <- arguments[3]  # from remove_singletons=[YES|NO]
 
-derep_wide <- reshape(derep_long, idvar = "V2", timevar = "V1", direction = "wide")
-derep_wide[1:5,1:5]
-rownames(derep_wide) <- derep_wide[,1]
-derep_wide <- derep_wide[,-1]
+df_long <- read.table(df_long_file, stringsAsFactors = FALSE)
 
-derep_wide[1:5,1:5]
-colnames(derep_wide) <- gsub("V3.", replacement = "", colnames(derep_wide))
-derep_wide[1:5,1:5]
-derep_wide[is.na(derep_wide)] <- 0
-derep_wide[1:5,1:5]
+# exclude singletons
+single_msg <- "not"
+if( rm_single == "YES"){
+  non_singletons <- names(which(sapply(split(df_long[,3], df_long[,1]), sum) > 1))
+  df_long <- df_long[df_long[,1] %in% non_singletons,]
+  single_msg <- ""
+}
 
-dim(derep_wide)
-dim(derep_orig)
-boxplot(sapply(list(derep_orig, derep_wide), rowSums))
-boxplot(sapply(list(derep_orig, derep_wide), colSums))
+# check that they're gone
+# sum(sapply(split(df_long[,3], df_long[,1]),sum) < 2)
 
-rownames(derep_orig) %in% rownames(derep_wide)
-rownames(derep_wide) %in% rownames(derep_orig)
+# reshape to wide format
+duptab_new <- reshape(df_long, idvar = "V2",
+                      timevar = "V1", direction = "wide")
 
-setdiff(colnames(derep_orig), colnames(derep_wide))
-samples_missing <- setdiff(rownames(derep_orig), rownames(derep_wide))
-rowSums(derep_orig[samples_missing,])
-# this explaing the difference in rows!
+# move column 1 (sample names) to row names
+rownames(duptab_new) <- duptab_new[,1]
 
-derep_orig <- derep_orig[rowSums(derep_orig) > 1,]
-dim(derep_orig)
-dim(derep_wide)
+# remove column 1 and make into matrix
+duptab_new <- as.matrix(duptab_new[,-1])
 
-# can't explain the mising columns yet...
+################################################################################
+# correct column names
+colnames(duptab_new) <- gsub("V3.", replacement = "", colnames(duptab_new))
 
-plot(
-sort(as.matrix(derep_orig), decreasing = TRUE)[1:100],
-sort(as.matrix(derep_wide), decreasing = TRUE)[1:100]
-)
+# change NA's to 0's
+duptab_new[is.na(duptab_new)] <- 0
 
-sort(as.matrix(derep_orig), decreasing = TRUE)[1:100],
-sort(as.matrix(derep_wide), decreasing = TRUE)[1:100]
+# exclude singletons (i.e. columns with only 1 occurrence across ALL samples!)
+# derep_wide <- derep_wide[,colSums(derep_wide) > 1]
 
-table(as.matrix(derep_orig))
-table(as.matrix(derep_wide))
+write.csv(x = duptab_new, file = df_wide_file, quote = FALSE)
 
-hist(as.matrix(derep_orig), breaks = 31, col = hsv(1,1,1,0.2))
-hist(as.matrix(derep_wide), breaks = 31, col = hsv(0.6,1,1,0.2), add = TRUE)
-# lots more zeros in the original
+duptab_dim <- dim(duptab_new)
+exit_msg <- list(
+  c("Contingency table written to file:", df_wide_file),
+  paste("It contains counts of", duptab_dim[2], "unique sequences in", 
+  duptab_dim[1], "samples."),
+  c("Samples with 0 reads do not appear in this table."),
+  paste("Singletons were", single_msg, "removed.")
+  )
 
-plot(sort(colSums(derep_orig), decreasing = TRUE)[1:200], log = "y")
-points(sort(colSums(derep_wide), decreasing = TRUE), log = "y", col = "red")
-
-
-derep_wide <- derep_wide[rownames(derep_orig), colnames(derep_orig)]
-class(derep_orig)
-class(derep_wide)
-identical(derep_orig, derep_wide)
-dim(derep_wide)
-dim(derep_orig)
+invisible(lapply(exit_msg, writeLines))
