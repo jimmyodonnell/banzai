@@ -274,7 +274,7 @@ echo "index1 index2 left_side right_side" >> "${INDEX_COUNT}"
 # create a directory to store concatenated output
 CONCAT_DIR="${OUTPUT_DIR}"/all_lib
 mkdir "${CONCAT_DIR}"
-CONCAT_FILE="${CONCAT_DIR}"/1_demult_concat.fasta
+CONCAT_FILE="${CONCAT_DIR}"/demult_concat.fasta
 
 ################################################################################
 # BEGIN LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
@@ -502,7 +502,11 @@ done
 ################################################################################
 # PRIMER REMOVAL
 ################################################################################
-source "${SCRIPT_DIR}"/scripts/primer_removal.sh
+PRIMER_REMOVAL_OUT="${CONCAT_DIR}"/no_primers.fasta
+source "${SCRIPT_DIR}"/scripts/primer_removal.sh \
+  "${CONCAT_FILE}" "${PRIMER_REMOVAL_OUT}" \
+  "${PRIMER1}"  "${PRIMER2}" \
+	"${PRIMER_MISMATCH_PROPORTION}"  "${LENGTH_ROI_HALF}"
 
 ################################################################################
 # CONSOLIDATE IDENTICAL SEQUENCES (DEREPLICATION)
@@ -511,7 +515,7 @@ echo $(date +%Y-%m-%d\ %H:%M) "Identifying identical sequences... (python)"
 DEREP_FASTA="${CONCAT_DIR}"/derep.fasta
 DEREP_MAP="${CONCAT_DIR}"/derep.map
 python "$SCRIPT_DIR/scripts/dereplication/derep_fasta.py" \
-  "${DEREP_INPUT}" 'ID1_' "${DEREP_FASTA}" "${DEREP_MAP}"
+  "${PRIMER_REMOVAL_OUT}" 'ID1_' "${DEREP_FASTA}" "${DEREP_MAP}"
 
 # check if duplicate fasta and duplicate table exist. (Might need to check size)
 if [[ ! -s "${DEREP_FASTA}" ]] ; then
