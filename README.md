@@ -106,6 +106,8 @@ Your data (fastq files) can be compressed or not; but banzai currently only work
 
 ## Known Issues/Bugs ##
 * Currently awaiting catastrophic finding...
+- be aware of potential problems between awk versions on Linux and Mac. On a Mac, the output of `awk --version` is `awk version 20070501`
+
 
 ###Notes###
 An alternate hack to have the pipeline print to terminal AND file, in case logging breaks:
