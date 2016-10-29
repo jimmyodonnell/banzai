@@ -44,6 +44,10 @@ else
 	exit
 fi
 
+# override singleton call to ensure test conformity
+if [[ "${1}" == "test" ]]; then
+	remove_singletons="YES"
+fi
 
 # check if sequencing metadata exists
 if [[ -s "${SEQUENCING_METADATA}" ]] ; then
