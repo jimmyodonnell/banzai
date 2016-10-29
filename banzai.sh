@@ -76,6 +76,8 @@ fi
 dependencies=($( echo pear cutadapt vsearch swarm seqtk python blastn R ))
 source "${SCRIPT_DIR}"/scripts/dependency_check.sh "${dependencies[@]}"
 
+# Load reverse complement function
+source "${SCRIPT_DIR}"/misc/revcom.sh
 
 # Specify compression utility
 if hash pigz 2>/dev/null; then
@@ -239,17 +241,6 @@ else
   echo 'Aborting script'
   exit
 fi
-
-# make primer array
-read -a primers_arr <<< $( echo $PRIMER1 $PRIMER2 )
-
-# Reverse complement primers
-source "${SCRIPT_DIR}"/misc/revcom.sh
-PRIMER1RC=$( revcom "${PRIMER1}" )
-PRIMER2RC=$( revcom "${PRIMER2}" )
-
-# make primer array
-read -a primersRC_arr <<< $( echo $PRIMER1RC $PRIMER2RC )
 
 
 ################################################################################
