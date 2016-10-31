@@ -27,7 +27,7 @@ for IND_SEQ in "${ID2S[@]}"; do
   ID2_RC=$( echo ${IND_SEQ} | tr "[ATGCatgcNn]" "[TACGtacgNn]" | rev )
   awk 'gsub(/'"$ID2_RC"'.{3}$/,"") {
     if (a && a !~ /'"$ID2_RC"'.{3}$/)
-      print a "ID2_""'"$IND_SEQ"'";
+      print a "ID2=""'"$IND_SEQ"'";
     print
   } {a = $0}' "${demult_file_L}" > "${demult_file_R}"
 
