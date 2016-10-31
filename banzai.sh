@@ -280,6 +280,9 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	CURRENT_FILE1="${FILE1[i]}"
 	CURRENT_FILE2="${FILE2[i]}"
 
+	READ1=$( find "${PARENT_DIR}" -name "${CURRENT_FILE1}" )
+	READ2=$( find "${PARENT_DIR}" -name "${CURRENT_FILE2}" )
+
 	# PEAR v0.9.6 does not correctly merge .gz files.
 	# Look through files and decompress if necessary.
 	# for myfile in "${CURRENT_FILE1}" "${CURRENT_FILE2}"; do
@@ -289,6 +292,15 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	# 	fi
 	# done
 
+	for i in "${READ1}" "${READ2}"; do
+		if [[ ! -s "${i}" ]] ; then
+		    echo 'Could not find the raw reads file! Looked here:'
+				echo "${i}"
+		    echo 'Aborting script.'
+		    exit
+		fi
+  done
+
   CURRENT_ID1_SEQ=$( awk -F, '
 	/'"${CURRENT_FILE1}"'/ { print $'"${COL_NUM_ID1_SEQ}"'; }' "${SEQUENCING_METADATA}" |\
 	sort | uniq )
@@ -296,9 +308,6 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
   CURRENT_ID1_NAME=$( awk -F, '
 	/'"${CURRENT_FILE1}"'/ { print $'"${COL_NUM_ID1}"'; }' "${SEQUENCING_METADATA}" |\
 	sort | uniq )
-
-  READ1=$( find "${PARENT_DIR}" -name "${CURRENT_FILE1}" )
-	READ2=$( find "${PARENT_DIR}" -name "${CURRENT_FILE2}" )
 
 	ID1_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_ID1_NAME}
 	mkdir "${ID1_OUTPUT_DIR}"
