@@ -76,8 +76,10 @@ fi
 dependencies=($( echo pear cutadapt vsearch swarm seqtk python blastn R ))
 source "${SCRIPT_DIR}"/scripts/dependency_check.sh "${dependencies[@]}"
 
-# Load reverse complement function
-source "${SCRIPT_DIR}"/misc/revcom.sh
+# Load functions
+for file in "${SCRIPT_DIR}"/scripts/functions/* ; do
+	source "${file}"
+done
 
 # Specify compression utility
 if hash pigz 2>/dev/null; then

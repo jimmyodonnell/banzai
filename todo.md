@@ -13,6 +13,7 @@
 reading/writing wide format OTU/duplicate csv file takes an unreasonable amount of time (hours!).
 - TODO: incorporate/require data.table (dev version with fwrite)
 
+- TODO: fix timestamp / filetest functions
 
 #### Annotation/blast
 TODO clean up blast results parsing.
