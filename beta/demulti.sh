@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-!! ADD TO BANZAI
 # source "${SCRIPT_DIR}"/beta/demulti.sh -i "${DEMULTIPLEX_INPUT}" -s "${SECONDARY_INDEX_START}" -l 6 > "${CONCAT_DIR}"/demultiplexed_alt.fasta
 
 # Author: Jimmy O'Donnell jodonnellbio@gmail.com
@@ -64,16 +63,16 @@ if [[ -n $1 ]]; then
 	awk 'BEGIN {OFS=""};
 	  /^[ACTG]/ {
 	  print a \
-		":" substr($0,'${INDEXSTART}','${INDEXLENGTH}')\
-		":NONE";
+		";ID2A=" substr($0,'${INDEXSTART}','${INDEXLENGTH}')\
+		";ID2B=NONE";
 		print substr($0, '${SEQ_START}', length($0))
 	  } {a=$0}' "${INFILE}"
 else
 	awk 'BEGIN {OFS=""};
 	  /^[ACTG]/ {
 	  print a \
-		":" substr($0,'${INDEXSTART}','${INDEXLENGTH}')\
-		":" substr($0,length($0)+2-'${SEQ_START}','${INDEXLENGTH}');
+		";ID2A=" substr($0,'${INDEXSTART}','${INDEXLENGTH}')\
+		";ID2B=" substr($0,length($0)+2-'${SEQ_START}','${INDEXLENGTH}');
 		print substr($0, '${SEQ_START}', length($0)-'${INDEX_BOTH}')
 	  } {a=$0}' "${INFILE}"
 fi

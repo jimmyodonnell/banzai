@@ -8,6 +8,7 @@
 - TODO: Put sample ID start ('ID1_') to variable
 - TODO: fix subset to not decompress and recompress entire files
 
+- note: would be good to use only adapter/primary index SEQUENCES (not names); but I have now encountered Illumina data where this is neither in the read headers OR the filenames. Bummer.
 
 reading/writing wide format OTU/duplicate csv file takes an unreasonable amount of time (hours!).
 - TODO: incorporate/require data.table (dev version with fwrite)
