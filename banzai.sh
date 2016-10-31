@@ -255,7 +255,7 @@ LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 # TODO originally contained sort | uniq; this is unnecessary I think
 ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v COLNUM_ID2=$COLNUM_ID2 \
 'NR>1 {
-  print "ID1_" $COLNUM_ID1 "_ID2_" $COLNUM_ID2
+  print ";ID1=" $COLNUM_ID1 ";ID2=" $COLNUM_ID2
 }' $SEQUENCING_METADATA | sort | uniq )
 
 # create a file to store index efficiency data
@@ -413,7 +413,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 		# updated 20150521; one step solution using awk; removes anything after the first space!
 		awk -F'[: ]' '{
 				if ( /^>/ )
-					print ">"$4":"$5":"$6":"$7"_ID1_'${CURRENT_ID1_NAME}'_";
+					print ">"$4":"$5":"$6":"$7";ID1='${CURRENT_ID1_NAME}';";
 				else
 					print $0
 		}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
@@ -427,7 +427,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 
 		awk '{
 				if ( /^>/ )
-					print $0"_ID1_'${CURRENT_ID1_NAME}'_";
+					print $0";ID1='${CURRENT_ID1_NAME}';";
 				else
 					print $0
 		}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
@@ -506,7 +506,7 @@ echo $(date +%Y-%m-%d\ %H:%M) "Identifying identical sequences... (python)"
 DEREP_FASTA="${CONCAT_DIR}"/derep.fasta
 DEREP_MAP="${CONCAT_DIR}"/derep.map
 python "$SCRIPT_DIR/scripts/dereplication/derep_fasta.py" \
-  "${PRIMER_REMOVAL_OUT}" 'ID1_' "${DEREP_FASTA}" "${DEREP_MAP}"
+  "${PRIMER_REMOVAL_OUT}" 'ID1=' "${DEREP_FASTA}" "${DEREP_MAP}"
 
 # check if duplicate fasta and duplicate table exist. (Might need to check size)
 if [[ ! -s "${DEREP_FASTA}" ]] ; then
