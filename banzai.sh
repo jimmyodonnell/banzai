@@ -497,7 +497,7 @@ done
 # END LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
 ################################################################################
 PRIMER_REM_ID1_ALL="${CONCAT_DIR}"/no_primer_byid1.fasta
-cat "${OUTPUT_DIR}"*/demult.fasta >> "${PRIMER_REM_ID1_ALL}"
+cat "${OUTPUT_DIR}"/*/demult.fasta >> "${PRIMER_REM_ID1_ALL}"
 
 ################################################################################
 # PRIMER REMOVAL
