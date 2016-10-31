@@ -429,7 +429,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 
 		awk -F'[: ]' '{
 				if ( /^>/ )
-					print ">"$4":"$5":"$6":"$7";ID1='${CURRENT_ID1_NAME}';";
+					print ">"$4":"$5":"$6":"$7";ID1='${CURRENT_ID1_NAME}'";
 				else
 					print $0
 		}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
@@ -443,7 +443,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 
 		awk '{
 				if ( /^>/ )
-					print $0";ID1='${CURRENT_ID1_NAME}';";
+					print $0";ID1='${CURRENT_ID1_NAME}'";
 				else
 					print $0
 		}' "${FILTERED_OUTPUT}" > "${FILTERED_RENAMED}"
@@ -474,7 +474,8 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	# DEMULTIPLEXING (awk)
 	################################################################################
   source "${SCRIPT_DIR}"/scripts/demultiplexing.sh
-	source "${SCRIPT_DIR}"/beta/demulti.sh -i "${DEMULTIPLEX_INPUT}" -s "${ID2_START}" -l "${ID2_LENGTH}"
+	source "${SCRIPT_DIR}"/beta/demulti.sh -i "${DEMULTIPLEX_INPUT}" \
+	  -s "${ID2_START}" -l "${ID2_LENGTH}" >> "${CONCAT_DIR}"/demult_exp.fasta
 	if [ "${HOARD}" = "NO" ]; then
 		rm "${DEMULTIPLEX_INPUT}"
 	fi
