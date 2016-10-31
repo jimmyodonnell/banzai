@@ -253,11 +253,12 @@ ID2_ALL=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
 ID2_ALL_RC=($( for i in "${ID2_ALL[@]}"; do revcom $i; done))
 
 # write file for translating demultiplexed output to samples
+SAMPLE_TRANS_FILE="${OUTPUT_DIR}"/sample_trans.tmp
 for (( i=0; i < "${#ID2_ALL[@]}"; i++ )); do
   printf "ID1=%s;ID2A=%s;ID2B=%s\tID1=%s;ID2=%s\tsample=%s\n" \
 	"${ID1_ALL[i]}" "${ID2_ALL[i]}" "${ID2_ALL_RC[i]}" \
 	"${ID1_ALL[i]}" "${ID2_ALL[i]}" \
-	"${SAMPLE_NAMES[i]}" >> "${OUTPUT_DIR}"/sample_trans.tmp
+	"${SAMPLE_NAMES[i]}" >> "${SAMPLE_TRANS_FILE}"
 done
 
 # create a file to store index efficiency data
