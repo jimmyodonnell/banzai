@@ -206,17 +206,17 @@ else
 fi
 
 ################################################################################
-# Read in primers and create reverse complements.
+# Read in primers
 ################################################################################
-PRIMER1=$(awk -F',' -v COLNUM=$PRIMER1_COLNUM \
-'NR==2 {
+PRIMER1=($(awk -F',' -v COLNUM=$PRIMER1_COLNUM \
+'NR > 1 {
 	print $COLNUM
-}' $SEQUENCING_METADATA)
+}' $SEQUENCING_METADATA | sort | uniq ))
 
-PRIMER2=$(awk -F',' -v COLNUM=$PRIMER2_COLNUM \
-'NR==2 {
+PRIMER2=($(awk -F',' -v COLNUM=$PRIMER2_COLNUM \
+'NR > 1 {
 	print $COLNUM
-}' $SEQUENCING_METADATA)
+}' $SEQUENCING_METADATA | sort | uniq ))
 
 if [[ -n "${PRIMER1}" && -n "${PRIMER2}" ]]; then
   echo 'Primers read from metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
@@ -239,7 +239,6 @@ LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
 
 # Unique samples are given by combining the primary and secondary indexes
-# TODO originally contained sort | uniq; this is unnecessary I think
 ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v COLNUM_ID2=$COLNUM_ID2 \
 'NR>1 {
   print ";ID1=" $COLNUM_ID1 ";ID2=" $COLNUM_ID2
@@ -403,10 +402,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	FILTERED_RENAMED="${FILTERED_OUTPUT%.*}"_renamed.fasta
 	if [ "${RENAME_READS}" = "YES" ]; then
 		echo $(date +%Y-%m-%d\ %H:%M) "Renaming reads in library" "${CURRENT_ID1_NAME}""..."
-		# TODO remove whitespace from sequence labels?
-		# sed 's/ /_/'
 
-		# updated 20150521; one step solution using awk; removes anything after the first space!
 		awk -F'[: ]' '{
 				if ( /^>/ )
 					print ">"$4":"$5":"$6":"$7";ID1='${CURRENT_ID1_NAME}';";
