@@ -476,6 +476,17 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	cat "${ID1_OUTPUT_DIR}"/demultiplexed/*/2_notags.fasta >> "${CONCAT_FILE}"
 	echo
 
+	################################################################################
+	# ID1 SPECIFIC PRIMER REMOVAL
+	################################################################################
+	ID1_PRIMER_REM="${ID1_OUTPUT_DIR}"/demult.fasta
+	cat "${ID1_OUTPUT_DIR}"/demultiplexed/*/2_notags.fasta >> "${ID1_PRIMER_REM}"
+	ID1_PRIMER_REMOVAL_OUT="${ID1_OUTPUT_DIR}"/no_primers.fasta
+	source "${SCRIPT_DIR}"/scripts/primer_removal.sh \
+	  "${ID1_PRIMER_REM}" "${ID1_PRIMER_REMOVAL_OUT}" \
+	  "${PRIMER1}"  "${PRIMER2}" \
+		"${PRIMER_MISMATCH_PROPORTION}"  "${LENGTH_ROI_HALF}"
+
 	if [ "${HOARD}" = "NO" ]; then
 		rm -rf "${ID1_OUTPUT_DIR}"
 	fi
@@ -485,6 +496,8 @@ done
 ################################################################################
 # END LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
 ################################################################################
+PRIMER_REM_ID1_ALL="${CONCAT_DIR}"/no_primer_byid1.fasta
+cat "${OUTPUT_DIR}"*/demult.fasta >> "${PRIMER_REM_ID1_ALL}"
 
 ################################################################################
 # PRIMER REMOVAL
