@@ -146,6 +146,9 @@ COL_NUM_ID1_SEQ=$( get_colnum "${COLNAME_ID1_SEQ}" "${SEQUENCING_METADATA}")
 # Secondary multiplex index sequences
 COLNUM_ID2=$( get_colnum "${COLNAME_ID2_SEQ}" "${SEQUENCING_METADATA}")
 
+# Secondary index sequence positions
+COLNUM_ID2_START=$( get_colnum "${COLNAME_ID2_START}" "${SEQUENCING_METADATA}")
+
 # Sample names
 COLNUM_SAMPLE=$( get_colnum "${COLNAME_SAMPLE_ID}" "${SEQUENCING_METADATA}")
 
@@ -191,6 +194,10 @@ ID2S=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
   'NR>1 {  print $COLNUM }' $SEQUENCING_METADATA |\
   sort | uniq))
 N_index_sequences="${#ID2S}"
+ID2_LENGTH=${#ID2S[0]}
+ID2_START=($(awk -F',' -v COLNUM=$COLNUM_ID2_START \
+  'NR>1 {  print $COLNUM }' $SEQUENCING_METADATA |\
+  sort | uniq))
 
 # check if number of indexes is greater than one:
 if [[ "${N_index_sequences}" -gt 1 ]]; then
@@ -467,6 +474,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	# DEMULTIPLEXING (awk)
 	################################################################################
   source "${SCRIPT_DIR}"/scripts/demultiplexing.sh
+	source "${SCRIPT_DIR}"/beta/demulti.sh -i "${DEMULTIPLEX_INPUT}" -s "${ID2_START}" -l "${ID2_LENGTH}"
 	if [ "${HOARD}" = "NO" ]; then
 		rm "${DEMULTIPLEX_INPUT}"
 	fi
