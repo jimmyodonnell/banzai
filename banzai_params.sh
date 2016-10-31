@@ -31,6 +31,8 @@ OUTPUT_PDF_DIR=""
 COLNAME_FILE1="file1"
 COLNAME_FILE2="file2"
 
+# MUST be unique for each row!
+COLNAME_SAMPLE_ID="sample_id"
 
 COLNAME_DNA_ID="dna_id"
 COLNAME_SAMPLE_TYPE="dna_source"

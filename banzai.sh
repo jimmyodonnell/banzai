@@ -236,7 +236,33 @@ LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v COLNUM_ID2=$COLNUM_ID2 \
 'NR>1 {
   print ";ID1=" $COLNUM_ID1 ";ID2=" $COLNUM_ID2
-}' $SEQUENCING_METADATA | sort | uniq )
+}' "${SEQUENCING_METADATA}" )
+
+SAMPLE_NAMES=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
+'NR>1 {
+	print $COLNUM
+}' "${SEQUENCING_METADATA}"
+
+
+ID1_ALL=($(awk -F',' -v COLNUM=$COLNUM_ID1 \
+'NR>1 {
+	print $COLNUM
+}' "${SEQUENCING_METADATA}"
+
+ID2_ALL=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
+'NR>1 {
+	print $COLNUM
+}' "${SEQUENCING_METADATA}"
+
+bothends=($(for i in ${indexes[@]}; do echo "ID2A="$i";ID2B="$(revcom $i); done))
+
+
+
+paste "${ID_COMBO}" "${ID2_rev}"
+
+awk -F, 'END{print NR}' "${SEQUENCING_METADATA}"
+
+exit
 
 # create a file to store index efficiency data
 INDEX_COUNT="${OUTPUT_DIR}"/index_count.txt
