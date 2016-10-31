@@ -157,6 +157,7 @@ FILE2_COLNUM=$( get_colnum "${COLNAME_FILE2}" "${SEQUENCING_METADATA}")
 
 # Library names
 COL_NUM_ID1=$( get_colnum "${COLNAME_ID1_NAME}" "${SEQUENCING_METADATA}")
+COL_NUM_ID1_SEQ=$( get_colnum "${COLNAME_ID1_SEQ}" "${SEQUENCING_METADATA}")
 
 # Secondary multiplex index sequences
 COLNUM_ID2=$( get_colnum "${COLNAME_ID2_SEQ}" "${SEQUENCING_METADATA}")
@@ -288,8 +289,8 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	# 	fi
 	# done
 
-  CURRENT_ID1=$( awk -F, '
-	/'"${CURRENT_FILE1}"'/ { print $6; }' "${SEQUENCING_METADATA}" |\
+  CURRENT_ID1_SEQ=$( awk -F, '
+	/'"${CURRENT_FILE1}"'/ { print $'"${COL_NUM_ID1_SEQ}"'; }' "${SEQUENCING_METADATA}" |\
 	sort | uniq )
 
   CURRENT_ID1_NAME=$( awk -F, '
