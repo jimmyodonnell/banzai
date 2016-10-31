@@ -13,22 +13,6 @@
 reading/writing wide format OTU/duplicate csv file takes an unreasonable amount of time (hours!).
 - TODO: incorporate/require data.table (dev version with fwrite)
 
-- TODO: make function for file checking/reporting/timestamping
-
-```sh
-timestamp () {
-  echo $(date +%Y-%m-%d\ %H:%M) "${0}"
-}
-
-filetest () {
-  if [[ -s "${1}" ]]; then
-    timestamp "The following file is empty or absent:"
-    echo "${1}"
-    echo "This is a critical file, so the script will exit."
-    exit
-  fi
-}
-```
 
 #### Annotation/blast
 TODO clean up blast results parsing.
