@@ -208,14 +208,14 @@ fi
 ################################################################################
 # Read in primers and create reverse complements.
 ################################################################################
-PRIMER1=$(awk -F',' -v PRIMER1_COL=$PRIMER1_COLNUM \
+PRIMER1=$(awk -F',' -v COLNUM=$PRIMER1_COLNUM \
 'NR==2 {
-	print $PRIMER1_COL
+	print $COLNUM
 }' $SEQUENCING_METADATA)
 
-PRIMER2=$(awk -F',' -v PRIMER2_COL=$PRIMER2_COLNUM \
+PRIMER2=$(awk -F',' -v COLNUM=$PRIMER2_COLNUM \
 'NR==2 {
-	print $PRIMER2_COL
+	print $COLNUM
 }' $SEQUENCING_METADATA)
 
 if [[ -n "${PRIMER1}" && -n "${PRIMER2}" ]]; then
