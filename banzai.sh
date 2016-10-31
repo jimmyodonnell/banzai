@@ -153,15 +153,13 @@ PRIMER2_COLNUM=$( get_colnum "${COLNAME_PRIMER2}" "${SEQUENCING_METADATA}")
 ################################################################################
 # CHECK FILES
 ################################################################################
-FILE1=($(awk -F',' -v FILE1_COL=$FILE1_COLNUM \
-	'NR>1 {print $FILE1_COL}' \
-$SEQUENCING_METADATA |\
-sort | uniq ))
+FILE1=($(awk -F',' -v COLNUM=$FILE1_COLNUM \
+  'NR>1 {  print $COLNUM }' $SEQUENCING_METADATA |\
+  sort | uniq))
 
-FILE2=($(awk -F',' -v FILE2_COL=$FILE2_COLNUM \
-	'NR>1 {print $FILE2_COL}' \
-$SEQUENCING_METADATA |\
-sort | uniq ))
+FILE2=($(awk -F',' -v COLNUM=$FILE2_COLNUM \
+  'NR>1 {print $COLNUM}' $SEQUENCING_METADATA |\
+  sort | uniq ))
 
 NFILE1="${#FILE1[@]}"
 NFILE2="${#FILE2[@]}"
@@ -186,11 +184,9 @@ fi
 ################################################################################
 # LOAD SECONDARY INDEXES
 ################################################################################
-ID2S=($(awk -F',' -v COLNUM_ID2=$COLNUM_ID2 \
-'NR>1 {
-	print $COLNUM_ID2
-}' $SEQUENCING_METADATA |\
-sort | uniq))
+ID2S=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
+  'NR>1 {  print $COLNUM }' $SEQUENCING_METADATA |\
+  sort | uniq))
 N_index_sequences="${#ID2S}"
 
 # check if number of indexes is greater than one:
@@ -209,14 +205,12 @@ fi
 # Read in primers
 ################################################################################
 PRIMER1=($(awk -F',' -v COLNUM=$PRIMER1_COLNUM \
-'NR > 1 {
-	print $COLNUM
-}' $SEQUENCING_METADATA | sort | uniq ))
+  'NR > 1 { print $COLNUM }' $SEQUENCING_METADATA |\
+  sort | uniq ))
 
 PRIMER2=($(awk -F',' -v COLNUM=$PRIMER2_COLNUM \
-'NR > 1 {
-	print $COLNUM
-}' $SEQUENCING_METADATA | sort | uniq ))
+  'NR > 1 { print $COLNUM }' $SEQUENCING_METADATA |\
+  sort | uniq ))
 
 if [[ -n "${PRIMER1}" && -n "${PRIMER2}" ]]; then
   echo 'Primers read from metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
