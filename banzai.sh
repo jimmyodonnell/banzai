@@ -146,6 +146,9 @@ COL_NUM_ID1_SEQ=$( get_colnum "${COLNAME_ID1_SEQ}" "${SEQUENCING_METADATA}")
 # Secondary multiplex index sequences
 COLNUM_ID2=$( get_colnum "${COLNAME_ID2_SEQ}" "${SEQUENCING_METADATA}")
 
+# Sample names
+COLNUM_SAMPLE=$( get_colnum "${COLNAME_SAMPLE_ID}" "${SEQUENCING_METADATA}")
+
 # Primers
 PRIMER1_COLNUM=$( get_colnum "${COLNAME_PRIMER1}" "${SEQUENCING_METADATA}")
 PRIMER2_COLNUM=$( get_colnum "${COLNAME_PRIMER2}" "${SEQUENCING_METADATA}")
@@ -238,31 +241,24 @@ ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v COLNUM_ID2=$COLNUM_ID2 \
   print ";ID1=" $COLNUM_ID1 ";ID2=" $COLNUM_ID2
 }' "${SEQUENCING_METADATA}" )
 
-SAMPLE_NAMES=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
-'NR>1 {
-	print $COLNUM
-}' "${SEQUENCING_METADATA}"
+SAMPLE_NAMES=($(awk -F',' -v COLNUM=$COLNUM_SAMPLE \
+  'NR>1 { print $COLNUM }' "${SEQUENCING_METADATA}" ))
 
-
-ID1_ALL=($(awk -F',' -v COLNUM=$COLNUM_ID1 \
-'NR>1 {
-	print $COLNUM
-}' "${SEQUENCING_METADATA}"
+ID1_ALL=($(awk -F',' -v COLNUM=$COL_NUM_ID1 \
+  'NR>1 { print $COLNUM }' "${SEQUENCING_METADATA}" ))
 
 ID2_ALL=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
-'NR>1 {
-	print $COLNUM
-}' "${SEQUENCING_METADATA}"
+  'NR>1 { print $COLNUM }' "${SEQUENCING_METADATA}" ))
 
-bothends=($(for i in ${indexes[@]}; do echo "ID2A="$i";ID2B="$(revcom $i); done))
+ID2_ALL_RC=($( for i in "${ID2_ALL[@]}"; do revcom $i; done))
 
-
-
-paste "${ID_COMBO}" "${ID2_rev}"
-
-awk -F, 'END{print NR}' "${SEQUENCING_METADATA}"
-
-exit
+# write file for translating demultiplexed output to samples
+for (( i=0; i < "${#ID2_ALL[@]}"; i++ )); do
+  printf "ID1=%s;ID2A=%s;ID2B=%s\tID1=%s;ID2=%s\tsample=%s\n" \
+	"${ID1_ALL[i]}" "${ID2_ALL[i]}" "${ID2_ALL_RC[i]}" \
+	"${ID1_ALL[i]}" "${ID2_ALL[i]}" \
+	"${SAMPLE_NAMES[i]}" >> "${OUTPUT_DIR}"/sample_trans.tmp
+done
 
 # create a file to store index efficiency data
 INDEX_COUNT="${OUTPUT_DIR}"/index_count.txt
