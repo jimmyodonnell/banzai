@@ -149,11 +149,14 @@ COLNUM_FILE2=$( get_colnum "${COLNAME_FILE2}" "${SEQUENCING_METADATA}")
 COLNUM_ID1=$( get_colnum "${COLNAME_ID1_NAME}" "${SEQUENCING_METADATA}")
 COLNUM_ID1_SEQ=$( get_colnum "${COLNAME_ID1_SEQ}" "${SEQUENCING_METADATA}")
 
-# Secondary multiplex index sequences
-COLNUM_ID2=$( get_colnum "${COLNAME_ID2_SEQ}" "${SEQUENCING_METADATA}")
+if [[ "${SECONDARY_INDEX}" == "YES" ]]; then
+	# Secondary multiplex index sequences
+	COLNUM_ID2=$( get_colnum "${COLNAME_ID2_SEQ}" "${SEQUENCING_METADATA}")
 
-# Secondary index sequence positions
-COLNUM_ID2_START=$( get_colnum "${COLNAME_ID2_START}" "${SEQUENCING_METADATA}")
+	# Secondary index sequence positions
+	COLNUM_ID2_START=$( get_colnum "${COLNAME_ID2_START}" "${SEQUENCING_METADATA}")
+
+fi
 
 # Sample names
 COLNUM_SAMPLE=$( get_colnum "${COLNAME_SAMPLE_ID}" "${SEQUENCING_METADATA}")
@@ -196,25 +199,29 @@ fi
 ################################################################################
 # LOAD SECONDARY INDEXES
 ################################################################################
-ID2S=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
-  'NR>1 {  print $COLNUM }' $SEQUENCING_METADATA |\
-  sort | uniq))
-N_index_sequences="${#ID2S}"
-ID2_LENGTH=${#ID2S[0]}
-ID2_START=($(awk -F',' -v COLNUM=$COLNUM_ID2_START \
-  'NR>1 {  print $COLNUM }' $SEQUENCING_METADATA |\
-  sort | uniq))
+if [[ "${SECONDARY_INDEX}" == "YES" ]]; then
 
-# check if number of indexes is greater than one:
-if [[ "${N_index_sequences}" -gt 1 ]]; then
-	echo "Secondary indexes read from sequencing metadata (""${N_index_sequences}"" total)"
-	echo
-else
-  echo
-  echo 'ERROR:' "${N_index_sequences}" 'index sequences found. There should probably be more than 1.'
-  echo
-  echo 'Aborting script.'
-	exit
+	ID2S=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
+	  'NR>1 {  print $COLNUM }' $SEQUENCING_METADATA |\
+	  sort | uniq))
+	N_index_sequences="${#ID2S}"
+	ID2_LENGTH=${#ID2S[0]}
+	ID2_START=($(awk -F',' -v COLNUM=$COLNUM_ID2_START \
+	  'NR>1 {  print $COLNUM }' $SEQUENCING_METADATA |\
+	  sort | uniq))
+
+	# check if number of indexes is greater than one:
+	if [[ "${N_index_sequences}" -gt 1 ]]; then
+		echo "Secondary indexes read from sequencing metadata (""${N_index_sequences}"" total)"
+		echo
+	else
+	  echo
+	  echo 'ERROR:' "${N_index_sequences}" 'index sequences found. There should probably be more than 1.'
+	  echo
+	  echo 'Aborting script.'
+		exit
+	fi
+
 fi
 
 ################################################################################
@@ -260,8 +267,10 @@ SAMPLE_NAMES=($(awk -F',' -v COLNUM=$COLNUM_SAMPLE \
 ID1_ALL=($(awk -F',' -v COLNUM=$COLNUM_ID1 \
   'NR>1 { print $COLNUM }' "${SEQUENCING_METADATA}" ))
 
-ID2_ALL=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
-  'NR>1 { print $COLNUM }' "${SEQUENCING_METADATA}" ))
+if [[ "${SECONDARY_INDEX}" == "YES" ]]; then
+  ID2_ALL=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
+    'NR>1 { print $COLNUM }' "${SEQUENCING_METADATA}" ))
+fi
 
 ID2_ALL_RC=($( for i in "${ID2_ALL[@]}"; do revcom $i; done))
 
@@ -479,16 +488,20 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	################################################################################
 	# DEMULTIPLEXING (awk)
 	################################################################################
-  CURRENT_ID1_DEMULT="${ID1_OUTPUT_DIR}"/demult.fasta
-	source "${SCRIPT_DIR}"/beta/demulti.sh -i "${DEMULTIPLEX_INPUT}" \
-	  -s "${ID2_START}" -l "${ID2_LENGTH}" >> "${CURRENT_ID1_DEMULT}"
-	if [ "${HOARD}" = "NO" ]; then
-		rm "${DEMULTIPLEX_INPUT}"
-	fi
+	if [[ "${SECONDARY_INDEX}" == "YES" ]]; then
+	  CURRENT_ID1_DEMULT="${ID1_OUTPUT_DIR}"/demult.fasta
+		source "${SCRIPT_DIR}"/beta/demulti.sh -i "${DEMULTIPLEX_INPUT}" \
+		  -s "${ID2_START}" -l "${ID2_LENGTH}" >> "${CURRENT_ID1_DEMULT}"
+		if [ "${HOARD}" = "NO" ]; then
+			rm "${DEMULTIPLEX_INPUT}"
+		fi
 
-	echo $(date +%Y-%m-%d\ %H:%M) "Concatenating fasta files..."
-	cat "${ID1_OUTPUT_DIR}"/demult.fasta >> "${CONCAT_FILE}"
-	echo
+		echo $(date +%Y-%m-%d\ %H:%M) "Concatenating fasta files..."
+		cat "${ID1_OUTPUT_DIR}"/demult.fasta >> "${CONCAT_FILE}"
+		echo
+	else
+		cat "${DEMULTIPLEX_INPUT}" >> "${CONCAT_FILE}"
+  fi
 
 	################################################################################
 	# ID1 SPECIFIC PRIMER REMOVAL
@@ -511,7 +524,7 @@ done
 # END LOOP TO PERFORM LIBRARY-LEVEL ACTIONS
 ################################################################################
 PRIMER_REM_ID1_ALL="${CONCAT_DIR}"/no_primer_byid1.fasta
-cat "${OUTPUT_DIR}"/*/demult.fasta >> "${PRIMER_REM_ID1_ALL}"
+# cat "${OUTPUT_DIR}"/*/demult.fasta >> "${PRIMER_REM_ID1_ALL}"
 
 ################################################################################
 # PRIMER REMOVAL

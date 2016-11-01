@@ -119,12 +119,15 @@ HOMOPOLYMER_MAX="10"
 ################################################################################
 # DEMULTIPLEXING
 ################################################################################
+
+# Do the reads contain index sequences which identifies their sample of origin?
+SECONDARY_INDEX="YES"
+
 # Specify the nucleotide sequences that differentiate multiplexed samples
 # (sometimes, confusingly referred to as "tags" or "barcodes")
 # these are the secondary index -- the primary index added with the sequencing adapters should not be in the sequence data
 # You can grab these from the file specified above (SEQUENCING_METADATA) by specifying the column name of index sequences.
 COLNAME_ID2_SEQ="sec_index_seq"
-
 
 # How many nucleotides pad the 5' end of the tag sequence?
 # TODO build in flexibility (this number is unused right now)
