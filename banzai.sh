@@ -549,8 +549,8 @@ fi
 
 DUPLICATE_TABLE="${CONCAT_DIR}"/duplicate_table.csv
 
-Rscript "${SCRIPT_DIR}"/scripts/dereplication/long_to_wide.R \
-  "${DEREP_MAP}" "${DUPLICATE_TABLE}" "${remove_singletons}"
+# Rscript "${SCRIPT_DIR}"/scripts/dereplication/long_to_wide.R \
+#   "${DEREP_MAP}" "${DUPLICATE_TABLE}" "${remove_singletons}"
 
 # check if duplicate table exists. (Might need to check size)
 if [[ ! -s "${DUPLICATE_TABLE}" ]] ; then
@@ -702,8 +702,8 @@ echo -e '\t0.25 oz\tsimple syrup'
 echo -e '\tShake, strain, and enjoy!' '\xf0\x9f\x8d\xb9\x0a''\n'
 
 if [[ "${1}" == "test" ]]; then
-  source 	"${SCRIPT_DIR}"/test/test_duptab.sh
-  test_duptab "${PARENT_DIR}"/duptab_expected.csv "${OUTPUT_DIR}"
+  source 	"${SCRIPT_DIR}"/test/test_uniqmap.sh
+  test_uniqmap "${PARENT_DIR}"/derep_expected.map "${OUTPUT_DIR}"
 	if [[ "$?" < 1 ]]; then
 		echo "banzai passes test"
 	fi
