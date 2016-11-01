@@ -142,8 +142,8 @@ echo "Expecting" "${N_SAMPLES}" "samples total."
 echo
 
 # Filnames
-FILE1_COLNUM=$( get_colnum "${COLNAME_FILE1}" "${SEQUENCING_METADATA}")
-FILE2_COLNUM=$( get_colnum "${COLNAME_FILE2}" "${SEQUENCING_METADATA}")
+COLNUM_FILE1=$( get_colnum "${COLNAME_FILE1}" "${SEQUENCING_METADATA}")
+COLNUM_FILE2=$( get_colnum "${COLNAME_FILE2}" "${SEQUENCING_METADATA}")
 
 # Library names
 COLNUM_ID1=$( get_colnum "${COLNAME_ID1_NAME}" "${SEQUENCING_METADATA}")
@@ -165,11 +165,11 @@ COLNUM_PRIMER2=$( get_colnum "${COLNAME_PRIMER2}" "${SEQUENCING_METADATA}")
 ################################################################################
 # CHECK FILES
 ################################################################################
-FILE1=($(awk -F',' -v COLNUM=$FILE1_COLNUM \
+FILE1=($(awk -F',' -v COLNUM=$COLNUM_FILE1 \
   'NR>1 {  print $COLNUM }' $SEQUENCING_METADATA |\
   sort | uniq))
 
-FILE2=($(awk -F',' -v COLNUM=$FILE2_COLNUM \
+FILE2=($(awk -F',' -v COLNUM=$COLNUM_FILE2 \
   'NR>1 {print $COLNUM}' $SEQUENCING_METADATA |\
   sort | uniq ))
 
@@ -180,7 +180,7 @@ if [ "${NFILE1}" != "${NFILE2}" ]; then
 fi
 
 if [[ -n "${FILE1}" && -n "${FILE2}" ]]; then
-  echo 'Files read from metadata columns' "${FILE1_COLNUM}" 'and' "${FILE2_COLNUM}"
+  echo 'Files read from metadata columns' "${COLNUM_FILE1}" 'and' "${COLNUM_FILE2}"
   echo 'File names:'
 	for (( i=0; i < "${NFILE1}"; ++i)); do
 		printf '%s\t%s\n' "${FILE1[i]}" "${FILE2[i]}"
@@ -188,7 +188,7 @@ if [[ -n "${FILE1}" && -n "${FILE2}" ]]; then
 	echo
 else
   echo 'ERROR:' 'At least one file is not valid'
-  echo 'Looked in metadata columns' "${FILE1_COLNUM}" 'and' "${FILE2_COLNUM}"
+  echo 'Looked in metadata columns' "${COLNUM_FILE1}" 'and' "${COLNUM_FILE2}"
   echo 'Aborting script'
   exit
 fi
