@@ -553,7 +553,7 @@ DUPLICATE_TABLE="${CONCAT_DIR}"/duplicate_table.csv
 #   "${DEREP_MAP}" "${DUPLICATE_TABLE}" "${remove_singletons}"
 
 # check if duplicate table exists. (Might need to check size)
-if [[ ! -s "${DUPLICATE_TABLE}" ]] ; then
+if [[ ! -s "${DEREP_MAP}" ]] ; then
     echo 'There was a problem generating the duplicate table. It is empty or absent.'
     echo 'Aborting script.'
     exit
@@ -638,6 +638,7 @@ else
 	# OTU_table="${dir_out}"/OTU_table.csv
 
 	# Convert duplicate table to OTU table using R script (arguments: (1) duplicate table, (2) dup to otu table, (3) otu table path
+  if "${FIX_DUP_TO_OTU}"; then
 	Rscript "$SCRIPT_DIR/scripts/dup_to_OTU_table.R" "${DUPLICATE_TABLE}" "${dup_otu_map}" "${OTU_table}"
 
 	# check if OTU table and OTU fasta exist (and/or are of size gt 1?)
@@ -651,6 +652,7 @@ else
 	    echo 'Aborting script.'
 	    exit
 	fi
+  fi
 
 fi
 

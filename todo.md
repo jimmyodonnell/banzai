@@ -1,6 +1,7 @@
 # TODOs
 
 #### General
+- TODO: FIX_DUP_TO_OTU (for long format of both)
 - TODO: check for input files
 - TODO: check for filename with .gz extension
 - TODO: decompress if .gz
