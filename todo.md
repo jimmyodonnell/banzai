@@ -1,11 +1,7 @@
 # TODOs
 
 #### General
-- TODO: if "${SECONDARY_INDEXED}" == "YES"; (check for relevant columns; do demult) else skip
 - TODO: FIX_DUP_TO_OTU (for long format of both)
-- TODO: check for input files
-- TODO: check for filename with .gz extension
-- TODO: decompress if .gz
 - TODO: add checks for installation of R packages (replace crap in  analyses_prelim.R)
 - TODO: Put sample ID start ('ID1_') to variable
 - TODO: fix subset to not decompress and recompress entire files

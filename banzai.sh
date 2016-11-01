@@ -299,36 +299,40 @@ CONCAT_FILE="${CONCAT_DIR}"/demult_concat.fasta
 for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 
 	# Identify the forward and reverse fastq files.
-	CURRENT_FILE1="${FILE1[i]}"
-	CURRENT_FILE2="${FILE2[i]}"
-
-	READ1=$( find "${PARENT_DIR}" -name "${CURRENT_FILE1}" )
-	READ2=$( find "${PARENT_DIR}" -name "${CURRENT_FILE2}" )
+	CURRENT_FILE[0]="${FILE1[i]}"
+	CURRENT_FILE[1]="${FILE2[i]}"
 
 	# PEAR v0.9.6 does not correctly merge .gz files.
 	# Look through files and decompress if necessary.
-	# for myfile in "${CURRENT_FILE1}" "${CURRENT_FILE2}"; do
-	# 	if [[ "${myfile}" =~ \.gz$ ]]; then
-	# 		echo $(date +%Y-%m-%d\ %H:%M) "decompressing "${myfile}""
-	# 		"${ZIPPER}" -d "${myfile}"
-	# 	fi
-	# done
+	for j in 0 1 ; do
+	  FILEPATH=$( find "${PARENT_DIR}" -name "${CURRENT_FILE[j]}"*  )
+		if file "${FILEPATH}" | grep -q gzip ; then
+			echo $(date +%Y-%m-%d\ %H:%M) "decompressing "${FILEPATH}""
+			"${ZIPPER}" -d "${FILEPATH}"
+			READ[j]=$( find "${PARENT_DIR}" -name "${CURRENT_FILE[j]}"*  )
+		else
+			READ[j]="${FILEPATH}"
+		fi
+  done
 
-	# for i in "${READ1}" "${READ2}"; do
-	# 	if [[ ! -s "${i}" ]] ; then
-	# 	    echo 'Could not find the raw reads file! Looked here:'
-	# 			echo "${i}"
-	# 	    echo 'Aborting script.'
-	# 	    exit
-	# 	fi
-  # done
+	READ1="${READ[0]}"
+	READ2="${READ[1]}"
+
+	for j in "${READ1}" "${READ2}"; do
+		if [[ ! -s "${j}" ]] ; then
+		    echo 'Could not find the raw reads file! Looked here:'
+				echo "${j}"
+		    echo 'Aborting script.'
+		    exit
+		fi
+  done
 
   CURRENT_ID1_SEQ=$( awk -F, '
-	/'"${CURRENT_FILE1}"'/ { print $'"${COLNUM_ID1_SEQ}"'; }' "${SEQUENCING_METADATA}" |\
+	/'"${CURRENT_FILE[0]}"'/ { print $'"${COLNUM_ID1_SEQ}"'; }' "${SEQUENCING_METADATA}" |\
 	sort | uniq )
 
   CURRENT_ID1_NAME=$( awk -F, '
-	/'"${CURRENT_FILE1}"'/ { print $'"${COLNUM_ID1}"'; }' "${SEQUENCING_METADATA}" |\
+	/'"${CURRENT_FILE[0]}"'/ { print $'"${COLNUM_ID1}"'; }' "${SEQUENCING_METADATA}" |\
 	sort | uniq )
 
 	ID1_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_ID1_NAME}
