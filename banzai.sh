@@ -473,26 +473,26 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	################################################################################
 	# DEMULTIPLEXING (awk)
 	################################################################################
-  source "${SCRIPT_DIR}"/scripts/demultiplexing.sh
+  CURRENT_ID1_DEMULT="${ID1_OUTPUT_DIR}"/demult.fasta
 	source "${SCRIPT_DIR}"/beta/demulti.sh -i "${DEMULTIPLEX_INPUT}" \
-	  -s "${ID2_START}" -l "${ID2_LENGTH}" >> "${CONCAT_DIR}"/demult_exp.fasta
+	  -s "${ID2_START}" -l "${ID2_LENGTH}" >> "${CURRENT_ID1_DEMULT}"
 	if [ "${HOARD}" = "NO" ]; then
 		rm "${DEMULTIPLEX_INPUT}"
 	fi
 	echo
 
 	echo $(date +%Y-%m-%d\ %H:%M) "Concatenating fasta files..."
-	cat "${ID1_OUTPUT_DIR}"/demultiplexed/*/2_notags.fasta >> "${CONCAT_FILE}"
+	cat "${ID1_OUTPUT_DIR}"/demult.fasta >> "${CONCAT_FILE}"
 	echo
 
 	################################################################################
 	# ID1 SPECIFIC PRIMER REMOVAL
 	################################################################################
-	ID1_PRIMER_REM="${ID1_OUTPUT_DIR}"/demult.fasta
-	cat "${ID1_OUTPUT_DIR}"/demultiplexed/*/2_notags.fasta >> "${ID1_PRIMER_REM}"
+	# ID1_PRIMER_REM="${ID1_OUTPUT_DIR}"/demult.fasta
+	# cat "${ID1_OUTPUT_DIR}"/demultiplexed/*/2_notags.fasta >> "${ID1_PRIMER_REM}"
 	ID1_PRIMER_REMOVAL_OUT="${ID1_OUTPUT_DIR}"/no_primers.fasta
 	source "${SCRIPT_DIR}"/scripts/primer_removal.sh \
-	  "${ID1_PRIMER_REM}" "${ID1_PRIMER_REMOVAL_OUT}" \
+	  "${CURRENT_ID1_DEMULT}" "${ID1_PRIMER_REMOVAL_OUT}" \
 	  "${PRIMER1}"  "${PRIMER2}" \
 		"${PRIMER_MISMATCH_PROPORTION}"  "${LENGTH_ROI_HALF}"
 

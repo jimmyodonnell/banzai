@@ -9,6 +9,22 @@
 - TODO: Put sample ID start ('ID1_') to variable
 - TODO: fix subset to not decompress and recompress entire files
 
+- TODO: to clean the demultiplexed file:
+
+```sh
+awk 'FNR==NR{a[$1]=$2;next} {for (i in a) sub(i, a[i]); print}' \
+  "${SAMPLE_TRANS_FILE}" "${CONCAT_FILE}" |\
+  sed -e '/ID2B=/{N;d;}' > "${CONCAT_DIR}"/demult_samp.fasta
+
+awk 'FNR==NR{a[$1]=$2;next} {for (i in a) sub(i, a[i]); print}' \
+  sample_trans.tmp all_lib/duplicate_table.csv |\
+  sed -e '/ID2B=/{N;d;}' > all_lib/duplicate_tableE.csv
+
+awk 'FNR==NR{a[$1]=$2;next} {for (i in a) sub(i, a[i]); print}' \
+  sample_trans.tmp all_lib/derep.map |\
+  sed -e '/ID2B=/{N;d;}' > all_lib/derepE.map
+```
+
 - note: would be good to use only adapter/primary index SEQUENCES (not names); but I have now encountered Illumina data where this is neither in the read headers OR the filenames. Bummer.
 
 reading/writing wide format OTU/duplicate csv file takes an unreasonable amount of time (hours!).
