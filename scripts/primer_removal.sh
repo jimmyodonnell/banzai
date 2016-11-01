@@ -69,23 +69,6 @@ wait
 
 wait
 
-# check for cutadapt/primer removal success.
-if [[ ! -s "${primerR1_removed}" ]]; then
-	echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
-	echo "${primerR1_removed}"
-	echo 'Aborting script'
-	exit
-fi
-# check for cutadapt/primer removal success.
-if [[ ! -s "${primerR2_removed}" ]]; then
-	echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
-	echo "${primerR2_removed}"
-	echo 'Aborting script'
-	exit
-fi
-
-echo
-
 # Reverse-complement the sequences in which the RC of primer 1 was found on the right side
 echo $(date +%Y-%m-%d\ %H:%M) "Correcting sequence orientation..."
 seqtk seq -r "${primerR1_removed}" > "${primerR1_removedRC}"
