@@ -1,6 +1,7 @@
 # TODOs
 
 #### General
+- TODO: if "${SECONDARY_INDEXED}" == "YES"; (check for relevant columns; do demult) else skip
 - TODO: FIX_DUP_TO_OTU (for long format of both)
 - TODO: check for input files
 - TODO: check for filename with .gz extension
