@@ -134,6 +134,12 @@ cp "${param_file}" "${OUTPUT_DIR}"/analysis_parameters.txt
 ################################################################################
 # READ METADATA
 ################################################################################
+# report metadata dimensions
+METADATA_DIM=($( awk -F, 'END{print NR, NF}' "${SEQUENCING_METADATA}" ))
+echo "Metadata has" "${METADATA_DIM[0]}" "rows and" "${METADATA_DIM[1]}" "columns including header."
+N_SAMPLES=$( echo "${METADATA_DIM[0]}" - 1 | bc )
+echo "Expecting" "${N_SAMPLES}" "samples total."
+echo
 
 # Filnames
 FILE1_COLNUM=$( get_colnum "${COLNAME_FILE1}" "${SEQUENCING_METADATA}")
