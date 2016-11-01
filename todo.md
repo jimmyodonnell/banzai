@@ -1,7 +1,6 @@
 # TODOs
 
 #### General
-- TODO: clean up COL NUM variables (COLNUM_ID2, COL_NUM_ID1, PRIMER1_COLNUM, &c)
 - TODO: check for input files
 - TODO: check for filename with .gz extension
 - TODO: decompress if .gz

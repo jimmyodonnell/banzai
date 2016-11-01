@@ -140,8 +140,8 @@ FILE1_COLNUM=$( get_colnum "${COLNAME_FILE1}" "${SEQUENCING_METADATA}")
 FILE2_COLNUM=$( get_colnum "${COLNAME_FILE2}" "${SEQUENCING_METADATA}")
 
 # Library names
-COL_NUM_ID1=$( get_colnum "${COLNAME_ID1_NAME}" "${SEQUENCING_METADATA}")
-COL_NUM_ID1_SEQ=$( get_colnum "${COLNAME_ID1_SEQ}" "${SEQUENCING_METADATA}")
+COLNUM_ID1=$( get_colnum "${COLNAME_ID1_NAME}" "${SEQUENCING_METADATA}")
+COLNUM_ID1_SEQ=$( get_colnum "${COLNAME_ID1_SEQ}" "${SEQUENCING_METADATA}")
 
 # Secondary multiplex index sequences
 COLNUM_ID2=$( get_colnum "${COLNAME_ID2_SEQ}" "${SEQUENCING_METADATA}")
@@ -153,8 +153,8 @@ COLNUM_ID2_START=$( get_colnum "${COLNAME_ID2_START}" "${SEQUENCING_METADATA}")
 COLNUM_SAMPLE=$( get_colnum "${COLNAME_SAMPLE_ID}" "${SEQUENCING_METADATA}")
 
 # Primers
-PRIMER1_COLNUM=$( get_colnum "${COLNAME_PRIMER1}" "${SEQUENCING_METADATA}")
-PRIMER2_COLNUM=$( get_colnum "${COLNAME_PRIMER2}" "${SEQUENCING_METADATA}")
+COLNUM_PRIMER1=$( get_colnum "${COLNAME_PRIMER1}" "${SEQUENCING_METADATA}")
+COLNUM_PRIMER2=$( get_colnum "${COLNAME_PRIMER2}" "${SEQUENCING_METADATA}")
 
 ################################################################################
 # CHECK FILES
@@ -214,21 +214,21 @@ fi
 ################################################################################
 # Read in primers
 ################################################################################
-PRIMER1=($(awk -F',' -v COLNUM=$PRIMER1_COLNUM \
+PRIMER1=($(awk -F',' -v COLNUM=$COLNUM_PRIMER1 \
   'NR > 1 { print $COLNUM }' $SEQUENCING_METADATA |\
   sort | uniq ))
 
-PRIMER2=($(awk -F',' -v COLNUM=$PRIMER2_COLNUM \
+PRIMER2=($(awk -F',' -v COLNUM=$COLNUM_PRIMER2 \
   'NR > 1 { print $COLNUM }' $SEQUENCING_METADATA |\
   sort | uniq ))
 
 if [[ -n "${PRIMER1}" && -n "${PRIMER2}" ]]; then
-  echo 'Primers read from metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
+  echo 'Primers read from metadata columns' "${COLNUM_PRIMER1}" 'and' "${COLNUM_PRIMER2}"
   echo 'Primer sequences:' "${PRIMER1}" "${PRIMER2}"
 	echo
 else
   echo 'ERROR:' 'At least one primer is not valid'
-  echo 'Looked in metadata columns' "${PRIMER1_COLNUM}" 'and' "${PRIMER2_COLNUM}"
+  echo 'Looked in metadata columns' "${COLNUM_PRIMER1}" 'and' "${COLNUM_PRIMER2}"
   echo 'Aborting script'
   exit
 fi
@@ -243,15 +243,15 @@ LENGTH_ROI_HALF=$(( $LENGTH_ROI / 2 ))
 
 
 # Unique samples are given by combining the primary and secondary indexes
-ID_COMBO=$( awk -F',' -v COLNUM_ID1=$COL_NUM_ID1 -v COLNUM_ID2=$COLNUM_ID2 \
+ID_COMBO=$( awk -F',' -v COLNUM1=$COLNUM_ID1 -v COLNUM2=$COLNUM_ID2 \
 'NR>1 {
-  print ";ID1=" $COLNUM_ID1 ";ID2=" $COLNUM_ID2
+  print ";ID1=" $COLNUM1 ";ID2=" $COLNUM2
 }' "${SEQUENCING_METADATA}" )
 
 SAMPLE_NAMES=($(awk -F',' -v COLNUM=$COLNUM_SAMPLE \
   'NR>1 { print $COLNUM }' "${SEQUENCING_METADATA}" ))
 
-ID1_ALL=($(awk -F',' -v COLNUM=$COL_NUM_ID1 \
+ID1_ALL=($(awk -F',' -v COLNUM=$COLNUM_ID1 \
   'NR>1 { print $COLNUM }' "${SEQUENCING_METADATA}" ))
 
 ID2_ALL=($(awk -F',' -v COLNUM=$COLNUM_ID2 \
@@ -309,11 +309,11 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
   # done
 
   CURRENT_ID1_SEQ=$( awk -F, '
-	/'"${CURRENT_FILE1}"'/ { print $'"${COL_NUM_ID1_SEQ}"'; }' "${SEQUENCING_METADATA}" |\
+	/'"${CURRENT_FILE1}"'/ { print $'"${COLNUM_ID1_SEQ}"'; }' "${SEQUENCING_METADATA}" |\
 	sort | uniq )
 
   CURRENT_ID1_NAME=$( awk -F, '
-	/'"${CURRENT_FILE1}"'/ { print $'"${COL_NUM_ID1}"'; }' "${SEQUENCING_METADATA}" |\
+	/'"${CURRENT_FILE1}"'/ { print $'"${COLNUM_ID1}"'; }' "${SEQUENCING_METADATA}" |\
 	sort | uniq )
 
 	ID1_OUTPUT_DIR="${OUTPUT_DIR}"/${CURRENT_ID1_NAME}
