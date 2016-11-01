@@ -51,22 +51,6 @@ echo $(date +%Y-%m-%d\ %H:%M) "Beginning primer removal..."
 
 wait
 
-
-# check for cutadapt/primer removal success.
-if [[ ! -s "${primerL1_removed}" ]]; then
-  echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
-	echo "${primerL1_removed}"
-  echo 'Aborting script'
-  exit
-fi
-# check for cutadapt/primer removal success.
-if [[ ! -s "${primerL2_removed}" ]]; then
-  echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
-	echo "${primerL2_removed}"
-  echo 'Aborting script'
-  exit
-fi
-
 # Remove the reverse complement of primer 1 from the right side of sequences
 ( cutadapt \
 	-a "${PRIMER2RC}"$ \
@@ -123,12 +107,3 @@ else
   echo $(date +%Y-%m-%d\ %H:%M) "Primer removal files deleted."
 	echo
 fi
-
-# check that it worked (derep input / no primers)
-if [[ ! -s "${NO_PRIMERS}" ]] ; then
-    echo 'ERROR: Input file for dereplication is empty or absent.'
-    echo 'This will cause problems for all remaining steps, so script will exit.'
-    exit
-fi
-
-echo

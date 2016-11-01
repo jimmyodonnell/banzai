@@ -485,7 +485,6 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	if [ "${HOARD}" = "NO" ]; then
 		rm "${DEMULTIPLEX_INPUT}"
 	fi
-	echo
 
 	echo $(date +%Y-%m-%d\ %H:%M) "Concatenating fasta files..."
 	cat "${ID1_OUTPUT_DIR}"/demult.fasta >> "${CONCAT_FILE}"
@@ -497,10 +496,10 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	# ID1_PRIMER_REM="${ID1_OUTPUT_DIR}"/demult.fasta
 	# cat "${ID1_OUTPUT_DIR}"/demultiplexed/*/2_notags.fasta >> "${ID1_PRIMER_REM}"
 	ID1_PRIMER_REMOVAL_OUT="${ID1_OUTPUT_DIR}"/no_primers.fasta
-	source "${SCRIPT_DIR}"/scripts/primer_removal.sh \
-	  "${CURRENT_ID1_DEMULT}" "${ID1_PRIMER_REMOVAL_OUT}" \
-	  "${PRIMER1}"  "${PRIMER2}" \
-		"${PRIMER_MISMATCH_PROPORTION}"  "${LENGTH_ROI_HALF}"
+	# source "${SCRIPT_DIR}"/scripts/primer_removal.sh \
+	#   "${CURRENT_ID1_DEMULT}" "${ID1_PRIMER_REMOVAL_OUT}" \
+	#   "${PRIMER1}"  "${PRIMER2}" \
+	# 	"${PRIMER_MISMATCH_PROPORTION}"  "${LENGTH_ROI_HALF}"
 
 	if [ "${HOARD}" = "NO" ]; then
 		rm -rf "${ID1_OUTPUT_DIR}"
@@ -522,6 +521,15 @@ source "${SCRIPT_DIR}"/scripts/primer_removal.sh \
   "${CONCAT_FILE}" "${PRIMER_REMOVAL_OUT}" \
   "${PRIMER1}"  "${PRIMER2}" \
 	"${PRIMER_MISMATCH_PROPORTION}"  "${LENGTH_ROI_HALF}"
+
+# check for cutadapt/primer removal success.
+if [[ ! -s "${PRIMER_REMOVAL_OUT}" ]]; then
+  echo 'ERROR: cutadapt did not process reads correctly. This file is empty or absent:'
+	echo "${PRIMER_REMOVAL_OUT}"
+  echo 'Aborting script'
+	echo
+  exit
+fi
 
 ################################################################################
 # CONSOLIDATE IDENTICAL SEQUENCES (DEREPLICATION)
