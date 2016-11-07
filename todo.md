@@ -1,6 +1,7 @@
 # TODOs
 
 #### General
+- TODO: Report software versions in summary
 - TODO: FIX_DUP_TO_OTU (for long format of both)
 - TODO: add checks for installation of R packages (replace crap in  analyses_prelim.R)
 - TODO: Put sample ID start ('ID1_') to variable
