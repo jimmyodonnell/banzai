@@ -1,13 +1,19 @@
 Bioinformatics Summary:
 
-pear_version=$(pear --help | grep 'PEAR v' | awk '{ print $2 }')
-vsearch_version=$(vsearch --version | head -1 | awk '{ print $2 }')
-cutadapt_version=$(cutadapt --version)
-
+v_pear=$(pear --help | grep 'PEAR v' | awk '{ print $2 }')
+v_vsearch=$( vsearch --version 2>&1 | head -1 )
+v_cutadapt=$(cutadapt --version)
+v_R=$(Rscript <( echo 'message(R.version.string)' ) 2>&1 )
+v_swarm=$( swarm --version 2>&1 | head -n 1 )
+v_python=$( python --version 2>&1 )
+v_awk=$( awk --version )
+v_blastn=$( blastn -version )
+v_blastdb=$( blastdbcmd -db nt -info | head -n 4 )
+# R package versions: packageVersion("gdm")
 
 SEQUENCING RUN
 ==============
-The sequencing run consisted of X libraries distinguished by ligation index sequence, each of which contained (min, mean, max?) samples distinguished by primer index sequence. 
+The sequencing run consisted of X libraries distinguished by ligation index sequence, each of which contained (min, mean, max?) samples distinguished by primer index sequence.
 
 
 
@@ -15,12 +21,12 @@ The sequencing run consisted of X libraries distinguished by ligation index sequ
 
 After sequences were demultiplexed by the sequencing facility on the basis of the ligated (library) index, we merged forward and reverse paired-end reads and performed quality control using PEAR "${pear_version}" \cite{Zhang2014}).
 
-Reads were discarded if more than "$UNCALLEDMAX" of its bases were uncalled, 
+Reads were discarded if more than "$UNCALLEDMAX" of its bases were uncalled,
 
-If a read contained two consecutive base calls with quality scores less than "$Quality_Threshold" (i.e. probability of incorrect base call = XXX), these bases and all subsequent bases were removed from the read before merging. 
+If a read contained two consecutive base calls with quality scores less than "$Quality_Threshold" (i.e. probability of incorrect base call = XXX), these bases and all subsequent bases were removed from the read before merging.
 
 
-Read alignments were scored using the 
+Read alignments were scored using the
 if [ "$SCORING" == 2 ] then;
 	echo "assembly scoring method, using +1 for match and -1 for mismatch, multiplied by base quality scores."
 fi
@@ -28,7 +34,7 @@ if [ "$SCORING" == 1 ] then;
 	echo "observed expected alignment scores with +1 for match and -1 for mismatch."
 fi
 
-Merged reads were assessed for statistical significance using 
+Merged reads were assessed for statistical significance using
 if [ "$TEST" == 1 ] then;
 	echo "observed expected alignment scores"
 fi
@@ -39,14 +45,14 @@ fi
 and merged reads with a p-value greater than $PVALUE were discarded
 
 
-Forward and reverse reads were merged using PEAR v0.9.4 \cite{Zhang2014} and discarded if more than 0.01 of the bases were uncalled. If a read contained two consecutive base calls with quality scores less than 15 (i.e. probability of incorrect base call = 0.0316), these bases and all subsequent bases were removed from the read. 
+Forward and reverse reads were merged using PEAR v0.9.4 \cite{Zhang2014} and discarded if more than 0.01 of the bases were uncalled. If a read contained two consecutive base calls with quality scores less than 15 (i.e. probability of incorrect base call = 0.0316), these bases and all subsequent bases were removed from the read.
 
-Read pairs for which the probability of matching by chance alone exceeded 0.01 were not assembled and omitted from the analysis. 
+Read pairs for which the probability of matching by chance alone exceeded 0.01 were not assembled and omitted from the analysis.
 
 Assembled reads were discarded if assembled sequences were not between 50 and 168 bp long, or if reads did not overlap by at least 100 bp.
 
 
-Merged reads were discarded if the sum of the per-base error probabilities was greater than 0.5 (``expected errors'' as defined by Edgar \cite{2010} and implemented in vsearch \cite{torognes2016https://github.com/torognes/vsearch}). Sequences were demultiplexed on the basis of the 6bp index sequence at base positions 4-9 at both ends using the programming language AWK. Primer sequences were removed using cutadapt version $(cutadapt --version) \cite{Martin2011}, allowing for 2 mismatches in the primer sequence. To speed up subsequent clustering, identical sequences were consolidated in python. Singleton sequences were removed. 
+Merged reads were discarded if the sum of the per-base error probabilities was greater than 0.5 (``expected errors'' as defined by Edgar \cite{2010} and implemented in vsearch \cite{torognes2016https://github.com/torognes/vsearch}). Sequences were demultiplexed on the basis of the 6bp index sequence at base positions 4-9 at both ends using the programming language AWK. Primer sequences were removed using cutadapt version $(cutadapt --version) \cite{Martin2011}, allowing for 2 mismatches in the primer sequence. To speed up subsequent clustering, identical sequences were consolidated in python. Singleton sequences were removed.
 
 
 We assessed whether each unique sequence was likely to be an artefact of the PCR (chimera) using the de novo chimera detection algorithm described by Edgar \cite{} and implemented by vsearch $(vsearch_version).
@@ -68,11 +74,9 @@ We tested for amplification of both the filtration and PCR negative controls by 
 CONTAMINATION
 =============
 
-We calculated the rate of contamination in two directions: reads belonging to the positive control taxon in non-control samples, and reads in control samples that do NOT belong to the control taxon. 
+We calculated the rate of contamination in two directions: reads belonging to the positive control taxon in non-control samples, and reads in control samples that do NOT belong to the control taxon.
 
-proportion of reads assigned to the positive control taxon in non-control samples. 
-
-
+proportion of reads assigned to the positive control taxon in non-control samples.
 
 
 
@@ -81,41 +85,139 @@ proportion of reads assigned to the positive control taxon in non-control sample
 
 
 
+
+
+CITATIONS:
 
 @article{Edgar01102010,
 author = {Edgar, Robert C.
-}, 
+},
 title = {Search and clustering orders of magnitude faster than BLAST},
-volume = {26}, 
-number = {19}, 
-pages = {2460-2461}, 
-year = {2010}, 
-doi = {10.1093/bioinformatics/btq461}, 
-abstract ={Motivation: Biological sequence data is accumulating rapidly, motivating the development of improved high-throughput methods for sequence classification.Results: UBLAST and USEARCH are new algorithms enabling sensitive local and global search of large sequence databases at exceptionally high speeds. They are often orders of magnitude faster than BLAST in practical applications, though sensitivity to distant protein relationships is lower. UCLUST is a new clustering method that exploits USEARCH to assign sequences to clusters. UCLUST offers several advantages over the widely used program CD-HIT, including higher speed, lower memory use, improved sensitivity, clustering at lower identities and classification of much larger datasets.Availability: Binaries are available at no charge for non-commercial use at http://www.drive5.com/usearchContact: robert@drive5.comSupplementary information: Supplementary data are available at Bioinformatics online.}, 
-URL = {http://bioinformatics.oxfordjournals.org/content/26/19/2460.abstract}, 
-eprint = {http://bioinformatics.oxfordjournals.org/content/26/19/2460.full.pdf+html}, 
-journal = {Bioinformatics} 
+volume = {26},
+number = {19},
+pages = {2460-2461},
+year = {2010},
+doi = {10.1093/bioinformatics/btq461},
+URL = {http://bioinformatics.oxfordjournals.org/content/26/19/2460.abstract},
+eprint = {http://bioinformatics.oxfordjournals.org/content/26/19/2460.full.pdf+html},
+journal = {Bioinformatics}
 }
 
 @article{Edgar15082011,
-author = {Edgar, Robert C. and Haas, Brian J. and Clemente, Jose C. and Quince, Christopher and Knight, Rob}, 
+author = {Edgar, Robert C. and Haas, Brian J. and Clemente, Jose C. and Quince, Christopher and Knight, Rob},
 title = {UCHIME improves sensitivity and speed of chimera detection},
-volume = {27}, 
-number = {16}, 
-pages = {2194-2200}, 
-year = {2011}, 
-doi = {10.1093/bioinformatics/btr381}, 
-abstract ={Motivation: Chimeric DNA sequences often form during polymerase chain reaction amplification, especially when sequencing single regions (e.g. 16S rRNA or fungal Internal Transcribed Spacer) to assess diversity or compare populations. Undetected chimeras may be misinterpreted as novel species, causing inflated estimates of diversity and spurious inferences of differences between populations. Detection and removal of chimeras is therefore of critical importance in such experiments.Results: We describe UCHIME, a new program that detects chimeric sequences with two or more segments. UCHIME either uses a database of chimera-free sequences or detects chimeras de novo by exploiting abundance data. UCHIME has better sensitivity than ChimeraSlayer (previously the most sensitive database method), especially with short, noisy sequences. In testing on artificial bacterial communities with known composition, UCHIME de novo sensitivity is shown to be comparable to Perseus. UCHIME is >100Ã faster than Perseus and >1000Ã faster than ChimeraSlayer.Contact: robert@drive5.comAvailability: Source, binaries and data: http://drive5.com/uchime.Supplementary information: Supplementary data are available at Bioinformatics online.}, 
-URL = {http://bioinformatics.oxfordjournals.org/content/27/16/2194.abstract}, 
-eprint = {http://bioinformatics.oxfordjournals.org/content/27/16/2194.full.pdf+html}, 
-journal = {Bioinformatics} 
+volume = {27},
+number = {16},
+pages = {2194-2200},
+year = {2011},
+doi = {10.1093/bioinformatics/btr381},
+URL = {http://bioinformatics.oxfordjournals.org/content/27/16/2194.abstract},
+eprint = {http://bioinformatics.oxfordjournals.org/content/27/16/2194.full.pdf+html},
+journal = {Bioinformatics}
 }
 
 
 PEAR
+@article{Zhang01032014,
+author = {Zhang, Jiajie and Kobert, Kassian and Flouri, Tomáš and Stamatakis, Alexandros},
+title = {PEAR: a fast and accurate Illumina Paired-End reAd mergeR},
+volume = {30},
+number = {5},
+pages = {614-620},
+year = {2014},
+doi = {10.1093/bioinformatics/btt593},
+URL = {http://bioinformatics.oxfordjournals.org/content/30/5/614.abstract},
+eprint = {http://bioinformatics.oxfordjournals.org/content/30/5/614.full.pdf+html},
+journal = {Bioinformatics}
+}
 
 SWARM
-
+@article{10.7717/peerj.593,
+ title = {Swarm: robust and fast clustering method for amplicon-based studies},
+ author = {MahÃ©, FrÃ©dÃ©ric and Rognes, TorbjÃžrn and Quince, Christopher and de Vargas, Colomban and Dunthorn, Micah},
+ year = 2014,
+ month = sep,
+ keywords = {Environmental diversity, Barcoding, Molecular operational taxonomic units},
+ volume = 2,
+ pages = {e593},
+ journal = {PeerJ},
+ issn = {2167-8359},
+ url = {https://doi.org/10.7717/peerj.593},
+ doi = {10.7717/peerj.593}
+}
 
 VSEARCH
-https://github.com/torognes/vsearch
+@article{10.7717/peerj.2584,
+ title = {VSEARCH: a versatile open source tool for metagenomics},
+ author = {Rognes, TorbjÃžrn and Flouri, TomÃ¡Å¡ and Nichols, Ben and Quince, Christopher and MahÃ©, FrÃ©dÃ©ric},
+ year = 2016,
+ month = oct,
+ keywords = {Clustering, Chimera detection, Searching, Masking, Shuffling, Parallellization, Metagenomics, Alignment, Sequences, Dereplication},
+ volume = 4,
+ pages = {e2584},
+ journal = {PeerJ},
+ issn = {2167-8359},
+ url = {https://doi.org/10.7717/peerj.2584},
+ doi = {10.7717/peerj.2584}
+}
+
+blastn
+@article{Altschul1990,
+abstract = {A new approach to rapid sequence comparison, basic local alignment search tool (BLAST), directly approximates alignments that optimize a measure of local similarity, the maximal segment pair (MSP) score. Recent mathematical results on the stochastic properties of MSP scores allow an analysis of the performance of this method as well as the statistical significance of alignments it generates. The basic algorithm is simple and robust; it can be implemented in a number of ways and applied in a variety of contexts including straightforward DNA and protein sequence database searches, motif searches, gene identification searches, and in the analysis of multiple regions of similarity in long DNA sequences. In addition to its flexibility and tractability to mathematical analysis, BLAST is an order of magnitude faster than existing sequence comparison tools of comparable sensitivity.},
+author = {Altschul, S F and Gish, W and Miller, W and Myers, E W and Lipman, D J},
+doi = {10.1016/S0022-2836(05)80360-2},
+issn = {0022-2836 (Print)},
+journal = {Journal of molecular biology},
+keywords = {Algorithms,Amino Acid Sequence,Base Sequence,Databases, Factual,Mutation,Sensitivity and Specificity,Sequence Homology, Nucleic Acid,Software},
+language = {ENG},
+month = {oct},
+number = {3},
+pages = {403--410},
+pmid = {2231712},
+title = {{Basic local alignment search tool.}},
+volume = {215},
+year = {1990}
+}
+@article{Camacho2009,
+abstract = {BACKGROUND: Sequence similarity searching is a very important bioinformatics task. While Basic Local Alignment Search Tool (BLAST) outperforms exact methods through its use of heuristics, the speed of the current BLAST software is suboptimal for very long queries or database sequences. There are also some shortcomings in the user-interface of the current command-line applications. RESULTS: We describe features and improvements of rewritten BLAST software and introduce new command-line applications. Long query sequences are broken into chunks for processing, in some cases leading to dramatically shorter run times. For long database sequences, it is possible to retrieve only the relevant parts of the sequence, reducing CPU time and memory usage for searches of short queries against databases of contigs or chromosomes. The program can now retrieve masking information for database sequences from the BLAST databases. A new modular software library can now access subject sequence data from arbitrary data sources. We introduce several new features, including strategy files that allow a user to save and reuse their favorite set of options. The strategy files can be uploaded to and downloaded from the NCBI BLAST web site. CONCLUSION: The new BLAST command-line applications, compared to the current BLAST tools, demonstrate substantial speed improvements for long queries as well as chromosome length database sequences. We have also improved the user interface of the command-line applications.},
+author = {Camacho, Christiam and Coulouris, George and Avagyan, Vahram and Ma, Ning and Papadopoulos, Jason and Bealer, Kevin and Madden, Thomas L},
+doi = {10.1186/1471-2105-10-421},
+issn = {1471-2105 (Electronic)},
+journal = {BMC bioinformatics},
+keywords = {Computational Biology,Databases, Genetic,Sequence Alignment,Software,methods},
+language = {ENG},
+month = {dec},
+pages = {421},
+pmid = {20003500},
+title = {{BLAST+: architecture and applications.}},
+volume = {10},
+year = {2009}
+}
+
+GENBANK (NCBI NT)
+@article{Clark2016,
+abstract = {GenBank({\textregistered}) (www.ncbi.nlm.nih.gov/genbank/) is a comprehensive database that contains publicly available nucleotide sequences for over 340 000 formally described species. Recent developments include a new starting page for submitters, a shift toward using accession.version identifiers rather than GI numbers, a wizard for submitting 16S rRNA sequences, and an Identical Protein Report to address growing issues of data redundancy. GenBank organizes the sequence data received from individual laboratories and large-scale sequencing projects into 18 divisions, and GenBank staff assign unique accession.version identifiers upon data receipt. Most submitters use the web-based BankIt or standalone Sequin programs. Daily data exchange with the European Nucleotide Archive (ENA) and the DNA Data Bank of Japan (DDBJ) ensures worldwide coverage. GenBank is accessible through the nuccore, nucest, and nucgss databases of the Entrez retrieval system, which integrates these records with a variety of other data including taxonomy nodes, genomes, protein structures, and biomedical journal literature in PubMed. BLAST provides sequence similarity searches of GenBank and other sequence databases. Complete bimonthly releases and daily updates of the GenBank database are available by FTP. },
+author = {Clark, Karen and Karsch-Mizrachi, Ilene and Lipman, David J and Ostell, James and Sayers, Eric W},
+doi = {10.1093/nar/gkv1276},
+issn = {0305-1048},
+journal = {Nucleic Acids Research},
+month = {jan},
+number = {Database issue},
+pages = {D67--D72},
+publisher = {Oxford University Press},
+title = {{GenBank}},
+url = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4702903/},
+volume = {44},
+year = {2016}
+}
+
+
+R
+cite_R_full=$(Rscript <( echo 'message(citation())' ) 2>&1 )
+cite_R=$( echo "${cite_R_full}" | grep -F Manual -A 8 )
+
+# R packages
+# lapply(c("gdm", "sp"), citation)
+# or in bash:
+cite_vegan_full=$(Rscript <( echo 'message(citation("vegan"))' ) 2>&1 )
+cite_vegan=$( echo "${cite_vegan_full}" | grep -F Manual -A 8 )
