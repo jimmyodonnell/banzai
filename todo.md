@@ -7,10 +7,11 @@
 - TODO: add checks for installation of R packages (replace crap in  analyses_prelim.R)
 - TODO: Put sample ID start ('ID1_') to variable
 - TODO: fix subset to not decompress and recompress entire files
-- TODO: require metadata field "taxid_NCBI":
+- TODO: require metadata field "taxid_NCBI": (e.g. 1561972)
   https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Undef&id=408169&lvl=3&p=mapview&p=has_linkout&p=blast_url&p=genome_blast&keep=1&srchmode=3&unlock/
-- TODO: require metadata field "scientific_name":
-- TODO: require metadata field "instrument_name":
+- TODO: require metadata field "scientific_name": (e.g. seawater metagenome)
+- TODO: require metadata field "instrument_name": (e.g. Illumina MiSeq)
+- TODO: require metadata field "library_layout": (e.g. PAIRED)
 - TODO: to clean the demultiplexed file:
 
 ```sh
