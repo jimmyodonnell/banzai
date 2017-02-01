@@ -1,4 +1,4 @@
-#banzai!#
+# banzai!
 
 🏄
 
@@ -79,8 +79,13 @@ Aside from the standard command line utilities (awk, sed, grep, etc) that are al
 * **[seqtk](https://github.com/lh3/seqtk)**: reverse complementing entire fastq/a files
 * **[python](https://www.python.org/)**: fast consolidation of duplicate sequences (installed by default on Macs)
 * **[blast+](http://www.ncbi.nlm.nih.gov/books/NBK279690/)**: taxonomic assignment
-* **[MEGAN](http://ab.inf.uni-tuebingen.de/software/megan5/)**: taxonomic assignment
-* **[R](https://www.r-project.org/)**: ecological analyses. Requires the packages **vegan** and **gtools**
+* **[R](https://www.r-project.org/)**: ecological analyses. Requires these packages:
+  * [data.table](https://cran.r-project.org/web/packages/data.table/index.html): data manipulation. Default installation on Mac probably won't enable parallel capabilities; to do so, check [these instructions](https://github.com/Rdatatable/data.table/wiki/Installation).
+  * [gtools](https://cran.r-project.org/web/packages/gtools/index.html): data manipulation
+  * [reshape2](https://cran.r-project.org/web/packages/reshape2/index.html): data manipulation
+  * [vegan](https://cran.r-project.org/web/packages/vegan/index.html): ecological analyses
+  * [taxize](https://cran.r-project.org/web/packages/taxize/index.html): taxonomic annotation
+
 
 Follow the [Vagrant-VirtualBox instructions](doc/vagrant_install.md) to automatically install your own virtual machine that includes all of these dependencies.
 
