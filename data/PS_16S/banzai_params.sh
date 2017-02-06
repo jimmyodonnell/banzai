@@ -5,7 +5,7 @@
 # INPUT
 ################################################################################
 # What is the file path to the directory containing all of the libraries/reads?
-PARENT_DIR="./data/PS_16S"
+PARENT_DIR="${SCRIPT_DIR}""/data/PS_16S"
 
 # Where is the sequencing metadata file? (SEE FORMATTING GUIDELINES IN README!)
 SEQUENCING_METADATA="${PARENT_DIR}"/metadata.csv
@@ -16,7 +16,7 @@ SEQUENCING_METADATA="${PARENT_DIR}"/metadata.csv
 ################################################################################
 # This script will generate a directory (folder) containing the output of the script.
 # Where do you want this new folder to go?
-OUTPUT_DIRECTORY="${PARENT_DIR%/*}"
+OUTPUT_DIRECTORY="${HOME}" #"${PARENT_DIR%/*}"
 
 # You can optionally specify a folder into which the script copies a PDF containing some results.
 # The pdf is created by default in the analysis folder specified above, but
@@ -27,34 +27,45 @@ OUTPUT_PDF_DIR=""
 ################################################################################
 # METADATA DETAILS
 ################################################################################
+# Specify columns for raw sequencing files:
+COLNAME_FILE1="file1"
+COLNAME_FILE2="file2"
+
+# MUST be unique for each row!
+COLNAME_SAMPLE_ID="sample_id"
+
+COLNAME_DNA_ID="dna_id"
+COLNAME_SAMPLE_TYPE="dna_source"
+
+# Your metadata must have a column corresponding to the subfolders containing the raw reads.
+# In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
+COLNAME_ID1_NAME="pri_index_name"
+COLNAME_ID1_SEQ="pri_index_seq"
+
+################################################################################
+# MERGE PAIRED READS
+################################################################################
+USE_PEAR_DEFAULTS="NO"
+# For more information on these parameters, type into a terminal window: pear -help
+# Bokulich recommends:
+# Quality_Threshold=3, r=3 (PEAR only considers r=2), UNCALLEDMAX=0
+# TRIMMIN= 0.75 * LENGTH_READ # this is hard-coded in the script banzai.sh
+
 # TODO grab this from a fragment_size column in the sequencing metadata file
 ### ***** REMEMBER TO WATCH FOR ZEROS WHEN IMPLEMENTING THIS!
 # Is there a column in the metadata file for fragment size?
-frag_size_in_metadata="NO"
+insert_size_in_metadata="NO"
 # If YES, what is the name?
-frag_size_column="fragment_size_BA"
+COLNAME_INSERT_SIZE="insert_size"
+
+# do you want banzai to automatically calculate the expected assembled sequence lengths and overlap based on read length and fragment size?
+calculate_merge_length="NO" # [ YES | NO]
 
 # If fragment size is not specified in metadata, specify it here.
 # What is the maximum expected length of the fragment of interest?
 # This is the length of the fragments input into library prep --
 # i.e. with (indexed) primers, but without library index or sequencing adapters
 LENGTH_FRAG="180"
-
-# Your metadata must have a column corresponding to the subfolders containing the raw reads.
-# In order to make this flexible across both multiple and single library preps, you must include this even if you only sequenced one library (sorry!).
-READ_LIB_FROM_SEQUENCING_METADATA="YES"
-LIBRARY_COLUMN_NAME="library"
-
-################################################################################
-# MERGE PAIRED READS
-################################################################################
-# For more information on these parameters, type into a terminal window: pear -help
-# Bokulich recommends:
-# Quality_Threshold=3, r=3 (PEAR only considers r=2), UNCALLEDMAX=0
-# TRIMMIN= 0.75 * LENGTH_READ # this is hard-coded in the script banzai.sh
-
-# do you want banzai to automatically calculate the expected assembled sequence lengths and overlap based on read length and fragment size?
-calculate_merge_length="NO" # [ YES | NO]
 
 # if "NO", provide the following values for PEAR:
 minimum_overlap="10" # [10]
@@ -89,8 +100,6 @@ min_seq_length=75
 # Substantial quality filtering (e.g. trimming, minimum length, etc) is performed by PEAR during read merging.
 # You may also want to exclude sequences containing more than a specified threshold of 'expected errors'
 # This number is equal to the sum of the error probabilities.
-# The only software that currently implements this is usearch, but it requires breaking up files larger than ~4GB
-# I think this can be written in python relatively easily, but I haven't gotten to it yet.
 # For more information on this parameter, Google the usearch help
 Perform_Expected_Error_Filter="YES" # [YES|NO]
 Max_Expected_Errors="0.5"
@@ -98,49 +107,46 @@ Max_Expected_Errors="0.5"
 ################################################################################
 # HOMOPOLYMERS
 ################################################################################
+# 454 sequencers have trouble correctly identifying the length of a strech of consecutive identical bases (homopolymers).
+# Illumina machines do not have this problem, yet some people are still paranoid.
 # Would you like to remove reads containing runs of consecutive identical bases (homopolymers)?
 REMOVE_HOMOPOLYMERS="NO"
 # What is the maximum homopolymer length you're willing to accept?
 # Reads containing runs of identical bases longer than this will be discarded.
-HOMOPOLYMER_MAX="7"
+HOMOPOLYMER_MAX="10"
 
 
 ################################################################################
 # DEMULTIPLEXING
 ################################################################################
-# Specify the nucleotide sequences that differentiate multiplexed samples ("tags", and in the case of the Kelly Lab, primer tags)
-# You can grab these from the file specified above (SEQUENCING_METADATA) by specifying the column name holding tags.
-# Or you can specify a text file containing only these tags (choose "NO", and then specify path to the tag file).
-# This file should be simply a list of sequences, one per line, of each of the tags, WITH A TRAILING NEWLINE!
-# To make a trailing newline, make sure when you open the file, you have hit enter after the final sequence.
-TAG_COLUMN_NAME="tag_sequence"
 
+# Do the reads contain index sequences which identifies their sample of origin?
+SECONDARY_INDEX="YES"
+
+# Specify the nucleotide sequences that differentiate multiplexed samples
+# (sometimes, confusingly referred to as "tags" or "barcodes")
+# these are the secondary index -- the primary index added with the sequencing adapters should not be in the sequence data
+# You can grab these from the file specified above (SEQUENCING_METADATA) by specifying the column name of index sequences.
+COLNAME_ID2_SEQ="sec_index_seq"
 
 # How many nucleotides pad the 5' end of the tag sequence?
 # TODO build in flexibility (this number is unused right now)
 TAG_Ns="3"
-# What is the maximum number of Ns to allow at the end of a sequence before a tag is reached?
-# TAG_N_MAX="9" # THIS IS NOT WORKING YET. SET TO DEFAULT 9
-
-# Should demultiplexed samples be concatenated for annotation as a single unit? (Each read can still be mapped back to samples)
-# Recommended: YES
-CONCATENATE_SAMPLES="YES"
+SECONDARY_INDEX_START="4"
+COLNAME_ID2_START="sec_index_start"
 
 ################################################################################
 # PRIMER REMOVAL
 ################################################################################
 # Specify the primers used to generate these amplicons.
-# As with the multiplex tags, Banzai will grab these from the file SEQUENCING_METADATA.
+# As with the multiplex indexes, Banzai will grab these from the file SEQUENCING_METADATA.
 # You must indicate the column names of the forward and reverse primers
-COLNAME_PRIMER1="primer_sequence_F"
-COLNAME_PRIMER2="primer_sequence_R"
+COLNAME_PRIMER1="primerF_seq"
+COLNAME_PRIMER2="primerR_seq"
 
 # What proportion of mismatches are you willing to accept when looking for primers?
 # Recommended: "0.10"
 PRIMER_MISMATCH_PROPORTION="0.10"
-
-COLNAME_DNA_ID="sample_name"
-COLNAME_SAMPLE_TYPE="sample_type"
 
 ################################################################################
 # SINGLETONS
@@ -192,35 +198,9 @@ culling_limit="20"
 
 
 ################################################################################
-## MEGAN ##
-PERFORM_MEGAN="NO"
-
-# For more information, see the manual provided with the software
-# Specify the path to the MEGAN executable file you want to use.
-# Note that in recent versions an executable was not provided; in that case, you need to reference like so: '/Applications/MEGAN/MEGAN.app/Contents/MacOS/JavaApplicationStub'
-megan_exec='/Applications/MEGAN/MEGAN.app/Contents/MacOS/JavaApplicationStub'
-
-# What is the lowest taxonomic rank at which MEGAN should group OTUs?
-COLLAPSE_RANK1="Family"
-MINIMUM_SUPPORT="1"
-MINIMUM_COMPLEXITY="0"
-TOP_PERCENT="3"
-MINIMUM_SUPPORT_PERCENT="0"
-MINIMUM_SCORE="140"
-LCA_PERCENT="70"
-MAX_EXPECTED="1e-25"
-
-# Do you want to perform a secondary MEGAN analysis, collapsing at a different taxonomic level?
-PERFORM_SECONDARY_MEGAN="YES"
-COLLAPSE_RANK2="Genus"
-
-
-################################################################################
 # REANALYSIS
 ################################################################################
 # Would you like to pick up where a previous analysis left off?
-# If reanalyzing existing demultiplexed data, point this variable to the directory storing the individual tag folders.
-# EXISTING_DEMULTIPLEXED_DIR='/Users/threeprime/Documents/Data/IlluminaData/16S/20141020/Analysis_20141023_1328/demultiplexed'
 
 # Have the reads already been paired?
 ALREADY_PEARED="NO" # YES/NO
@@ -234,23 +214,17 @@ FILTERED_OUTPUT='/Users/threeprime/Documents/Data/IlluminaData/12S/20140930/Anal
 ################################################################################
 # GENERAL SETTINGS
 ################################################################################
+# Would you like to save every single intermediate file as we go? YES | NO
+# recommendation: NO, unless testing or troubleshooting
+HOARD="YES"
+
 # Would you like to compress extraneous intermediate files once the analysis is finished? YES/NO
 PERFORM_CLEANUP="YES"
 
 # Is it ok to rename the sequences within a fasta file?
 # This will only remove info about the machine; reads can still be traced back to origin in fastq.
 # This will happen after the fastq has been converted to a fasta file at the quality filtering step.
-RENAME_READS="YES"
+RENAME_READS="NO"
 
 # If you want to receive a text message when the pipeline finishes, input your number here:
 EMAIL_ADDRESS="4077443377@tmomail.net"
-
-
-
-
-################################################################################
-# GRAVEYARD
-################################################################################
-# What is the path to the reads?
-# READ1='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R1.fastq.gz'
-# READ2='/Users/threeprime/Documents/GoogleDrive/Data_Illumina/16S/run_20150401/libraryA/lib1_R2.fastq.gz'
