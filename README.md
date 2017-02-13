@@ -59,6 +59,10 @@ merged reads:           +++******~~~~~~~~~~~~~~~~~~~~~~~~******+++
 ```
 *(Layout inspired in part by the [FROGS](https://github.com/geraldinepascal/FROGS) documentation.)*
 
+
+#### Flow chart: ####
+![](doc/banzai_flowchart.png)
+
 ## Basic implementation ##
 Copy the file 'banzai_params.sh' into a new folder and set parameters as desired. Then run the banzai script, using your newly edited parameter file like so (Mac OSX):
 
