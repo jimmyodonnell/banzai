@@ -82,7 +82,7 @@ echo
 mkdir "${out_dir}"
 
 # make the logfile
-LOGFILE="${out_dir}"/logfile.txt
+LOGFILE="${out_dir}"/logfile.log
 exec > >(tee "${LOGFILE}") 2>&1
 
 
