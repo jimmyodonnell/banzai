@@ -659,12 +659,14 @@ else
 	fi
 
 
-	# Assign the path for the OTU table
-	# OTU_table="${dir_out}"/OTU_table.csv
+	# Assign the path for the OTU to sample map file
+	OTU_map="${dup_otu_map%/*}"/OTU.map
 
-	# Convert duplicate table to OTU table using R script (arguments: (1) duplicate table, (2) dup to otu table, (3) otu table path
-  if "${FIX_DUP_TO_OTU}"; then
-	Rscript "$SCRIPT_DIR/scripts/dup_to_OTU_table.R" "${DUPLICATE_TABLE}" "${dup_otu_map}" "${OTU_table}"
+	# Convert duplicate table to OTU table using R script (arguments: 
+  # (1) unique sequence ("duplicate") to sample map file, 
+  # (2) unique sequence ("duplicate") to otu map file, 
+  # (3) otu to sample map file path
+  Rscript "$SCRIPT_DIR/scripts/dup_to_OTU.R" "${DEREP_MAP}" "${dup_otu_map}" "${OTU_map}"
 
 	# check if OTU table and OTU fasta exist (and/or are of size gt 1?)
 	if [[ ! -s "${OTU_fasta}" ]] ; then
@@ -672,12 +674,11 @@ else
 	    echo 'Aborting script.'
 	    exit
 	fi
-	if [[ ! -s "${OTU_table}" ]] ; then
+	if [[ ! -s "${OTU_map}" ]] ; then
 	    echo 'There was a problem generating the OTU table. It is empty or absent.'
 	    echo 'Aborting script.'
 	    exit
 	fi
-  fi
 
 fi
 
