@@ -709,12 +709,13 @@ fi
 ################################################################################
 # WRITE SUMMARY
 ################################################################################
-SUMMARY_FILE="${OUTPUT_DIR}"/summary.txt
-echo "Writing summary file..."
-source "${SCRIPT_DIR}"/scripts/summarize.sh "${LOGFILE}" > "${SUMMARY_FILE}"
-echo "Summary written to:"
-echo "${SUMMARY_FILE}"
-echo
+# TODO add this; probably there is a problem caused by reading a logfile while writing to it.
+# SUMMARY_FILE="${OUTPUT_DIR}"/summary.txt
+# echo "Writing summary file..."
+# source "${SCRIPT_DIR}"/scripts/summarize.sh "${LOGFILE}" > "${SUMMARY_FILE}"
+# echo "Summary written to:"
+# echo "${SUMMARY_FILE}"
+# echo
 
 ################################################################################
 # EXIT
