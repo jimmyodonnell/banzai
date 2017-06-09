@@ -572,11 +572,6 @@ if [[ ! -s "${DEREP_MAP}" ]] ; then
     exit
 fi
 
-DUPLICATE_TABLE="${CONCAT_DIR}"/duplicate_table.csv
-
-# Rscript "${SCRIPT_DIR}"/scripts/dereplication/long_to_wide.R \
-#   "${DEREP_MAP}" "${DUPLICATE_TABLE}" "${remove_singletons}"
-
 # check if duplicate table exists. (Might need to check size)
 if [[ ! -s "${DEREP_MAP}" ]] ; then
     echo 'There was a problem generating the duplicate table. It is empty or absent.'
@@ -682,6 +677,20 @@ else
 
 fi
 
+if [ "$WIDE_FORMAT" = "YES" ]; then
+  echo $(date +%Y-%m-%d\ %H:%M) 'Converting unique sequence table to wide format...'
+  DEREP_WIDE="${DEREP_MAP%.*}".csv
+  Rscript "$SCRIPT_DIR/scripts/long_to_wide.R" "${DEREP_MAP}" "${DEREP_WIDE}"
+  echo $(date +%Y-%m-%d\ %H:%M) 'Wide format unique sequence table written to:'
+  echo "${DEREP_WIDE}"
+  echo
+  echo $(date +%Y-%m-%d\ %H:%M) 'Converting OTU table to wide format...'
+  OTU_WIDE="${OTU_map%.*}".csv
+  Rscript "$SCRIPT_DIR/scripts/long_to_wide.R" "${OTU_map}" "${OTU_WIDE}"
+  echo $(date +%Y-%m-%d\ %H:%M) 'Wide format OTU table written to:'
+  echo "${OTU_WIDE}"
+  echo
+fi
 
 ################################################################################
 # CLEAN UP
