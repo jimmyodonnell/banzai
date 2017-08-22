@@ -42,13 +42,10 @@ kwargs = {
 ################################################################################
 
 
-def run_main(sampleID, fname=0, outidx='index.txt', **kw):
+def run_main(sampleID, fname=0, **kw):
 	import fileinput
 	import os
 	import itertools
-
-	if os.path.exists(outidx):
-		os.unlink(outidx)
 
 	#_open input file
 	f = fileinput.input(fname)
