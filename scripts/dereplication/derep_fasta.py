@@ -56,7 +56,7 @@ def run_main(sampleID, fname=0, **kw):
 	# sample_pattern = re.compile(samplestringID + "(.*)", re.flags)
 
 	#_loop over two lines of input
-	for line0, line1 in itertools.izip_longest(*[f]*2):
+	for line0, line1 in itertools.izip_longest(f,f):
 		seq_id = line0.replace('\n','').replace('>','')#_don't .strip()
 		sample_id = sampleID + '{0:s}'.format(seq_id.split(sampleID)[1])
 		dna_str = line1.strip()
@@ -72,10 +72,10 @@ def run_main(sampleID, fname=0, **kw):
 		else:
 			dict_uniqseq[dna_str] = [idx_id]
 
-	keys_by_length = sorted(dict_uniqseq,
-	                        key=lambda k: len(dict_uniqseq[k]), reverse=True)
+	keys_by_length = sorted(dict_uniqseq, 
+						key=lambda k: len(dict_uniqseq[k]), reverse = True)
 	write_fasta(dict_uniqseq, keys_by_length, **kw)
-	write_map(list_id, dict_uniqseq, keys_by_length, list_id, **kw)
+	write_map(list_id, dict_uniqseq, keys_by_length, **kw)
 
 	#_close input
 	f.close()
@@ -94,11 +94,11 @@ def write_fasta(dna_dict, sorted_keys, fasta_output='fasta_output.file', **kwarg
 			        ';size={0:n}\n'.format(len(dna_dict[key])) +
 					'{0:s}\n'.format(key))
 
-def write_map(id_list, dna_dict, sorted_keys, sample_list, map_output='map_output.file', **kwargs):
+def write_map(id_list, dna_dict, sorted_keys, map_output='map_output.file', **kwargs):
 	'''write two column file of sequence name from input and sequence name in output'''
 	with open(map_output, 'w') as f:
 		for index, key in enumerate(sorted_keys):
-			count_per_sample = Counter([sample_list[i] for i in dna_dict[key]]).most_common()
+			count_per_sample = Counter([id_list[i] for i in dna_dict[key]]).most_common()
 		    	f.write('\n'.join([
 					'DUP_{0:n}'.format(index+1) + '\t' +
 			        '{0:s}'.format(k) + '\t' +
