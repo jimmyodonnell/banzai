@@ -6,20 +6,38 @@ Find and remove duplicate DNA sequences from a fasta file
 usage: python ./this_script.py infile.fasta 'ID1_' derep.fasta derep.map
 '''
 
-import sys
 import os
 from collections import Counter
 import fileinput
 import itertools
+import argparse
 
-try:
-	infile = sys.argv[1]
-	sample_id_start  = sys.argv[2]
-	outfasta = sys.argv[3]
-	outmap = sys.argv[4]
+parser = argparse.ArgumentParser(
+	description = 'Remove and count duplicate sequences in a fasta file', 
+	)
 
-except:
-	raise RuntimeError, '\n\n\n\tusage: ./this_script.py <filename_to_sort> <sample_id_start> <output_fasta_filename> <output_map_filename> \n\n'
+parser.add_argument('-i', '--fasta_in',
+	help = 'File path for input file. Must be a fasta file with *no* wrapped lines!', 
+	required = True)
+
+parser.add_argument('-s', '--sample_prefix',
+	help = 'First part of string identifying samples (e.g. "ID1=").', 
+	required = True)
+
+parser.add_argument('-f', '--fasta_out',
+	help = 'File path for output fasta.', 
+	required = True)
+
+parser.add_argument('-m', '--mapfile',
+	help = 'File path for output mapfile.', 
+	required = True)
+
+args = vars(parser.parse_args())
+
+infile = args['fasta_in']
+sample_id_start = args['sample_prefix']
+outfasta = args['fasta_out']
+outmap = args['mapfile']
 
 #############################################################################_80
 #_main_#########################################################################
