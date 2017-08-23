@@ -19,30 +19,12 @@ try:
 except:
 	raise RuntimeError, '\n\n\n\tusage: ./this_script.py <filename_to_sort> <sample_id_start> <output_fasta_filename> <output_map_filename> \n\n'
 
-kwargs = {
-		#_file to sort
-		'fname'		: infile,
-
-		# give a string that identifies the start of the sample identifier
-		'sampleID'	:	sample_id_start,
-
-		#_name of fasta output. other options include:
-		# '{0:s}.seq'.format(infile),
-		# os.path.splitext(infile)[0]+'_derep.fasta',
-		'fasta_output'	: outfasta,
-
-		#_name of output of ids to unique sequences
-		# 'map_output'	: os.path.splitext(infile)[0]+'_derep.map',
-		'map_output'	: outmap
-		}
-
-
 #############################################################################_80
 #_main_#########################################################################
 ################################################################################
 
 
-def run_main(sampleID, fname=0, **kw):
+def run_main(sampleID, fname, out_f, out_m):
 	import fileinput
 	import os
 	import itertools
@@ -74,8 +56,8 @@ def run_main(sampleID, fname=0, **kw):
 
 	keys_by_length = sorted(dict_uniqseq, 
 						key=lambda k: len(dict_uniqseq[k]), reverse = True)
-	write_fasta(dict_uniqseq, keys_by_length, **kw)
-	write_map(list_id, dict_uniqseq, keys_by_length, **kw)
+	write_fasta(dict_uniqseq, keys_by_length, out_f)
+	write_map(list_id, dict_uniqseq, keys_by_length, out_m)
 
 	#_close input
 	f.close()
@@ -85,7 +67,7 @@ def run_main(sampleID, fname=0, **kw):
 #_end_main_#####################################################################
 ################################################################################
 
-def write_fasta(dna_dict, sorted_keys, fasta_output='fasta_output.file', **kwargs):
+def write_fasta(dna_dict, sorted_keys, fasta_output = 'fasta_output.file'):
 	''' write fasta file of unique sequences '''
 	with open(fasta_output, 'w') as f:
 		for index, key in enumerate(sorted_keys):
@@ -94,7 +76,7 @@ def write_fasta(dna_dict, sorted_keys, fasta_output='fasta_output.file', **kwarg
 			        ';size={0:n}\n'.format(len(dna_dict[key])) +
 					'{0:s}\n'.format(key))
 
-def write_map(id_list, dna_dict, sorted_keys, map_output='map_output.file', **kwargs):
+def write_map(id_list, dna_dict, sorted_keys, map_output = 'map_output.file'):
 	'''write two column file of sequence name from input and sequence name in output'''
 	with open(map_output, 'w') as f:
 		for index, key in enumerate(sorted_keys):
@@ -106,4 +88,4 @@ def write_map(id_list, dna_dict, sorted_keys, map_output='map_output.file', **kw
 					for k, v in count_per_sample]) + '\n')
 
 if __name__ == '__main__':
-	run_main(**kwargs)
+	run_main(sampleID = sample_id_start, fname = infile, out_f = outfasta, out_m = outmap)
