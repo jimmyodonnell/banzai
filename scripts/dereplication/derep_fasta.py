@@ -9,6 +9,8 @@ usage: python ./this_script.py infile.fasta 'ID1_' derep.fasta derep.map
 import sys
 import os
 from collections import Counter
+import fileinput
+import itertools
 
 try:
 	infile = sys.argv[1]
@@ -24,10 +26,7 @@ except:
 ################################################################################
 
 
-def run_main(sampleID, fname, out_f, out_m):
-	import fileinput
-	import os
-	import itertools
+def run_main(fname, sampleID, out_f, out_m):
 
 	#_open input file
 	f = fileinput.input(fname)
@@ -88,4 +87,4 @@ def write_map(id_list, dna_dict, sorted_keys, map_output = 'map_output.file'):
 					for k, v in count_per_sample]) + '\n')
 
 if __name__ == '__main__':
-	run_main(sampleID = sample_id_start, fname = infile, out_f = outfasta, out_m = outmap)
+	run_main(fname = infile, sampleID = sample_id_start, out_f = outfasta, out_m = outmap)
