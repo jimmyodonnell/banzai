@@ -202,7 +202,7 @@ else
   echo 'ERROR:' 'At least one file is not valid'
   echo 'Looked in metadata columns' "${COLNUM_FILE1}" 'and' "${COLNUM_FILE2}"
   echo 'Aborting script'
-  exit
+  exit 1
 fi
 
 ################################################################################
