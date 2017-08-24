@@ -34,24 +34,7 @@ col_sampletype	<- arguments[7]
 
 
 # load required packages
-required_packages <- "vegan"
-
-for(package in required_packages){
-	if( package %in% installed.packages()){
-		print(paste("loading ", package))
-		library(package, character.only = TRUE)
-	} else {
-		print(paste(package, "is not installed; attempting to install it..."))
-		install.packages(package)
-		if( package %in% installed.packages()){
-			print(c("loading ", package))
-			library(package, character.only = TRUE)
-		} else {
-			stop(c("Couldn't find or load the R package ", package))
-		}
-	}
-}
-
+library(vegan)
 
 # initialize PDF
 pdf(file = pdf_file)

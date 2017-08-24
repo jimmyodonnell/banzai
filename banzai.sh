@@ -76,6 +76,14 @@ fi
 dependencies=($( echo pear cutadapt vsearch swarm seqtk python blastn R ))
 source "${SCRIPT_DIR}"/scripts/dependency_check.sh "${dependencies[@]}"
 
+# source "${SCRIPT_DIR}"/scripts/r-pkg-list.sh "${SCRIPT_DIR}"/scripts "${SCRIPT_DIR}"/doc/r-pkg-req.txt
+
+Rscript "${SCRIPT_DIR}"/scripts/r-pkg-install.R "${SCRIPT_DIR}"/doc/r-pkg-req.txt
+if [[ "$?" > 0 ]]; then
+	echo "failed to load required R packages. Exiting banzai..."
+	exit 1
+fi
+
 # Load functions
 for file in "${SCRIPT_DIR}"/scripts/functions/* ; do
 	source "${file}"

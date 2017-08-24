@@ -1,7 +1,0 @@
-DESeq2
-data.table
-gtools
-package, character.only = TRUE
-reshape2
-taxize
-vegan
