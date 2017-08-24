@@ -19,11 +19,12 @@ START_TIME_SEC=$(date +%Y%m%d_%H%M%S)
 time1=$(date -u +"%s")
 
 # Find the directory this script lives in, so it can find its friends.
-SCRIPT_DIR="$(dirname "$0")"
+BANZAI_DIR="$(dirname "$0")"
+SCRIPT_DIR="${BANZAI_DIR}"/scripts
 
 # Specify the parameter file, check for test mode
 if [[ "${1}" == "test" ]]; then
-	param_file="${SCRIPT_DIR}"/banzai_params.sh
+	param_file="${BANZAI_DIR}"/banzai_params.sh
 else
 	param_file="${1}"
 fi
@@ -65,7 +66,7 @@ else
 fi
 
 # check for correct newline characters (CRLF will break things)
-source "${SCRIPT_DIR}"/scripts/newline_fix.sh "${SEQUENCING_METADATA}"
+source "${SCRIPT_DIR}"/newline_fix.sh "${SEQUENCING_METADATA}"
 if [[ -s "${NEWLINES_FIXED}" ]]; then
 	SEQUENCING_METADATA="${NEWLINES_FIXED}"
 fi
@@ -74,18 +75,18 @@ fi
 # CHECK FOR DEPENDENCIES
 ################################################################################
 dependencies=($( echo pear cutadapt vsearch swarm seqtk python blastn R ))
-source "${SCRIPT_DIR}"/scripts/dependency_check.sh "${dependencies[@]}"
+source "${SCRIPT_DIR}"/dependency_check.sh "${dependencies[@]}"
 
-# source "${SCRIPT_DIR}"/scripts/r-pkg-list.sh "${SCRIPT_DIR}"/scripts "${SCRIPT_DIR}"/doc/r-pkg-req.txt
+# source "${SCRIPT_DIR}"/r-pkg-list.sh "${SCRIPT_DIR}" "${BANZAI_DIR}"/doc/r-pkg-req.txt
 
-Rscript "${SCRIPT_DIR}"/scripts/r-pkg-install.R "${SCRIPT_DIR}"/doc/r-pkg-req.txt
+Rscript "${SCRIPT_DIR}"/r-pkg-install.R "${BANZAI_DIR}"/doc/r-pkg-req.txt
 if [[ "$?" > 0 ]]; then
 	echo "failed to load required R packages. Exiting banzai..."
 	exit 1
 fi
 
 # Load functions
-for file in "${SCRIPT_DIR}"/scripts/functions/* ; do
+for file in "${SCRIPT_DIR}"/functions/* ; do
 	source "${file}"
 done
 
@@ -134,7 +135,7 @@ echo "${OUTPUT_DIR}"
 echo
 
 # Copy these files into that directory as a verifiable log you can refer back to.
-cp "${SCRIPT_DIR}"/banzai.sh "${OUTPUT_DIR}"/analysis_script.txt
+cp "${BANZAI_DIR}"/banzai.sh "${OUTPUT_DIR}"/analysis_script.txt
 cp "${param_file}" "${OUTPUT_DIR}"/analysis_parameters.txt
 
 
@@ -489,7 +490,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	if [ "${REMOVE_HOMOPOLYMERS}" = "YES" ]; then
 		echo $(date +%Y-%m-%d\ %H:%M) "Removing homopolymers..."
 		NOHOMO_FASTA="${ID1_OUTPUT_DIR}"/3_no_homopolymers.fasta
-		source "${SCRIPT_DIR}"/scripts/homopolymer_rm.sh "${FILTERED_OUTPUT}" "${HOMOPOLYMER_MAX}" "${NOHOMO_FASTA}"
+		source "${SCRIPT_DIR}"/homopolymer_rm.sh "${FILTERED_OUTPUT}" "${HOMOPOLYMER_MAX}" "${NOHOMO_FASTA}"
 		DEMULTIPLEX_INPUT="${NOHOMO_FASTA}"
 	else
 		echo "Homopolymers not removed."
@@ -502,7 +503,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	################################################################################
 	if [[ "${SECONDARY_INDEX}" == "YES" ]]; then
 	  CURRENT_ID1_DEMULT="${ID1_OUTPUT_DIR}"/demult.fasta
-		source "${SCRIPT_DIR}"/scripts/demulti.sh -i "${DEMULTIPLEX_INPUT}" \
+		source "${SCRIPT_DIR}"/demulti.sh -i "${DEMULTIPLEX_INPUT}" \
 		  -s "${ID2_START}" -l "${ID2_LENGTH}" >> "${CURRENT_ID1_DEMULT}"
 		if [ "${HOARD}" = "NO" ]; then
 			rm "${DEMULTIPLEX_INPUT}"
@@ -521,7 +522,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	# ID1_PRIMER_REM="${ID1_OUTPUT_DIR}"/demult.fasta
 	# cat "${ID1_OUTPUT_DIR}"/demultiplexed/*/2_notags.fasta >> "${ID1_PRIMER_REM}"
 	ID1_PRIMER_REMOVAL_OUT="${ID1_OUTPUT_DIR}"/no_primers.fasta
-	# source "${SCRIPT_DIR}"/scripts/primer_removal.sh \
+	# source "${SCRIPT_DIR}"/primer_removal.sh \
 	#   "${CURRENT_ID1_DEMULT}" "${ID1_PRIMER_REMOVAL_OUT}" \
 	#   "${PRIMER1}"  "${PRIMER2}" \
 	# 	"${PRIMER_MISMATCH_PROPORTION}"  "${LENGTH_ROI_HALF}"
@@ -542,7 +543,7 @@ PRIMER_REM_ID1_ALL="${CONCAT_DIR}"/no_primer_byid1.fasta
 # PRIMER REMOVAL
 ################################################################################
 PRIMER_REMOVAL_OUT="${CONCAT_DIR}"/no_primers.fasta
-source "${SCRIPT_DIR}"/scripts/primer_removal.sh \
+source "${SCRIPT_DIR}"/primer_removal.sh \
   "${CONCAT_FILE}" "${PRIMER_REMOVAL_OUT}" \
   "${PRIMER1}"  "${PRIMER2}" \
 	"${PRIMER_MISMATCH_PROPORTION}"  "${LENGTH_ROI_HALF}"
@@ -562,7 +563,7 @@ fi
 echo $(date +%Y-%m-%d\ %H:%M) "Identifying identical sequences... (python)"
 DEREP_FASTA="${CONCAT_DIR}"/derep.fasta
 DEREP_MAP="${CONCAT_DIR}"/derep.map
-python "$SCRIPT_DIR/scripts/dereplication/derep_fasta.py" \
+python "${SCRIPT_DIR}"/dereplication/derep_fasta.py \
   -i "${PRIMER_REMOVAL_OUT}" -s 'ID1=' -f "${DEREP_FASTA}" -m "${DEREP_MAP}"
 
 # check if duplicate fasta and duplicate table exist. (Might need to check size)
@@ -592,7 +593,7 @@ fi
 ##############################################################################
 if [[ "${remove_chimeras}" = "YES" ]] ; then
 echo $(date +%Y-%m-%d\ %H:%M) 'Looking for chimeras in duplicate fasta file using vsearch'
-source "${SCRIPT_DIR}"/scripts/chimera_check.sh "${DEREP_FASTA}"
+source "${SCRIPT_DIR}"/chimera_check.sh "${DEREP_FASTA}"
 clustering_input="${chimera_free_fasta}"
 echo
 else
@@ -616,7 +617,7 @@ else
 	    "swarm" )
 
 	        echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using swarm'
-	        source "${SCRIPT_DIR}"/scripts/OTU_clustering/cluster_swarm.sh "${clustering_input}"
+	        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
 					echo
 
 	    ;;
@@ -624,10 +625,10 @@ else
 	    "vsearch" )
 
 	        # echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using vsearch'
-	        # source "${SCRIPT_DIR}"/scripts/OTU_clustering/cluster_vsearch.sh "${duplicate_fasta}"
+	        # source "${SCRIPT_DIR}"/OTU_clustering/cluster_vsearch.sh "${duplicate_fasta}"
 					echo "Sorry, OTU clustering with vsearch has not been implemented yet."
 					echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using swarm'
-	        source "${SCRIPT_DIR}"/scripts/OTU_clustering/cluster_swarm.sh "${clustering_input}"
+	        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
 					echo
 
 	    ;;
@@ -635,7 +636,7 @@ else
 	    "usearch" )
 
 	        echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using usearch'
-	        source "${SCRIPT_DIR}"/scripts/OTU_clustering/cluster_usearch.sh "${clustering_input}"
+	        source "${SCRIPT_DIR}"/OTU_clustering/cluster_usearch.sh "${clustering_input}"
 					echo
 
 	    ;;
@@ -645,7 +646,7 @@ else
 	        echo "${cluster_method}" 'is an invalid clustering method.'
 	        echo 'Must be one of swarm, vsearch, usearch, or none.'
 	        echo $(date +%Y-%m-%d\ %H:%M) 'Clustering sequences into OTUs using swarm'
-	        source "${SCRIPT_DIR}"/scripts/OTU_clustering/cluster_swarm.sh "${clustering_input}"
+	        source "${SCRIPT_DIR}"/OTU_clustering/cluster_swarm.sh "${clustering_input}"
 					echo
 
 
@@ -669,7 +670,7 @@ else
   # (1) unique sequence ("duplicate") to sample map file, 
   # (2) unique sequence ("duplicate") to otu map file, 
   # (3) otu to sample map file path
-  Rscript "$SCRIPT_DIR/scripts/dup_to_OTU.R" "${DEREP_MAP}" "${dup_otu_map}" "${OTU_map}"
+  Rscript "${SCRIPT_DIR}"/dup_to_OTU.R "${DEREP_MAP}" "${dup_otu_map}" "${OTU_map}"
 
 	# check if OTU table and OTU fasta exist (and/or are of size gt 1?)
 	if [[ ! -s "${OTU_fasta}" ]] ; then
@@ -688,13 +689,13 @@ fi
 if [ "$WIDE_FORMAT" = "YES" ]; then
   echo $(date +%Y-%m-%d\ %H:%M) 'Converting unique sequence table to wide format...'
   DEREP_WIDE="${DEREP_MAP%.*}".csv
-  Rscript "$SCRIPT_DIR/scripts/long_to_wide.R" "${DEREP_MAP}" "${DEREP_WIDE}"
+  Rscript "${SCRIPT_DIR}"/long_to_wide.R "${DEREP_MAP}" "${DEREP_WIDE}"
   echo $(date +%Y-%m-%d\ %H:%M) 'Wide format unique sequence table written to:'
   echo "${DEREP_WIDE}"
   echo
   echo $(date +%Y-%m-%d\ %H:%M) 'Converting OTU table to wide format...'
   OTU_WIDE="${OTU_map%.*}".csv
-  Rscript "$SCRIPT_DIR/scripts/long_to_wide.R" "${OTU_map}" "${OTU_WIDE}"
+  Rscript "${SCRIPT_DIR}"/long_to_wide.R "${OTU_map}" "${OTU_WIDE}"
   echo $(date +%Y-%m-%d\ %H:%M) 'Wide format OTU table written to:'
   echo "${OTU_WIDE}"
   echo
@@ -729,7 +730,7 @@ fi
 # TODO add this; probably there is a problem caused by reading a logfile while writing to it.
 # SUMMARY_FILE="${OUTPUT_DIR}"/summary.txt
 # echo "Writing summary file..."
-# source "${SCRIPT_DIR}"/scripts/summarize.sh "${LOGFILE}" > "${SUMMARY_FILE}"
+# source "${SCRIPT_DIR}"/summarize.sh "${LOGFILE}" > "${SUMMARY_FILE}"
 # echo "Summary written to:"
 # echo "${SUMMARY_FILE}"
 # echo
@@ -748,7 +749,7 @@ echo -e '\t0.25 oz\tsimple syrup'
 echo -e '\tShake, strain, and enjoy!' '\xf0\x9f\x8d\xb9\x0a''\n'
 
 if [[ "${1}" == "test" ]]; then
-  source 	"${SCRIPT_DIR}"/test/test_uniqmap.sh
+  source 	"${BANZAI_DIR}"/test/test_uniqmap.sh
   test_uniqmap "${PARENT_DIR}"/derep_expected.map "${OUTPUT_DIR}"
 	if [[ "$?" < 1 ]]; then
 		echo "banzai passes test"
