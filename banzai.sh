@@ -502,7 +502,7 @@ for (( i=0; i < "${#FILE1[@]}"; i++ )); do
 	################################################################################
 	if [[ "${SECONDARY_INDEX}" == "YES" ]]; then
 	  CURRENT_ID1_DEMULT="${ID1_OUTPUT_DIR}"/demult.fasta
-		source "${SCRIPT_DIR}"/beta/demulti.sh -i "${DEMULTIPLEX_INPUT}" \
+		source "${SCRIPT_DIR}"/scripts/demulti.sh -i "${DEMULTIPLEX_INPUT}" \
 		  -s "${ID2_START}" -l "${ID2_LENGTH}" >> "${CURRENT_ID1_DEMULT}"
 		if [ "${HOARD}" = "NO" ]; then
 			rm "${DEMULTIPLEX_INPUT}"
