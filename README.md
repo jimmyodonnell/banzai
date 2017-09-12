@@ -4,9 +4,20 @@
 
 **banzai** is a shell script (bash) that links together the disparate programs needed to process the raw results from an Illumina sequencing run of PCR amplicons into a contingency table of the number of similar sequences found in each of a set of samples.
 
+## Contents
+1. [Introduction](#introduction)
+2. [Flow Chart](#flow-chart)
+3. [Usage](#usage)
+4. [Dependencies](#Dependencies)
+5. [Sequencing Metadata](#sequencing-metadata)
+5. [Bugs and Issues](#bugs-and-issues)
+6. [Notes](#notes)
+
+## Introduction
 The script should run on Unix (Mac OSX) and Linux machines. It makes heavy usage of Unix command line utilities (such as find, grep, sed, awk, and more) and is written for the BSD versions of those programs as found on standard installations of Mac OSX. I tried to use POSIX-compliant commands wherever possible.
 
-Banzai was designed for sequencing data that were generated like so:
+### Lab Preparation: Samples to sequences ###
+Banzai was designed for sequencing data that were generated for a target region like so:
 
 ```
 Genomic DNA:    ----------------------------------------------------------------
@@ -36,12 +47,15 @@ Read 1:            aa:::+++******~~~~~~~~~~~~~~
 Read 2:                                    ~~~~~~~~~~~~~~******+++:::aa
 ```
 
+### Banzai: Sequences to Samples ###
+Banzai works backward through the same process:
+
 **Demultiplexing (primary):**
 ```
 Read 1:                 +++******~~~~~~~~~~~~~~
 Read 2:                                    ~~~~~~~~~~~~~~******+++
 ```
-This has probably already been performed by the time you get the data.
+(This has probably already been performed by the time you get the data.)
 
 **Read merging:**
 ```
@@ -60,10 +74,10 @@ merged reads:           +++******~~~~~~~~~~~~~~~~~~~~~~~~******+++
 *(Layout inspired in part by the [FROGS](https://github.com/geraldinepascal/FROGS) documentation.)*
 
 
-#### Flow chart: ####
+## Flow Chart ##
 ![](doc/banzai_flowchart.png)
 
-## Basic implementation ##
+## Usage ##
 Copy the file 'banzai_params.sh' into a new folder and set parameters as desired. Then run the banzai script, using your newly edited parameter file like so (Mac OSX):
 
 ```sh
@@ -99,26 +113,21 @@ Follow the [Vagrant-VirtualBox instructions](doc/vagrant_install.md) to automati
 * I recommend that before analyzing data, you check and report basic properties of the sequencing runs using **[fastqc](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)**. I have included a script to do this for all the fastq or fastq.gz files in any subdirectory of a directory (run_fastqc.sh).
 
 
-## Sequencing Pool Metadata ##
+## Sequencing Metadata ##
+This is a critical component. 
 You must provide a CSV spreadsheet that contains metadata about the samples. Banzai will read some of the parameters from it, like the primers and multiplex index sequences. You need to provide the file path to the spreadsheet, and the relevant column names. Some of the details seem tedious (like listing each file name), but they are inspired by the EMBL/EBIMetagenomics metadata requirements. That is, you're going to have to do this stuff at some point anyway.
 
 This file should be encoded with UNIX newline characters (LF). Banzai will attempt to check for and fix files encoded with Windows newline characters (CRLF), but this is a place to look if you get mysterious errors. Early in the logfile you can check to be sure the correct number of tags and primer sequences were found.
 
 No field should contain any spaces. That means row names, column names, and cells. Accommodating this would require an advanced degree in bash-quoting judo, which I do not have.
 
-## Library Names ##
-As of 2015-10-09, libraries no longer have to be named anything in particular (e.g. A, B, lib1, lib2),
-BUT THEY CANNOT CONTAIN UNDERSCORES or spaces! (This will be moot once library index sequences are required)
 
-## Raw Data ##
-Your data (fastq files) can be compressed or not; but banzai currently only works with paired-end Illumina data. Thus, the bare minimum input is two fastq files corresponding to the first and second read. *Banzai will fail if there are files in your library folders that are not your raw data but have 'fastq' in the filename!* For example, if your library contains four files: "R1.fastq", "R1.fastq.gz", "R2.fastq", and "R2.fastq.gz". banzai will grab the first two (R1.fastq and R1.fastq.gz) and try to merge them, and (correctly) fail miserably. Note that while PEAR 0.9.7 merges compressed (\*.gz) files directly, PEAR 0.9.6 does not do so correctly. If given compressed files as input, banzai first decompresses them, which will add a little bit of time to the overall analysis.
-
-## Known Issues/Bugs ##
+## Bugs and Issues ##
 * Currently awaiting catastrophic finding...
 - be aware of potential problems between awk versions on Linux and Mac. On a Mac, the output of `awk --version` is `awk version 20070501`
 
 
-###Notes###
+## Notes ##
 An alternate hack to have the pipeline print to terminal AND file, in case logging breaks:
 sh script.sh  2>&1 | tee ~/Desktop/logfile.txt
 
@@ -126,3 +135,10 @@ sh script.sh  2>&1 | tee ~/Desktop/logfile.txt
 * 2015-10-19 expected error filtering implemented via vsearch. OTU clustering can be done with swarm or usearch.
 * 2015-10-09 read length calculated from raw data. Library names are flexible.
 * 2014-11-12 Noticed that the reverse tag removal step removed the tag label from the sequenceID line of fasta files if the tag sequence is RC-palindromic!
+* **Library Names**:
+As of 2015-10-09, libraries no longer have to be named anything in particular (e.g. A, B, lib1, lib2),
+BUT THEY CANNOT CONTAIN UNDERSCORES or spaces! (This will be moot once library index sequences are required)
+* **Raw Data**: 
+Your data (fastq files) can be compressed or not; but banzai currently only works with paired-end Illumina data. 
+Thus, the bare minimum input is two fastq files corresponding to the first and second read. *Banzai will fail if there are files in your library folders that are not your raw data but have 'fastq' in the filename!* 
+For example, if your library contains four files: "R1.fastq", "R1.fastq.gz", "R2.fastq", and "R2.fastq.gz". banzai will grab the first two (R1.fastq and R1.fastq.gz) and try to merge them, and (correctly) fail miserably. Note that while PEAR 0.9.7 merges compressed (\*.gz) files directly, PEAR 0.9.6 does not do so correctly. If given compressed files as input, banzai first decompresses them, which will add a little bit of time to the overall analysis.
