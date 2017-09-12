@@ -8,7 +8,7 @@
 1. [Introduction](#introduction)
 2. [Flow Chart](#flow-chart)
 3. [Usage](#usage)
-4. [Dependencies](#Dependencies)
+4. [Dependencies](#dependencies)
 5. [Sequencing Metadata](#sequencing-metadata)
 5. [Bugs and Issues](#bugs-and-issues)
 6. [Notes](#notes)
