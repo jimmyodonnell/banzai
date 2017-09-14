@@ -156,6 +156,12 @@ remove_singletons="YES"  # [YES|NO]
 
 
 ################################################################################
+# DEREPLICATION
+################################################################################
+# Should the sequence ID after dereplication be the output of a hash algorithm?
+USE_HASH="NO"
+
+################################################################################
 # CLUSTER OTUs
 ################################################################################
 # Would you like to cluster sequences into OTUs based on similarity?

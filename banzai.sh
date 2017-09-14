@@ -564,7 +564,8 @@ echo $(date +%Y-%m-%d\ %H:%M) "Identifying identical sequences... (python)"
 DEREP_FASTA="${CONCAT_DIR}"/derep.fasta
 DEREP_MAP="${CONCAT_DIR}"/derep.map
 python "${SCRIPT_DIR}"/dereplication/derep_fasta.py \
-  -i "${PRIMER_REMOVAL_OUT}" -s 'ID1=' -f "${DEREP_FASTA}" -m "${DEREP_MAP}"
+  -i "${PRIMER_REMOVAL_OUT}" -s 'ID1=' -f "${DEREP_FASTA}" -m "${DEREP_MAP}" \
+	-H "${USE_HASH}"
 
 # check if duplicate fasta and duplicate table exist. (Might need to check size)
 if [[ ! -s "${DEREP_FASTA}" ]] ; then

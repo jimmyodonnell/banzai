@@ -11,6 +11,7 @@ from collections import Counter
 import fileinput
 import itertools
 import argparse
+import hashlib
 
 parser = argparse.ArgumentParser(
 	description = 'Remove and count duplicate sequences in a fasta file', 
@@ -32,19 +33,26 @@ parser.add_argument('-m', '--mapfile',
 	help = 'File path for output mapfile.', 
 	required = True)
 
+parser.add_argument('-H', '--hash',
+	help = 'Use hash output (SHA1) of sequence to name sequences?', 
+	choices = ["YES", "NO"], 
+	default = "NO", 
+	required = False)
+
 args = vars(parser.parse_args())
 
 infile = args['fasta_in']
 sample_id_start = args['sample_prefix']
 outfasta = args['fasta_out']
 outmap = args['mapfile']
+hash_arg = args['hash']
 
 #############################################################################_80
 #_main_#########################################################################
 ################################################################################
 
 
-def run_main(fname, sampleID, out_f, out_m):
+def run_main(fname, sampleID, out_f, out_m, hash_id):
 
 	#_open input file
 	f = fileinput.input(fname)
@@ -73,8 +81,12 @@ def run_main(fname, sampleID, out_f, out_m):
 
 	keys_by_length = sorted(dict_uniqseq, 
 						key=lambda k: len(dict_uniqseq[k]), reverse = True)
-	write_fasta(dict_uniqseq, keys_by_length, out_f)
-	write_map(list_id, dict_uniqseq, keys_by_length, out_m)
+	if hash_id == 'YES':
+		write_fasta_hash(dict_uniqseq, keys_by_length, out_f)
+		write_map_hash(list_id, dict_uniqseq, keys_by_length, out_m)		
+	else:
+		write_fasta(dict_uniqseq, keys_by_length, out_f)
+		write_map(list_id, dict_uniqseq, keys_by_length, out_m)
 
 	#_close input
 	f.close()
@@ -88,8 +100,15 @@ def write_fasta(dna_dict, sorted_keys, fasta_output = 'fasta_output.file'):
 	''' write fasta file of unique sequences '''
 	with open(fasta_output, 'w') as f:
 		for index, key in enumerate(sorted_keys):
-			# if len(dna_dict[key]) > 1:
 			f.write('>DUP_{0:n}'.format(index+1) +
+			        ';size={0:n}\n'.format(len(dna_dict[key])) +
+					'{0:s}\n'.format(key))
+
+def write_fasta_hash(dna_dict, sorted_keys, fasta_output = 'fasta_output.file'):
+	''' write fasta file of unique sequences using hash as sequence id'''
+	with open(fasta_output, 'w') as f:
+		for index, key in enumerate(sorted_keys):
+			f.write('>SHA1={0:s}'.format(hashlib.sha1(key).hexdigest()) +
 			        ';size={0:n}\n'.format(len(dna_dict[key])) +
 					'{0:s}\n'.format(key))
 
@@ -104,5 +123,16 @@ def write_map(id_list, dna_dict, sorted_keys, map_output = 'map_output.file'):
 					'{0:n}'.format(v)
 					for k, v in count_per_sample]) + '\n')
 
+def write_map_hash(id_list, dna_dict, sorted_keys, map_output = 'map_output.file'):
+	'''write two column file of sequence name from input and sequence name in output'''
+	with open(map_output, 'w') as f:
+		for index, key in enumerate(sorted_keys):
+			count_per_sample = Counter([id_list[i] for i in dna_dict[key]]).most_common()
+		    	f.write('\n'.join([
+					'SHA1={0:s}'.format(hashlib.sha1(key).hexdigest()) + '\t' +
+			        '{0:s}'.format(k) + '\t' +
+					'{0:n}'.format(v)
+					for k, v in count_per_sample]) + '\n')
+
 if __name__ == '__main__':
-	run_main(fname = infile, sampleID = sample_id_start, out_f = outfasta, out_m = outmap)
+	run_main(fname = infile, sampleID = sample_id_start, out_f = outfasta, out_m = outmap, hash_id = hash_arg)
