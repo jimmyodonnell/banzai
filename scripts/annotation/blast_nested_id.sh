@@ -39,13 +39,13 @@ else
 fi
 
 # assemble output directory path
-out_dir="${fasta_orig%/*}"/"blast_""${start_time}"
+out_dir="${fasta_orig%.*}"/"blast_""${start_time}"
 echo "Output will be stored in this directory:"
 echo "${out_dir}"
 echo
 
 # make the output directory
-mkdir "${out_dir}"
+mkdir -p "${out_dir}"
 
 # make the logfile
 LOGFILE="${out_dir}"/logfile.txt
