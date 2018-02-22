@@ -19,7 +19,7 @@ count_seq () {
   if [ "${FILETYPE}" == 'fasta' ]; then
     seq_count=$( grep -c '^>' "${1}" )
   else
-    fastq_lines=$( cat merged_pear.fastq.assembled.fastq | wc -l )
+    fastq_lines=$( cat "${1}" | wc -l )
     seq_count=$(echo "${fastq_lines}" / 4 | bc)
   fi
   echo $seq_count
